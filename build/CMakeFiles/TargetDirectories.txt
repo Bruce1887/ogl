@@ -1,0 +1,5 @@
+/home/edvin/dev/ogl/build/CMakeFiles/newtest.dir
+/home/edvin/dev/ogl/build/CMakeFiles/glad.dir
+/home/edvin/dev/ogl/build/CMakeFiles/stb_image.dir
+/home/edvin/dev/ogl/build/CMakeFiles/edit_cache.dir
+/home/edvin/dev/ogl/build/CMakeFiles/rebuild_cache.dir
