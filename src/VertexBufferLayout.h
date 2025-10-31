@@ -22,7 +22,7 @@ struct VertexBufferElement
             return 1;
         default:
             std::cerr << "[VertexBufferElement] Unknown type: " << type << std::endl;
-            return 0;   
+            return 0;
         }
     }
 };
@@ -67,4 +67,4 @@ inline void VertexBufferLayout::Push<unsigned char>(unsigned int count)
 {
     m_Elements.push_back({GL_UNSIGNED_BYTE, count, GL_TRUE});
     m_stride += VertexBufferElement::GetSizeOfType(GL_UNSIGNED_BYTE) * count;
-}   
+}

@@ -55,16 +55,15 @@ int main(int, char **)
         return -1;
     }
 
-    // std::cout << "OpenGL " << glGetString(GL_VERSION) << std::endl;
+    std::cout << "OpenGL " << glGetString(GL_VERSION) << std::endl;
 
     // set window-resize-callback (resize viewport)
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow * /*window*/, int width, int height)
                                    {
-        std::cout << "[WINDOW RESIZED]: " << width << ","<< height << std::endl;
         glViewport(0, 0, width, height); });
 
     {
-        float positions[] = {
+        float vertices[] = {
             -0.5f,-0.5f,0.0f,0.0f, // bottom left
             0.5f,-0.5f,1.0f,0.0f, // bottom right
             0.5f,0.5f,1.0f,1.0f, // top right
@@ -75,16 +74,19 @@ int main(int, char **)
             0, 1, 2,
             2, 3, 0};
 
+
         GLCALL(glEnable(GL_BLEND));
         GLCALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-
-        VertexArray va;
-        VertexBuffer vb(positions, 4 * 4 * sizeof(float));
+        
+        VertexBuffer vb(vertices, sizeof(vertices));
 
         VertexBufferLayout layout;
         layout.Push<float>(2);
         layout.Push<float>(2);
+        
+        VertexArray va;
         va.AddBuffer(vb, layout);
+        
         IndexBuffer ib(indices, 6);
 
         Shader shader("resources/shaders/basic.shader");
@@ -103,7 +105,7 @@ int main(int, char **)
 
         Renderer renderer;
 
-        glfwSetKeyCallback(window, [](GLFWwindow *wdw, int key, int /*scanco    de*/, int action, int mods)
+        glfwSetKeyCallback(window, [](GLFWwindow *wdw, int key, int /*scancode*/, int action, int mods)
                            {
             std::cout << "key: " << key << ", action: " << action  << ", mods:" << mods << std::endl;
             if (key == GLFW_KEY_W && mods & GLFW_MOD_CONTROL)
