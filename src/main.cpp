@@ -15,6 +15,8 @@
 #include <cassert>
 #include <cmath>
 
+#include <Common.h>
+
 int main(int, char **)
 {
     if (!glfwInit())
@@ -88,12 +90,16 @@ int main(int, char **)
         va.AddBuffer(vb, layout);
         
         IndexBuffer ib(indices, 6);
+        
+        Shader shader;
+        shader.addShader(SHADER_DIR "basic.vert",ShaderType::VERTEX);
+        shader.addShader(SHADER_DIR "basic.frag",ShaderType::FRAGMENT);
+        shader.CreateProgram();
 
-        Shader shader("resources/shaders/basic.shader");
         shader.Bind();
         shader.SetUniform4f("u_color", {0.0f, 0.3f, 0.8f, 1.0f});
 
-        Texture texture("resources/textures/lennart.jpg");
+        Texture texture(TEXTURE_DIR "lennart.jpg");
         texture.Bind();
         shader.SetUniform1i("u_texture", 0);
 
@@ -112,23 +118,18 @@ int main(int, char **)
                 glfwSetWindowShouldClose(wdw, GLFW_TRUE); });
 
 
-        GLCALL(glClearColor(0.2f, 0.1f, 0.2f, 1.0f)); // dark purple bg color
+        GLCALL(glClearColor(0.2f, 0.1f, 0.2f, 1.0f)); // dark purple background color
 
-
-        float red = 0.0f;
-        float increment = 0.01f;
+        float green = 0;
         while (!glfwWindowShouldClose(window))
         {
             renderer.Clear();
-
-
             shader.Bind();
-            shader.SetUniform4f("u_color", {red, 0.3f, 0.8f, 1.0f});
-
+            
+            green = (sin(glfwGetTime()) / 2.0f) + 0.5f;
+            shader.SetUniform4f("u_color", {0.0 , green, 0.0f, 1.0f});
             
             renderer.Draw(va, ib, shader);
-
-            red = std::fmod(red + increment, 10.0f);
 
             glfwSwapBuffers(window);
 

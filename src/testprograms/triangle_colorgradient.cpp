@@ -32,10 +32,9 @@ int main()
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     glfwSetKeyCallback(window, [](GLFWwindow *wdw, int key, int /*scancode*/, int /* action */, int mods)
-                           {
+                       {
             if (key == GLFW_KEY_W && mods & GLFW_MOD_CONTROL)
                 glfwSetWindowShouldClose(wdw, GLFW_TRUE); });
-
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
@@ -47,7 +46,10 @@ int main()
 
     // Scope to drop and delete shader before calling glfwTerminate()
     {
-        Shader shader("resources/shaders/gradient.shader");
+        Shader shader;
+        shader.addShader("resources/shaders/gradient.vert", ShaderType::VERTEX);
+        shader.addShader("resources/shaders/gradient.frag", ShaderType::FRAGMENT);
+        shader.CreateProgram();
 
         // set up vertex data (and buffer(s)) and configure vertex attributes
         // ------------------------------------------------------------------
@@ -109,7 +111,7 @@ int main()
         // ------------------------------------------------------------------------
         glDeleteVertexArrays(1, &VAO);
         glDeleteBuffers(1, &VBO);
-        
+
         shader.Unbind();
     }
     // glfw: terminate, clearing all previously allocated GLFW resources.

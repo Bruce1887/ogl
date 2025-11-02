@@ -1,6 +1,6 @@
 #include "Shader.h"
-#include "Renderer.h"
 
+#include <Renderer.h>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -8,49 +8,38 @@
 
 #include <cassert>
 
-ShaderProgramSource Shader::ParseShader(const std::string &filepath)
+ShaderProgramSource Shader::ParseShader(const std::string &filepath, ShaderType type)
 {
-    enum class ShaderType
-    {
-        NONE = -1,
-        VERTEX = 0,
-        FRAGMENT = 1
-    };
-
     std::ifstream stream(filepath);
     if (!stream.is_open())
     {
         std::cerr << "FAILED TO OPEN SHADERFILE AT: " << filepath << std::endl;
-        return {"", ""};
+        return {"", ShaderType::UNNASSIGNED};
     }
 
     std::string line;
-    std::stringstream ss[2];
+    std::stringstream ss;
 
-    ShaderType type = ShaderType::NONE;
+    
+    // Read content line by line, stupid
     while (getline(stream, line))
-    {
-        if (line.find("#shader") != std::string::npos)
-        {
-            if (line.find("vertex") != std::string::npos)
-                type = ShaderType::VERTEX;
-            else if (line.find("fragment") != std::string::npos)
-                type = ShaderType::FRAGMENT;
-            else
-                std::cerr << __FILE__ << " " << __func__ << " " << __LINE__ << " Invalid shader specified in " << filepath << std::endl;
-        }
-        else
-        {
-            ss[(int)type] << line << '\n';
-        }
+    {        
+            ss << line << '\n';
     }
 
-    return {ss[0].str(), ss[1].str()};
+    return {ss.str(), type};
 }
 
-unsigned int Shader::CompileShader(unsigned int type, const std::string &source)
+unsigned int Shader::CompileShader(ShaderType type, const std::string &source)
 {
-    unsigned int id = glCreateShader(type);
+    unsigned int id = glCreateShader((int) type);
+    #ifdef DEBUG
+        if(id == 0) {
+            std::cerr << "Could not create shader with type: " << type << std:endl;
+            std::cerr << "source: " << source << std:endl;
+        }
+    #endif
+
     const char *src = source.c_str();
     glShaderSource(id, 1, &src, nullptr);
     glCompileShader(id);
@@ -63,7 +52,7 @@ unsigned int Shader::CompileShader(unsigned int type, const std::string &source)
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
         char *message = (char *)alloca(length * sizeof(char));
         glGetShaderInfoLog(id, length, &length, message);
-        std::cout << "FAILED TO COMPILE " << (type == GL_VERTEX_SHADER ? "vertex" : "fragment") << "SHADER!" << std::endl
+        std::cout << "FAILED TO COMPILE SHADER! type: " << (int)type << std::endl // Todo: Maybe map shadertype to some string if you care
                   << message << std::endl
                   << std::endl << source << std::endl;
         glDeleteShader(id);
@@ -73,28 +62,36 @@ unsigned int Shader::CompileShader(unsigned int type, const std::string &source)
     return id;
 }
 
-unsigned int Shader::CreateShader(const std::string &vertexShader, const std::string &fragmentShader)
+void Shader::CreateProgram()
 {
     unsigned int program = glCreateProgram();
-    unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
-    unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
 
-    glAttachShader(program, vs);
-    glAttachShader(program, fs);
-    glLinkProgram(program);
-    glValidateProgram(program);
+    std::vector<unsigned int> shader_references;
+    shader_references.reserve(m_programSources.size());
 
-    glDeleteShader(vs);
-    glDeleteShader(fs);
+    for(size_t i = 0; i < m_programSources.size(); i++) {
+        const auto &ps = m_programSources[i];
+        unsigned int shader_ref = CompileShader(ps.type,ps.content);
+        glAttachShader(program, shader_ref);
+        shader_references.push_back(shader_ref);
+    }
 
-    return program;
+    GLCALL(glLinkProgram(program));
+    GLCALL(glValidateProgram(program));
+
+    for (auto &&ref : shader_references)
+    {
+        GLCALL(glDeleteShader(ref));
+    }
+
+    m_RendererID = program;
 }
 
-Shader::Shader(const std::string &filepath)
-    : m_FilePath(filepath), m_RendererID(0)
-{
-    ShaderProgramSource source = ParseShader(filepath);
-    m_RendererID = CreateShader(source.VertexSource, source.FragmentSource);
+Shader::Shader()
+    : m_RendererID(0) {}
+
+void Shader::addShader(const std::string &path, ShaderType type){
+    m_programSources.push_back(ParseShader(path,type));
 }
 
 Shader::~Shader()
