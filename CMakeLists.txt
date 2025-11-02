@@ -11,6 +11,7 @@ list(FILTER COMMON_SOURCES EXCLUDE REGEX "src/main.cpp")
 list(FILTER COMMON_SOURCES EXCLUDE REGEX "src/testprograms/triangle.cpp")
 list(FILTER COMMON_SOURCES EXCLUDE REGEX "src/testprograms/hello_triangle_indexed.cpp")
 list(FILTER COMMON_SOURCES EXCLUDE REGEX "src/testprograms/triangle_colorgradient.cpp")
+list(FILTER COMMON_SOURCES EXCLUDE REGEX "src/testprograms/test.cpp")
 
 # --- Add vendor code as separate libraries ---
 add_library(glad src/glad/glad.c)
@@ -36,7 +37,8 @@ function(add_gl_executable TARGET_NAME SOURCE_FILE)
 endfunction()
 
 # --- Build executables ---
-add_gl_executable(oogabooga src/main.cpp)
-add_gl_executable(triangle src/testprograms/triangle.cpp)
-add_gl_executable(hello_triangle_indexed src/testprograms/hello_triangle_indexed.cpp)
-add_gl_executable(triangle_colorgradient src/testprograms/triangle_colorgradient.cpp)
+# add_gl_executable(oogabooga src/main.cpp)
+# add_gl_executable(triangle src/testprograms/triangle.cpp)
+# add_gl_executable(hello_triangle_indexed src/testprograms/hello_triangle_indexed.cpp)
+# add_gl_executable(triangle_colorgradient src/testprograms/triangle_colorgradient.cpp)
+add_gl_executable(test src/testprograms/test.cpp)

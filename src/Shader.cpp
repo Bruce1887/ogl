@@ -20,11 +20,10 @@ ShaderProgramSource Shader::ParseShader(const std::string &filepath, ShaderType 
     std::string line;
     std::stringstream ss;
 
-    
     // Read content line by line, stupid
     while (getline(stream, line))
-    {        
-            ss << line << '\n';
+    {
+        ss << line << '\n';
     }
 
     return {ss.str(), type};
@@ -32,13 +31,14 @@ ShaderProgramSource Shader::ParseShader(const std::string &filepath, ShaderType 
 
 unsigned int Shader::CompileShader(ShaderType type, const std::string &source)
 {
-    unsigned int id = glCreateShader((int) type);
-    #ifdef DEBUG
-        if(id == 0) {
-            std::cerr << "Could not create shader with type: " << type << std:endl;
-            std::cerr << "source: " << source << std:endl;
-        }
-    #endif
+    unsigned int id = glCreateShader((int)type);
+#ifdef DEBUG
+    if (id == 0)
+    {
+        std::cerr << "Could not create shader with type: " << type << std : endl;
+        std::cerr << "source: " << source << std : endl;
+    }
+#endif
 
     const char *src = source.c_str();
     glShaderSource(id, 1, &src, nullptr);
@@ -52,9 +52,10 @@ unsigned int Shader::CompileShader(ShaderType type, const std::string &source)
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
         char *message = (char *)alloca(length * sizeof(char));
         glGetShaderInfoLog(id, length, &length, message);
-        std::cout << "FAILED TO COMPILE SHADER! type: " << (int)type << std::endl // Todo: Maybe map shadertype to some string if you care
+        std::cerr << "FAILED TO COMPILE SHADER! type: " << (int)type << std::endl // Todo: Maybe map shadertype to some string if you care
                   << message << std::endl
-                  << std::endl << source << std::endl;
+                  << std::endl
+                  << source << std::endl;
         glDeleteShader(id);
         return 0;
     }
@@ -69,9 +70,10 @@ void Shader::CreateProgram()
     std::vector<unsigned int> shader_references;
     shader_references.reserve(m_programSources.size());
 
-    for(size_t i = 0; i < m_programSources.size(); i++) {
+    for (size_t i = 0; i < m_programSources.size(); i++)
+    {
         const auto &ps = m_programSources[i];
-        unsigned int shader_ref = CompileShader(ps.type,ps.content);
+        unsigned int shader_ref = CompileShader(ps.type, ps.content);
         glAttachShader(program, shader_ref);
         shader_references.push_back(shader_ref);
     }
@@ -90,8 +92,9 @@ void Shader::CreateProgram()
 Shader::Shader()
     : m_RendererID(0) {}
 
-void Shader::addShader(const std::string &path, ShaderType type){
-    m_programSources.push_back(ParseShader(path,type));
+void Shader::addShader(const std::string &path, ShaderType type)
+{
+    m_programSources.push_back(ParseShader(path, type));
 }
 
 Shader::~Shader()
@@ -119,6 +122,11 @@ void Shader::SetUniform4f(const std::string &name, std::vector<float> floats)
     assert(floats.size() == 4); // SetUniform4f requires exactly 4 floats
 
     GLCALL(glUniform4f(GetUniformLocation(name), floats[0], floats[1], floats[2], floats[3]));
+}
+
+void Shader::SetUniform1f(const std::string &name, float f)
+{
+    GLCALL(glUniform1f(GetUniformLocation(name), f));
 }
 
 int Shader::GetUniformLocation(const std::string &name)

@@ -23,10 +23,9 @@ struct ShaderProgramSource
     ShaderType type; // e.g. vertex shader or something else
 };
 
-class Shader
+class Shader // två "private" i class def, hur snyggt är det
 {
 private:
-
     std::vector<ShaderProgramSource> m_programSources;
     unsigned int m_RendererID; // Unique ID for the buffer
     std::unordered_map<std::string, int> m_UniformLocationCache;
@@ -43,6 +42,7 @@ public:
     void Unbind() const;
 
     void SetUniform1i(const std::string &name, int value);
+    void SetUniform1f(const std::string &name, float f);
     void SetUniform4f(const std::string &name, std::vector<float> floats);
 
 private:    
