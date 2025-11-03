@@ -6,6 +6,7 @@
 #include "VertexArray.h"
 #include "Shader.h"
 #include "Texture.h"
+#include "Common.h"
 
 #include <iostream>
 #include <fstream>
@@ -14,12 +15,11 @@
 #include <cassert>
 #include <cmath>
 
-#include <Common.h>
 
 int main(int, char **)
 {
     // Initialise GLAD and GLFW
-    if (init())
+    if (init(__FILE__))
         goto out;
 
     {
@@ -55,18 +55,19 @@ int main(int, char **)
         vb.Unbind();
         ib.Unbind();
         shader.Unbind();
-        float hoff = 0.0;
-        Renderer renderer;
 
+        Renderer renderer;
 
         while (!glfwWindowShouldClose(window))
         {
             renderer.Clear();
-            shader.SetUniform1f("h_offset",hoff);
-            hoff = (sin(glfwGetTime()) / 2.0f);
-            shader.Bind();
 
-            renderer.Draw(va, ib, shader);
+            shader.Bind(); // we dont need to bind shader for rendering purposes, but for updating the uniforms.
+            shader.SetUniform1f("h_offset",(sin(glfwGetTime()) / 2.0f));
+            shader.SetUniform1f("v_offset",(cos(glfwGetTime()) / 2.0f));;
+            
+
+            renderer.Draw(va, ib, shader); 
 
             glfwSwapBuffers(window);
 

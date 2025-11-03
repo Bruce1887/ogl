@@ -1,14 +1,11 @@
-
-#include <iostream>
-#include <Common.h>
-#include <Renderer.h>
+#include "Common.h"
 
 GLsizei window_X = 640;
 GLsizei window_Y = 480;
 GLFWwindow *window = nullptr;
 GLFWmonitor *monitor = nullptr;
 
-int init(){
+int init(const std::string &windowname){
 	    if (!glfwInit())
     {
         std::cerr << "Failed to initialize GLFW" << std::endl;
@@ -21,7 +18,7 @@ int init(){
 
     // monitor = glfwGetPrimaryMonitor(); // for fullscreen maybe?
 
-    window = glfwCreateWindow(window_X, window_Y, "Lennart Jähkel", monitor, NULL);
+    window = glfwCreateWindow(window_X, window_Y, windowname.c_str(), monitor, NULL);
 
     if (!window)
     {

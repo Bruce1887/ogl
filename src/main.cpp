@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "Renderer.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
@@ -19,7 +17,7 @@
 int main(int, char **)
 {
     // Initialise GLAD and GLFW
-    if(init()) goto out;
+    if(init(__FILE__)) goto out;
 
     {
         float vertices[] = {
@@ -73,8 +71,8 @@ int main(int, char **)
         while (!glfwWindowShouldClose(window))
         {
             renderer.Clear();
-            shader.Bind();
 
+            shader.Bind(); // we dont need to bind shader for rendering purposes, but for updating the uniforms.
             green = (sin(glfwGetTime()) / 2.0f) + 0.5f;
             shader.SetUniform4f("u_color", {0.0, green, 0.0f, 1.0f});
 
