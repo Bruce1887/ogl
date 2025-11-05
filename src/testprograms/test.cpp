@@ -15,22 +15,21 @@
 #include <cassert>
 #include <cmath>
 
-
 int main(int, char **)
 {
     // Initialise GLAD and GLFW
     if (oogaboogaInit(__FILE__))
         goto out;
-
     {
         float vertices[] = {
-            -0.5f,-0.5f,1.0f,0.0f,0.0f,1.0f, // bottom left red
-            0.5f,-0.5f,0.0f,1.0f,0.0f,1.0f, // bottom right green
-            0.0f,0.5f,0.0f,0.0f,1.0f,1.0f, // top blue (left)
+            -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, // bottom left red
+            0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // bottom right green
+            0.0f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f    // top blue (left)
         };
-
         unsigned int indices[] = {
-            0, 1, 2,
+            0,
+            1,
+            2,
         };
 
         VertexBuffer vb(vertices, sizeof(vertices));
@@ -43,7 +42,7 @@ int main(int, char **)
         VertexArray va;
         va.AddBuffer(vb, layout);
 
-        IndexBuffer ib(indices, 6);
+        IndexBuffer ib(indices, 3, BufferUsage::STATIC_DRAW);
 
         Shader shader;
         shader.addShader(SHADER_DIR / "color_from_attr.vert", ShaderType::VERTEX);
@@ -65,10 +64,11 @@ int main(int, char **)
             renderer.Clear();
 
             shader.Bind(); // we dont need to bind shader for rendering purposes, but for updating the uniforms.
-            shader.SetUniform1f("h_offset",(sin(glfwGetTime()) / 2.0f));
-            shader.SetUniform1f("v_offset",(cos(glfwGetTime()) / 2.0f));;
-            
-            renderer.Draw(va, ib, shader); 
+            shader.SetUniform1f("h_offset", (sin(glfwGetTime()) / 2.0f));
+            shader.SetUniform1f("v_offset", (cos(glfwGetTime()) / 2.0f));
+            ;
+
+            renderer.Draw(va, ib, shader);
             glfwSwapBuffers(window);
             glfwPollEvents();
         }

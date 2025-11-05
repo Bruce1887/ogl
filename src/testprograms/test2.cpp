@@ -15,6 +15,10 @@
 #include <cassert>
 #include <cmath>
 
+int num_triangles = 1;
+
+void keyCallback(GLFWwindow *wdw, int key, int /*scancode*/, int action, int mods);
+
 int main(int, char **)
 {
     // Initialise GLAD and GLFW
@@ -24,14 +28,8 @@ int main(int, char **)
     {
         float vertices[] = {
             -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, // bottom left red
-            0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // bottom right green
-            0.0f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f    // top blue (left)
-        };
-
-        unsigned int indices[] = {
-            0,
-            1,
-            2,
+            0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,  // bottom right blue
+            0.0f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f    // top blue
         };
 
         VertexBuffer vb(vertices, sizeof(vertices));
@@ -44,7 +42,13 @@ int main(int, char **)
         VertexArray va;
         va.AddBuffer(vb, layout);
 
-        IndexBuffer ib(indices, 6);
+        unsigned int indices[] = {
+            0,
+            1,
+            2,
+        };
+        std::cout << "sizeof(indices): " << sizeof(indices) << std::endl;
+        IndexBuffer ib(indices, 3, BufferUsage::DYNAMIC_DRAW);
 
         Shader shader;
         shader.addShader(SHADER_DIR / "color_from_attr.vert", ShaderType::VERTEX);
@@ -58,6 +62,8 @@ int main(int, char **)
         vb.Unbind();
         ib.Unbind();
         shader.Unbind();
+
+        glfwSetKeyCallback(window, keyCallback);
 
         Renderer renderer;
 
@@ -77,4 +83,25 @@ out:
     oogaboogaExit();
 
     return 0;
+}
+
+void keyCallback(GLFWwindow *wdw, int key, int /*scancode*/, int action, int mods)
+{
+    // std::cout << "key: " << key << ", action: " << action << ", mods:" << mods << std::endl;
+    if (key == GLFW_KEY_W && mods & GLFW_MOD_CONTROL)
+    {
+        glfwSetWindowShouldClose(wdw, GLFW_TRUE);
+    }
+    else if (key == GLFW_KEY_K && action == GLFW_PRESS)
+    {
+        num_triangles++;
+        std::cout << "num_triangles: " << num_triangles << std::endl;
+    }
+    else if (key == GLFW_KEY_L && action == GLFW_PRESS)
+    {
+        num_triangles--;
+        if (num_triangles < 1)
+            num_triangles = 1;
+        std::cout << "num_triangles: " << num_triangles << std::endl;
+    }
 }

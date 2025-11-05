@@ -1,12 +1,19 @@
 #include "IndexBuffer.h"
 
-IndexBuffer::IndexBuffer(const void *data, unsigned int count)
+
+/**
+ * @brief Construct a new Index Buffer:: Index Buffer object
+ * 
+ * @param data the array of indices. 
+ * @param count the amount of indices in data. NOTE: IT IS VERY IMPORTANT THAT THIS NUMBER IS CORRECT AND NOT TOO SMALL (too big might not have an immediate impact but idk)
+ * @param usage a hint to the GL implementation of how the data is going to be used (e.g. rendered once and never again, or rendered very many times and changed frequently)
+ */
+IndexBuffer::IndexBuffer(const unsigned int *data, unsigned int count, BufferUsage usage)
     : m_Count(count)
 {
-    const unsigned int *data_cast = (unsigned int *)data;
     GLCALL(glGenBuffers(1, &m_RendererID));
     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID));
-    GLCALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(unsigned int), data, GL_STATIC_DRAW));
+    GLCALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(unsigned int), data, (unsigned int)usage));
 }
 
 IndexBuffer::~IndexBuffer()

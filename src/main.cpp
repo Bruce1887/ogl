@@ -32,8 +32,8 @@ int main(int, char **)
             2, 3, 0};   
 
         GLCALL(glEnable(GL_BLEND));
+        
         GLCALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-
         VertexBuffer vb(vertices, sizeof(vertices));
 
         VertexBufferLayout layout;
@@ -43,7 +43,7 @@ int main(int, char **)
         VertexArray va;
         va.AddBuffer(vb, layout);
 
-        IndexBuffer ib(indices, 6);
+        IndexBuffer ib(indices, 6,BufferUsage::STATIC_DRAW);
 
         Shader shader;
         shader.addShader(SHADER_DIR / "basic.vert", ShaderType::VERTEX);
