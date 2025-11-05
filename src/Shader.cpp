@@ -10,38 +10,37 @@
 
 ShaderProgramSource Shader::ParseShader(const std::string &filepath, ShaderType type)
 {
-    std::ifstream stream(filepath);
-    if (!stream.is_open())
+    std::ifstream file(filepath, std::ios::in | std::ios::binary);
+    if (!file)
     {
-        std::cerr << "FAILED TO OPEN SHADERFILE AT: " << filepath << std::endl;
-        return {"", ShaderType::UNNASSIGNED};
+        std::cerr << "Error: Failed to open shader file: " << filepath << std::endl;
+        return {"", ShaderType::UNASSIGNED};
     }
 
-    std::string line;
-    std::stringstream ss;
+    std::string source;
+    file.seekg(0, std::ios::end);
+    source.reserve(static_cast<size_t>(file.tellg()));
+    file.seekg(0, std::ios::beg);
 
-    // Read content line by line, stupid
-    while (getline(stream, line))
-    {
-        ss << line << '\n';
-    }
+    source.assign((std::istreambuf_iterator<char>(file)),
+                  std::istreambuf_iterator<char>());
 
-    return {ss.str(), type};
+    return {std::move(source), type};
 }
 
-unsigned int Shader::CompileShader(ShaderType type, const std::string &source)
+unsigned int Shader::CompileShader(ShaderType type, const std::string &shader_str)
 {
     unsigned int id = glCreateShader((int)type);
 #ifdef DEBUG
     if (id == 0)
     {
         std::cerr << "Could not create shader with type: " << type << std : endl;
-        std::cerr << "source: " << source << std : endl;
+        std::cerr << "shader_str: " << shader_str << std : endl;
     }
 #endif
 
-    const char *src = source.c_str();
-    glShaderSource(id, 1, &src, nullptr);
+    const char *shader_c_str = shader_str.c_str();
+    glShaderSource(id, 1, &shader_c_str, nullptr);
     glCompileShader(id);
 
     int result;
@@ -55,7 +54,7 @@ unsigned int Shader::CompileShader(ShaderType type, const std::string &source)
         std::cerr << "FAILED TO COMPILE SHADER! type: " << (int)type << std::endl // Todo: Maybe map shadertype to some string if you care
                   << message << std::endl
                   << std::endl
-                  << source << std::endl;
+                  << shader_str << std::endl;
         glDeleteShader(id);
         return 0;
     }
