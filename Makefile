@@ -2,7 +2,8 @@
 
 BUILD_MAKEFILE = build/Makefile
 
-CMAKE_GEN = cmake -S . -B build/
+# CMAKE_GEN = cmake -S . -B build/
+CMAKE_GEN = cmake -S . -B build -G "Unix Makefiles"
 
 # Default target: build (and run) the project
 all: $(BUILD_MAKEFILE)
