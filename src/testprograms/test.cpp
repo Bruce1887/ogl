@@ -26,7 +26,7 @@ int main(int, char **)
         float vertices[] = {
             -0.5f,-0.5f,1.0f,0.0f,0.0f,1.0f, // bottom left red
             0.5f,-0.5f,0.0f,1.0f,0.0f,1.0f, // bottom right green
-            0.0f,0.5f,0.0f,0.0f,1.0f,0.0f, // top blue (left)
+            0.0f,0.5f,0.0f,0.0f,1.0f,1.0f, // top blue (left)
         };
 
         unsigned int indices[] = {

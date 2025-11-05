@@ -1,4 +1,4 @@
-#version 460 core
+#version 400 core
 
 layout(location = 0) out vec4 color;
 in vec2 v_texCoord;
@@ -9,4 +9,4 @@ void main()
    // color = texture(u_texture, v_texCoord);   
    vec4 texColor = texture(u_texture, v_texCoord);
    color = texColor * u_color;
-};
+}
