@@ -22,14 +22,16 @@ int main(int, char **)
         goto out;
 
     {
-        float vertices[][6] = {
-            {-0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f},
-            {0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f},
-            {0.0f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f},
+        float vertices[] = {
+            -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, // bottom left red
+            0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // bottom right green
+            0.0f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f    // top blue (left)
         };
 
-        unsigned int indices[][3] = {
-            {0, 1, 2},
+        unsigned int indices[] = {
+            0,
+            1,
+            2,
         };
 
         VertexBuffer vb(vertices, sizeof(vertices));
