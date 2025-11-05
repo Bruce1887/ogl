@@ -17,8 +17,8 @@
 int main(int, char **)
 {
     // Initialise GLAD and GLFW
-    if(init(__FILE__)) goto out;
-
+    if(oogaboogaInit(__FILE__)) goto out;
+    
     {
         float vertices[] = {
             -0.5f,-0.5f,0.0f,0.0f, // bottom left
@@ -29,12 +29,11 @@ int main(int, char **)
 
         unsigned int indices[] = {
             0, 1, 2,
-            2, 3, 0};
+            2, 3, 0};   
 
         GLCALL(glEnable(GL_BLEND));
         GLCALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
-        
         VertexBuffer vb(vertices, sizeof(vertices));
 
         VertexBufferLayout layout;
@@ -47,14 +46,14 @@ int main(int, char **)
         IndexBuffer ib(indices, 6);
 
         Shader shader;
-        shader.addShader(SHADER_DIR "basic.vert", ShaderType::VERTEX);
-        shader.addShader(SHADER_DIR "basic.frag", ShaderType::FRAGMENT);
+        shader.addShader(SHADER_DIR / "basic.vert", ShaderType::VERTEX);
+        shader.addShader(SHADER_DIR / "basic.frag", ShaderType::FRAGMENT);
         shader.CreateProgram();
 
         shader.Bind();
         shader.SetUniform4f("u_color", {0.0f, 0.3f, 0.8f, 1.0f});
 
-        Texture texture(TEXTURE_DIR "lennart.jpg");
+        Texture texture((TEXTURE_DIR / "lennart.jpg").string());
         texture.Bind();
         shader.SetUniform1i("u_texture", 0);
 
@@ -86,7 +85,7 @@ int main(int, char **)
 
     glfwTerminate(); // dont call glfwTerminate() if glfw failed to initialize
 out:
-    exit();
+    oogaboogaExit();
     
     return 0;
 }

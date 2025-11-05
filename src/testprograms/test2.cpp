@@ -15,7 +15,6 @@
 #include <cassert>
 #include <cmath>
 
-
 int main(int, char **)
 {
     // Initialise GLAD and GLFW
@@ -23,14 +22,14 @@ int main(int, char **)
         goto out;
 
     {
-        float vertices[] = {
-            -0.5f,-0.5f,1.0f,0.0f,0.0f,1.0f, // bottom left red
-            0.5f,-0.5f,0.0f,1.0f,0.0f,1.0f, // bottom right green
-            0.0f,0.5f,0.0f,0.0f,1.0f,1.0f, // top blue (left)
+        float vertices[][6] = {
+            {-0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f},
+            {0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f},
+            {0.0f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f},
         };
 
-        unsigned int indices[] = {
-            0, 1, 2,
+        unsigned int indices[][3] = {
+            {0, 1, 2},
         };
 
         VertexBuffer vb(vertices, sizeof(vertices));
@@ -65,10 +64,8 @@ int main(int, char **)
             renderer.Clear();
 
             shader.Bind(); // we dont need to bind shader for rendering purposes, but for updating the uniforms.
-            shader.SetUniform1f("h_offset",(sin(glfwGetTime()) / 2.0f));
-            shader.SetUniform1f("v_offset",(cos(glfwGetTime()) / 2.0f));;
-            
-            renderer.Draw(va, ib, shader); 
+
+            renderer.Draw(va, ib, shader);
             glfwSwapBuffers(window);
             glfwPollEvents();
         }

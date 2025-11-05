@@ -5,15 +5,17 @@ GLsizei window_Y = 480;
 GLFWwindow *window = nullptr;
 GLFWmonitor *monitor = nullptr;
 
-int init(const std::string &windowname){
-	    if (!glfwInit())
+
+int oogaboogaInit(const std::string &windowname)
+{
+    if (!glfwInit())
     {
         std::cerr << "Failed to initialize GLFW" << std::endl;
         return -1;
     }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     // monitor = glfwGetPrimaryMonitor(); // for fullscreen maybe?
@@ -26,9 +28,9 @@ int init(const std::string &windowname){
         glfwGetError(e_msg);
         std::cerr << "Failed to create window: " << e_msg << std::endl;
 
-        glfwTerminate();
         return -1;
     }
+    
     glfwSetKeyCallback(window, [](GLFWwindow *wdw, int key, int /*scancode*/, int action, int mods)
                        {
             std::cout << "key: " << key << ", action: " << action  << ", mods:" << mods << std::endl;
@@ -37,15 +39,15 @@ int init(const std::string &windowname){
 
     glfwMakeContextCurrent(window);
 
-    glfwSwapInterval(1);    
+    glfwSwapInterval(1);
 
     // ####### NO GL FUNCTION CALLS UNTIL GLAD HAS LOADED THE FUNCTIONS #######
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cerr << "Failed to initialize GLAD" << std::endl;
-        glfwTerminate();
+        // glfwTerminate();
         return -1;
-    }    
+    }
 
     GLCALL(glClearColor(0.2f, 0.1f, 0.2f, 1.0f)); // dark purple background color
 
@@ -58,11 +60,14 @@ int init(const std::string &windowname){
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow * /*window*/, int width, int height)
                                    { glViewport(0, 0, width, height); });
 
-	return 0;
+    return 0;
 }
 
-int exit() {
-	// Cleanup (nothing to do yet)
-	
-	return 0;
+int oogaboogaExit()
+{
+    // Cleanup
+    
+    glfwTerminate();
+
+    return 0;
 }

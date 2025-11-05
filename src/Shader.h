@@ -14,7 +14,7 @@ enum class ShaderType
     TESS_CONTROL =  GL_TESS_CONTROL_SHADER,
     TESS_EVAL = GL_TESS_EVALUATION_SHADER,
     GEOMETRY =  GL_GEOMETRY_SHADER,
-    UNNASSIGNED = -1
+    UNASSIGNED = -1
 };
 
 struct ShaderProgramSource
@@ -46,7 +46,23 @@ public:
     void SetUniform4f(const std::string &name, std::vector<float> floats);
 
 private:    
+    
+    /**
+     * @brief 
+     * 
+     * @param type Det är här typen av shadern faktist kommer till användning i "glCreateShader((int)type)"
+     * @param source 
+     * @return unsigned int 
+     */
     unsigned int CompileShader(ShaderType type, const std::string &source);
+    
+    /**
+     * @brief Läs shaderfilen och samlar datan som behövs för att kompilera och binda ett shaderprogram rätt.
+     * 
+     * @param filepath filsökväg till en shader (e.g. .vert eller .frag)
+     * @param type shadertyp, e.g. vertex shader eller fragment shader
+     * @return ShaderProgramSource Det som behövs för att kompilera och binda ett shaderprogram rätt 
+     */
     ShaderProgramSource ParseShader(const std::string &filepath, ShaderType type);
 
     int GetUniformLocation(const std::string &name);

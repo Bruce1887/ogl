@@ -27,8 +27,6 @@ const char *fragmentShaderSource = "#version 330 core\n"
 
 int main()
 {
-
-	std::cout << "TIRNAGLE" << std::endl;
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();
