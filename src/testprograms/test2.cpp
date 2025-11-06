@@ -19,6 +19,9 @@ int num_triangles = 1;
 
 void keyCallback(GLFWwindow *wdw, int key, int /*scancode*/, int action, int mods);
 
+std::vector<float> vertices;
+VertexBufferLayout layout;
+
 int main(int, char **)
 {
     // Initialise GLAD and GLFW
@@ -26,15 +29,13 @@ int main(int, char **)
         goto out;
 
     {
-        float vertices[] = {
-            -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f, // bottom left red
-            0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,  // bottom right blue
-            0.0f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f    // top blue
-        };
+        vertices = {
+            -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 0.0f,
+            0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f};
 
-        VertexBuffer vb(vertices, sizeof(vertices));
+        VertexBuffer vb(vertices);
 
-        VertexBufferLayout layout;
         layout.Push<float>(2); // aPos
         layout.Push<float>(3); // aColor
         layout.Push<float>(1); // moveVertex
@@ -47,7 +48,7 @@ int main(int, char **)
             1,
             2,
         };
-        std::cout << "sizeof(indices): " << sizeof(indices) << std::endl;
+
         IndexBuffer ib(indices, 3, BufferUsage::DYNAMIC_DRAW);
 
         Shader shader;
@@ -85,6 +86,31 @@ out:
     return 0;
 }
 
+void circleVertices(float centerX, float centerY, float radius, int numSegments, std::vector<float> &outVertices)
+{
+    outVertices.clear();
+    for (int i = 0; i < numSegments; ++i)
+    {
+        float theta = 2.0f * 3.1415926f * float(i) / float(numSegments); // current angle
+
+        float x = radius * cosf(theta); // calculate the x component
+        float y = radius * sinf(theta); // calculate the y component
+
+        // Position
+        outVertices.push_back(x + centerX);
+        outVertices.push_back(y + centerY);
+
+        // Other vertex attributes
+        float blue = i % 2 == 0 ? 1.0f : 0.0f;
+        float red = 1.0f - blue;
+        outVertices.push_back(red);  // r
+        outVertices.push_back(0.0f); // g
+        outVertices.push_back(blue); // b
+
+        outVertices.push_back(0.0f); // moveVertex
+    }
+}
+
 void keyCallback(GLFWwindow *wdw, int key, int /*scancode*/, int action, int mods)
 {
     // std::cout << "key: " << key << ", action: " << action << ", mods:" << mods << std::endl;
@@ -92,16 +118,21 @@ void keyCallback(GLFWwindow *wdw, int key, int /*scancode*/, int action, int mod
     {
         glfwSetWindowShouldClose(wdw, GLFW_TRUE);
     }
-    else if (key == GLFW_KEY_K && action == GLFW_PRESS)
+    else if (key == GLFW_KEY_L && action == GLFW_PRESS)
     {
         num_triangles++;
         std::cout << "num_triangles: " << num_triangles << std::endl;
     }
-    else if (key == GLFW_KEY_L && action == GLFW_PRESS)
+    else if (key == GLFW_KEY_K && action == GLFW_PRESS)
     {
         num_triangles--;
         if (num_triangles < 1)
             num_triangles = 1;
         std::cout << "num_triangles: " << num_triangles << std::endl;
     }
+
+    circleVertices(0.0f, 0.0f, 0.5f, num_triangles, vertices);
+    VertexBuffer vb(vertices);
+
+    // va.AddBuffer(vb, layout);
 }

@@ -1,2 +1,5 @@
 .vscode/
 build/
+html/
+latex/
+doxy_output/

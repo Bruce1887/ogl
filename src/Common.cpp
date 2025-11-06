@@ -39,6 +39,7 @@ int oogaboogaInit(const std::string &windowname)
 
     glfwMakeContextCurrent(window);
 
+    // Enable V-Sync.
     glfwSwapInterval(1);
 
     // ####### NO GL FUNCTION CALLS UNTIL GLAD HAS LOADED THE FUNCTIONS #######

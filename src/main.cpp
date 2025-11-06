@@ -1,3 +1,4 @@
+#include "Common.h"
 #include "Renderer.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
@@ -12,7 +13,6 @@
 #include <cassert>
 #include <cmath>
 
-#include <Common.h>
 
 int main(int, char **)
 {
@@ -21,15 +21,16 @@ int main(int, char **)
     
     {
         float vertices[] = {
-            -0.5f,-0.5f,0.0f,0.0f, // bottom left
-            0.5f,-0.5f,1.0f,0.0f, // bottom right
-            0.5f,0.5f,1.0f,1.0f, // top right
-            -0.5f,0.5f,0.0f,1.0f, // top left
+            -0.5f,-0.5f,    1.0f,0.0f,0.0f,     0.0f,0.0f, // bottom left
+            0.5f,-0.5f,     0.0f,1.0f,0.0f,     1.0f,0.0f, // bottom right
+            0.5f,0.5f,      0.0f,0.0f,1.0f,     1.0f,1.0f, // top right
+            -0.5f,0.5f,     1.0f,1.0f,1.0f,     0.0f,1.0f, // top left
         };
 
         unsigned int indices[] = {
             0, 1, 2,
-            2, 3, 0};   
+            2, 3, 0
+        };
 
         GLCALL(glEnable(GL_BLEND));
         
@@ -38,12 +39,13 @@ int main(int, char **)
 
         VertexBufferLayout layout;
         layout.Push<float>(2);
+        layout.Push<float>(3);
         layout.Push<float>(2);
 
         VertexArray va;
         va.AddBuffer(vb, layout);
 
-        IndexBuffer ib(indices, 6,BufferUsage::STATIC_DRAW);
+        IndexBuffer ib(indices, 6);
 
         Shader shader;
         shader.addShader(SHADER_DIR / "basic.vert", ShaderType::VERTEX);
@@ -51,13 +53,17 @@ int main(int, char **)
         shader.CreateProgram();
 
         shader.Bind();
-        shader.SetUniform4f("u_color", {0.0f, 0.3f, 0.8f, 1.0f});
+        // shader.SetUniform4f("u_color", {0.0f, 0.3f, 0.8f, 1.0f});
 
-        Texture texture((TEXTURE_DIR / "lennart.jpg").string());
-        texture.Bind();
-        shader.SetUniform1i("u_texture", 0);
+        Texture texture1((TEXTURE_DIR / "lennart.jpg").string(),0);
+        texture1.Bind();
+        shader.SetUniform1i("u_texture1", 0);
+        
+        Texture texture2((TEXTURE_DIR / "cowday.png").string(),1);
+        texture2.Bind();
+        shader.SetUniform1i("u_texture2", 1);
 
-        // Unbind everything
+        // Unbind everything    
         va.Unbind();
         vb.Unbind();
         ib.Unbind();
@@ -65,16 +71,11 @@ int main(int, char **)
 
         Renderer renderer;
 
-        float green = 0;
         
         while (!glfwWindowShouldClose(window))
         {
-            renderer.Clear();
-
-            shader.Bind(); // we dont need to bind shader for rendering purposes, but for updating the uniforms.
-            green = (sin(glfwGetTime()) / 2.0f) + 0.5f;
-            shader.SetUniform4f("u_color", {0.0, green, 0.0f, 1.0f});
-
+            renderer.Clear();            
+            
             renderer.Draw(va, ib, shader);
 
             glfwSwapBuffers(window);
@@ -83,7 +84,6 @@ int main(int, char **)
         }
     }
 
-    glfwTerminate(); // dont call glfwTerminate() if glfw failed to initialize
 out:
     oogaboogaExit();
     

@@ -42,7 +42,7 @@ int main(int, char **)
         VertexArray va;
         va.AddBuffer(vb, layout);
 
-        IndexBuffer ib(indices, 3, BufferUsage::STATIC_DRAW);
+        IndexBuffer ib(indices, 3);
 
         Shader shader;
         shader.addShader(SHADER_DIR / "color_from_attr.vert", ShaderType::VERTEX);
