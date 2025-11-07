@@ -1,21 +1,10 @@
 #pragma once 
 
-#include <glad/glad.h>
+#include "Common.h"
 
 #include <string>
 #include <vector>
 #include <unordered_map>
-
-enum class ShaderType
-{
-    VERTEX =  GL_VERTEX_SHADER,
-    FRAGMENT = GL_FRAGMENT_SHADER,
-    COMPUTE = GL_COMPUTE_SHADER,
-    TESS_CONTROL =  GL_TESS_CONTROL_SHADER,
-    TESS_EVAL = GL_TESS_EVALUATION_SHADER,
-    GEOMETRY =  GL_GEOMETRY_SHADER,
-    UNASSIGNED = -1
-};
 
 struct ShaderProgramSource
 {
@@ -41,9 +30,13 @@ public:
     void Bind() const;
     void Unbind() const;
 
-    void SetUniform1i(const std::string &name, int value);
-    void SetUniform1f(const std::string &name, float f);
-    void SetUniform4f(const std::string &name, std::vector<float> floats);
+    void SetUniform(const std::string &name, int value);
+    void SetUniform(const std::string &name, float value);
+    void SetUniform(const std::string &name, const glm::vec2 &v);
+    void SetUniform(const std::string &name, const glm::vec3 &v);
+    void SetUniform(const std::string &name, const glm::vec4 &v);
+    void SetUniform(const std::string &name, const glm::mat4 &m);
+
 
 private:    
     

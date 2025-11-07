@@ -111,21 +111,30 @@ void Shader::Unbind() const
     GLCALL(glUseProgram(0));
 }
 
-void Shader::SetUniform1i(const std::string &name, int value)
-{
+void Shader::SetUniform(const std::string &name, int value) {
     GLCALL(glUniform1i(GetUniformLocation(name), value));
 }
 
-void Shader::SetUniform4f(const std::string &name, std::vector<float> floats)
-{
-    assert(floats.size() == 4); // SetUniform4f requires exactly 4 floats
-
-    GLCALL(glUniform4f(GetUniformLocation(name), floats[0], floats[1], floats[2], floats[3]));
+// Float/double uniforms
+void Shader::SetUniform(const std::string &name, float value) {
+    GLCALL(glUniform1f(GetUniformLocation(name), value));
 }
 
-void Shader::SetUniform1f(const std::string &name, float f)
-{
-    GLCALL(glUniform1f(GetUniformLocation(name), f));
+// Float vector uniforms
+void Shader::SetUniform(const std::string &name, const glm::vec2 &v) {
+    GLCALL(glUniform2fv(GetUniformLocation(name), 1, &v[0]));   
+}
+void Shader::SetUniform(const std::string &name, const glm::vec3 &v) {
+    GLCALL(glUniform3fv(GetUniformLocation(name), 1, &v[0]));
+}
+void Shader::SetUniform(const std::string &name, const glm::vec4 &v) {
+    GLCALL(glUniform4fv(GetUniformLocation(name), 1, &v[0]));
+}
+
+// Matrix uniforms
+void Shader::SetUniform(const std::string &name, const glm::mat4 &m) {
+    GLCALL(glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(m)));
+
 }
 
 int Shader::GetUniformLocation(const std::string &name)

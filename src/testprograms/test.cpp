@@ -64,9 +64,8 @@ int main(int, char **)
             renderer.Clear();
 
             shader.Bind(); // we dont need to bind shader for rendering purposes, but for updating the uniforms.
-            shader.SetUniform1f("h_offset", (sin(glfwGetTime()) / 2.0f));
-            shader.SetUniform1f("v_offset", (cos(glfwGetTime()) / 2.0f));
-            ;
+            shader.SetUniform("h_offset", (float)(sin(glfwGetTime()) / 2.0f));
+            shader.SetUniform("v_offset", (float)(cos(glfwGetTime()) / 2.0f));
 
             renderer.Draw(va, ib, shader);
             glfwSwapBuffers(window);

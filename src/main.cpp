@@ -32,9 +32,7 @@ int main(int, char **)
             2, 3, 0
         };
 
-        GLCALL(glEnable(GL_BLEND));
-        
-        GLCALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+
         VertexBuffer vb(vertices, sizeof(vertices));
 
         VertexBufferLayout layout;
@@ -57,21 +55,20 @@ int main(int, char **)
 
         Texture texture1((TEXTURE_DIR / "lennart.jpg").string(),0);
         texture1.Bind();
-        shader.SetUniform1i("u_texture1", 0);
-        
+        shader.SetUniform("u_texture1", 0);
+
         Texture texture2((TEXTURE_DIR / "cowday.png").string(),1);
         texture2.Bind();
-        shader.SetUniform1i("u_texture2", 1);
+        shader.SetUniform("u_texture2", 1);
 
-        // Unbind everything    
+        // Unbind everything
         va.Unbind();
         vb.Unbind();
         ib.Unbind();
         shader.Unbind();
 
         Renderer renderer;
-
-        
+       
         while (!glfwWindowShouldClose(window))
         {
             renderer.Clear();            

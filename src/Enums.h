@@ -1,7 +1,5 @@
 #pragma once	
 
-#include <GLFW/glfw3.h>
-
 /**
  * @brief Different hints to opengl about how the data is going to be used.
  * See OpenGL documentation on glBufferData() or glNamedBufferData()
@@ -21,5 +19,16 @@ enum class BufferUsage
     DYNAMIC_DRAW = GL_DYNAMIC_DRAW,
     DYNAMIC_READ = GL_DYNAMIC_READ,
     DYNAMIC_COPY = GL_DYNAMIC_COPY,
+    UNASSIGNED = -1
+};
+
+enum class ShaderType
+{
+    VERTEX =  GL_VERTEX_SHADER,
+    FRAGMENT = GL_FRAGMENT_SHADER,
+    COMPUTE = GL_COMPUTE_SHADER,
+    TESS_CONTROL =  GL_TESS_CONTROL_SHADER,
+    TESS_EVAL = GL_TESS_EVALUATION_SHADER,
+    GEOMETRY =  GL_GEOMETRY_SHADER,
     UNASSIGNED = -1
 };

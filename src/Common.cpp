@@ -5,6 +5,17 @@ GLsizei window_Y = 480;
 GLFWwindow *window = nullptr;
 GLFWmonitor *monitor = nullptr;
 
+void setupDefaultGLFWCallbacks()
+{
+    // set window-resize-callback (resize viewport)
+    glfwSetFramebufferSizeCallback(window, [](GLFWwindow * /*window*/, int width, int height)
+                                   { glViewport(0, 0, width, height); });
+    glfwSetKeyCallback(window, [](GLFWwindow *wdw, int key, int /*scancode*/, int action, int mods)
+                       {
+            // std::cout << "key: " << key << ", action: " << action  << ", mods:" << mods << std::endl;
+            if (key == GLFW_KEY_W && mods & GLFW_MOD_CONTROL)
+                glfwSetWindowShouldClose(wdw, GLFW_TRUE); });
+}
 
 int oogaboogaInit(const std::string &windowname)
 {
@@ -30,12 +41,8 @@ int oogaboogaInit(const std::string &windowname)
 
         return -1;
     }
-    
-    glfwSetKeyCallback(window, [](GLFWwindow *wdw, int key, int /*scancode*/, int action, int mods)
-                       {
-            std::cout << "key: " << key << ", action: " << action  << ", mods:" << mods << std::endl;
-            if (key == GLFW_KEY_W && mods & GLFW_MOD_CONTROL)
-                glfwSetWindowShouldClose(wdw, GLFW_TRUE); });
+
+    setupDefaultGLFWCallbacks();
 
     glfwMakeContextCurrent(window);
 
@@ -50,16 +57,15 @@ int oogaboogaInit(const std::string &windowname)
         return -1;
     }
 
+    // Print OpenGL version
+    std::cout << "OpenGL " << glGetString(GL_VERSION) << std::endl;
+    
     GLCALL(glClearColor(0.2f, 0.1f, 0.2f, 1.0f)); // dark purple background color
 
+    // Enable blending and set the blend function
     GLCALL(glEnable(GL_BLEND));
     GLCALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
-    std::cout << "OpenGL " << glGetString(GL_VERSION) << std::endl;
-
-    // set window-resize-callback (resize viewport)
-    glfwSetFramebufferSizeCallback(window, [](GLFWwindow * /*window*/, int width, int height)
-                                   { glViewport(0, 0, width, height); });
 
     return 0;
 }
@@ -67,7 +73,7 @@ int oogaboogaInit(const std::string &windowname)
 int oogaboogaExit()
 {
     // Cleanup
-    
+
     glfwTerminate();
 
     return 0;
