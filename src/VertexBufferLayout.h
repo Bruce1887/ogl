@@ -39,10 +39,10 @@ public:
     // ~VertexBufferLayout(); // dont need destructor as we dont have any dynamic memory allocation
 
     template <typename T>
-    inline void Push(unsigned int count)
-    {
-        static_assert(false);
-    }
+inline void Push(unsigned int count)
+{
+    static_assert(sizeof(T) == 0, "Push<T> not implemented for this type. Use float, unsigned int, or unsigned char.");  
+}
     inline const std::vector<VertexBufferElement> &GetElements() const { return m_Elements; }
 
     inline unsigned int GetStride() const { return m_stride; }
