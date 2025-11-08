@@ -12,13 +12,20 @@ uniform float u_tex_scale;
 void main()
 {
    float angle = u_time;
-   mat4 rotation = mat4(
+   mat4 r_matrix = mat4(
         cos(angle), -sin(angle), 0.0, 0.0,
         sin(angle),  cos(angle), 0.0, 0.0,
         0.0,         0.0,        1.0, 0.0,
         0.0,         0.0,        0.0, 1.0
     );
-   gl_Position = rotation * vec4(aPos, 0.0f, 1.0f);
+
+   mat4 p_matrix = mat4(
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        sin(u_time), cos(u_time), 0.0, 1.0
+   );
+   gl_Position = r_matrix * p_matrix * vec4(aPos, 0.0f, 1.0f);
    v_color = aColor;
-   v_texCoord = aTexCoord * u_tex_scale* sin(u_time);
+   v_texCoord = aTexCoord;// * u_tex_scale* sin(u_time);
 }
