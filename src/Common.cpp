@@ -66,6 +66,8 @@ int oogaboogaInit(const std::string &windowname)
     GLCALL(glEnable(GL_BLEND));
     GLCALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
+    // Enable depth testing
+    glEnable(GL_DEPTH_TEST);  
 
     return 0;
 }

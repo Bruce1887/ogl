@@ -1,4 +1,4 @@
-.PHONY: all norun clean
+.PHONY: all norun clean 
 
 BUILD_MAKEFILE = build/Makefile
 
@@ -11,11 +11,6 @@ all: $(BUILD_MAKEFILE)
 # Create or update the CMake build system
 $(BUILD_MAKEFILE):
 	$(CMAKE_GEN)
-
-norun: $(BUILD_MAKEFILE)
-	$(MAKE) -C build/
-	clear
-	./build/oogabooga
 
 clean:
 	rm -rf build/
