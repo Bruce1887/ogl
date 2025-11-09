@@ -100,17 +100,23 @@ int main(int, char **)
 
         unsigned int indices[] = {
             // Front face
-            0, 1, 2, 2, 3, 0,
+            0, 1, 2,
+            2, 3, 0,
             // Back face
-            4, 5, 6, 6, 7, 4,
+            4, 5, 6,
+            6, 7, 4,
             // Left face
-            8, 9, 10, 10, 11, 8,
+            8, 9, 10,
+            10, 11, 8,
             // Right face
-            12, 13, 14, 14, 15, 12,
+            12, 13, 14,
+            14, 15, 12,
             // Top face
-            16, 17, 18, 18, 19, 16,
+            16, 17, 18,
+            18, 19, 16,
             // Bottom face
-            20, 21, 22, 22, 23, 20};
+            20, 21, 22,
+            22, 23, 20};
 
         VertexArray va;
         va.Bind();
@@ -140,7 +146,7 @@ int main(int, char **)
         shader.SetUniform("u_texture1", 0);
         shader.SetUniform("u_texture2", 1);
 
-        glm::vec3 cubePositions[] = {
+        std::vector<glm::vec3> cubePositions = {
             glm::vec3(0.0f, 0.0f, 0.0f),
             glm::vec3(2.0f, 5.0f, -15.0f),
             glm::vec3(-1.5f, -2.2f, -2.5f),
@@ -151,31 +157,67 @@ int main(int, char **)
             glm::vec3(1.5f, 2.0f, -2.5f),
             glm::vec3(1.5f, 0.2f, -1.5f),
             glm::vec3(-1.3f, 1.0f, -1.5f)};
-            
-        Renderer renderer;
+
+        float fov = 45.0f;
+
+        struct settings
+        {
+            float fov;
+            float aspect;
+        };
+
+        settings w_settings{fov, (float)window_X / (float)window_Y};
+
+        glfwSetWindowUserPointer(window, &w_settings);
+
+        glfwSetKeyCallback(window, [](GLFWwindow *wdw, int key, int /* scancode */, int action, int mods)
+                           {
+            if (key == GLFW_KEY_W && mods & GLFW_MOD_CONTROL)
+                glfwSetWindowShouldClose(wdw, true);
+            else {
+                settings *w_settings_ref = (settings *)glfwGetWindowUserPointer(wdw);
+                std::cout << "[fov,aspect] : [" << w_settings_ref->fov << ", " << w_settings_ref->aspect << "]" << std::endl;
+                if (key == GLFW_KEY_K) w_settings_ref->fov -= 1.0f;
+                else if (key == GLFW_KEY_L) w_settings_ref->fov += 1.0f;
+                else if (key == GLFW_KEY_N && action == GLFW_PRESS) w_settings_ref->aspect -= 0.3f;
+                else if (key == GLFW_KEY_M && action == GLFW_PRESS) w_settings_ref->aspect += 0.3f;
+            } });
+
+        std::cout << "Use K/L to decrease/increase FOV" << std::endl;
+        std::cout << "Use N/M to decrease/increase Aspect Ratio" << std::endl;
+
         while (!glfwWindowShouldClose(window))
         {
-            renderer.Clear();
-
-            texture1.BindNew(0);
-            texture2.BindNew(1);
+            Renderer::Clear();
 
             shader.Bind();
 
-            glm::mat4 model_matrix = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-            glm::mat4 view_matrix = glm::mat4(1.0f);
-            glm::mat4 projection_matrix = glm::mat4(1.0f);
-            model_matrix = glm::translate(model_matrix, glm::vec3(2.0f, 0.0f, -5.0f)); // right 2, back 5
-            model_matrix = glm::rotate(model_matrix, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-            view_matrix = glm::translate(view_matrix, glm::vec3(0.0f, 0.0f, -3.0f));
-            projection_matrix = glm::perspective(glm::radians(45.0f), (float)window_X / (float)window_Y, 0.1f, 100.0f);
+            float frameTime = static_cast<float>(glfwGetTime());
 
-            shader.Bind();
-            shader.SetUniform("model", model_matrix);
-            shader.SetUniform("view", view_matrix);
-            shader.SetUniform("projection", projection_matrix);
+            // model_matrix = glm::translate(model_matrix, glm::vec3(2.0f, 0.0f, -5.0f)); // right 2, back 5
+            for (size_t i = 0; i < cubePositions.size(); i++)
+            {
+                glm::mat4 model_matrix = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+                model_matrix = glm::translate(model_matrix, cubePositions[i]);
+                if (i % 3 == 0)
+                    model_matrix = glm::rotate(model_matrix, frameTime * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
 
-            renderer.Draw(va, ib, shader);
+                glm::mat4 view_matrix = glm::mat4(1.0f);
+                glm::vec3 cameraPos = glm::vec3(cos(frameTime * 0.3), 0.0f, sin(frameTime * 0.3)) * 15.0f;
+                view_matrix = glm::translate(view_matrix, cameraPos);
+                view_matrix = glm::lookAt(cameraPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+                glm::mat4 projection_matrix = glm::mat4(1.0f);
+
+                projection_matrix = glm::perspective(glm::radians(w_settings.fov), w_settings.aspect, 0.1f, 100.0f);
+
+                shader.Bind();
+                shader.SetUniform("model", model_matrix);
+                shader.SetUniform("view", view_matrix);
+                shader.SetUniform("projection", projection_matrix);
+
+                Renderer::Draw(va, ib, shader);
+            }
 
             glfwSwapBuffers(window);
             glfwPollEvents();

@@ -6,6 +6,17 @@
 #include <vector>
 #include <unordered_map>
 
+enum class ShaderType
+{
+    VERTEX =  GL_VERTEX_SHADER,
+    FRAGMENT = GL_FRAGMENT_SHADER,
+    COMPUTE = GL_COMPUTE_SHADER,
+    TESS_CONTROL =  GL_TESS_CONTROL_SHADER,
+    TESS_EVAL = GL_TESS_EVALUATION_SHADER,
+    GEOMETRY =  GL_GEOMETRY_SHADER,
+    UNASSIGNED = -1
+};
+
 struct ShaderProgramSource
 {
     std::string content; // non compiled shader in string form

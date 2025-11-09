@@ -59,7 +59,7 @@ int oogaboogaInit(const std::string &windowname)
 
     // Print OpenGL version
     std::cout << "OpenGL " << glGetString(GL_VERSION) << std::endl;
-    
+
     GLCALL(glClearColor(0.2f, 0.1f, 0.2f, 1.0f)); // dark purple background color
 
     // Enable blending and set the blend function
@@ -67,7 +67,7 @@ int oogaboogaInit(const std::string &windowname)
     GLCALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
     // Enable depth testing
-    glEnable(GL_DEPTH_TEST);  
+    glEnable(GL_DEPTH_TEST);
 
     return 0;
 }
