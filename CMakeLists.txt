@@ -15,7 +15,8 @@ find_package(glfw3 REQUIRED)
 include_directories(src)
 
 # --- Gather shared/common sources ---
-file(GLOB_RECURSE COMMON_SOURCES "src/*.cpp" "src/*.c")
+# Glob common sources from src root and one-level subdirectories (covers src/IO and similar)
+file(GLOB_RECURSE COMMON_SOURCES "src/*.cpp" "src/*.c" "src/*/*.cpp" "src/*/*.c")
 list(FILTER COMMON_SOURCES EXCLUDE REGEX "src/vendor/.*")
 list(FILTER COMMON_SOURCES EXCLUDE REGEX "src/glad/.*")
 list(FILTER COMMON_SOURCES EXCLUDE REGEX "src/testprograms/.*")
