@@ -47,21 +47,22 @@ Texture::~Texture()
     GLCALL(glDeleteTextures(1, &m_RendererID));
 }
 
-void Texture::BindNew(unsigned int newslot)
+void Texture::bindNew(unsigned int newslot)
 {
     m_Slot = newslot;
     GLCALL(glActiveTexture(GL_TEXTURE0 + newslot));
     GLCALL(glBindTexture(GL_TEXTURE_2D, m_RendererID));
 }
 
-void Texture::Bind() const
+void Texture::bind() const
 {
     GLCALL(glActiveTexture(GL_TEXTURE0 + m_Slot));
     GLCALL(glBindTexture(GL_TEXTURE_2D, m_RendererID));
 }
 
-void Texture::Unbind() const
+void Texture::unbind() const
 {
     GLCALL(glBindTexture(GL_TEXTURE_2D, 0));
 }
 
+ 

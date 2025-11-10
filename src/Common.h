@@ -7,13 +7,13 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <vector>
-
 #include "Enums.h"
 #include "Error.h"
 
 #include <iostream>
 #include <filesystem>
+#include <vector>
+
 namespace fs = std::filesystem;
 inline const fs::path SHADER_DIR  = fs::path("resources") / "shaders";
 inline const fs::path TEXTURE_DIR = fs::path("resources") / "textures";

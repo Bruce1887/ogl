@@ -13,12 +13,12 @@ VertexBuffer::~VertexBuffer()
     GLCALL(glDeleteBuffers(1, &m_RendererID));
 }
 
-void VertexBuffer::Bind() const
+void VertexBuffer::bind() const
 {
     GLCALL(glBindBuffer(GL_ARRAY_BUFFER, m_RendererID));
 }
 
-void VertexBuffer::Unbind() const
+void VertexBuffer::unbind() const
 {
     GLCALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }

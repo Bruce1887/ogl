@@ -8,7 +8,7 @@
 
 #include <cassert>
 
-ShaderProgramSource Shader::ParseShader(const std::string &filepath, ShaderType type)
+ShaderProgramSource Shader::parseShader(const std::string &filepath, ShaderType type)
 {
     std::ifstream file(filepath, std::ios::in | std::ios::binary);
     if (!file)
@@ -28,7 +28,7 @@ ShaderProgramSource Shader::ParseShader(const std::string &filepath, ShaderType 
     return {std::move(source), type};
 }
 
-unsigned int Shader::CompileShader(ShaderType type, const std::string &shader_str)
+unsigned int Shader::compileShader(ShaderType type, const std::string &shader_str)
 {
     unsigned int id = glCreateShader((int)type);
 #ifdef DEBUG
@@ -62,7 +62,7 @@ unsigned int Shader::CompileShader(ShaderType type, const std::string &shader_st
     return id;
 }
 
-void Shader::CreateProgram()
+void Shader::createProgram()
 {
     unsigned int program = glCreateProgram();
 
@@ -72,7 +72,7 @@ void Shader::CreateProgram()
     for (size_t i = 0; i < m_programSources.size(); i++)
     {
         const auto &ps = m_programSources[i];
-        unsigned int shader_ref = CompileShader(ps.type, ps.content);
+        unsigned int shader_ref = compileShader(ps.type, ps.content);
         glAttachShader(program, shader_ref);
         shader_references.push_back(shader_ref);
     }
@@ -93,7 +93,7 @@ Shader::Shader()
 
 void Shader::addShader(const std::string &path, ShaderType type)
 {
-    m_programSources.push_back(ParseShader(path, type));
+    m_programSources.push_back(parseShader(path, type));
 }
 
 Shader::~Shader()
@@ -101,53 +101,58 @@ Shader::~Shader()
     GLCALL(glDeleteProgram(m_RendererID));
 }
 
-void Shader::Bind() const
+void Shader::bind() const
 {
     GLCALL(glUseProgram(m_RendererID));
 }
 
-void Shader::Unbind() const
+void Shader::unbind() const
 {
     GLCALL(glUseProgram(0));
 }
 
-void Shader::SetUniform(const std::string &name, int value) {
-    GLCALL(glUniform1i(GetUniformLocation(name), value));
+void Shader::setUniform(const std::string &name, int value) {
+    GLCALL(glUniform1i(getUniformLocation(name), value));
 }
 
 // Float/double uniforms
-void Shader::SetUniform(const std::string &name, float value) {
-    GLCALL(glUniform1f(GetUniformLocation(name), value));
+void Shader::setUniform(const std::string &name, float value) {
+    GLCALL(glUniform1f(getUniformLocation(name), value));
 }
 
 // Float vector uniforms
-void Shader::SetUniform(const std::string &name, const glm::vec2 &v) {
-    GLCALL(glUniform2fv(GetUniformLocation(name), 1, &v[0]));   
+void Shader::setUniform(const std::string &name, const glm::vec2 &v) {
+    GLCALL(glUniform2fv(getUniformLocation(name), 1, &v[0]));   
 }
-void Shader::SetUniform(const std::string &name, const glm::vec3 &v) {
-    GLCALL(glUniform3fv(GetUniformLocation(name), 1, &v[0]));
+void Shader::setUniform(const std::string &name, const glm::vec3 &v) {
+    GLCALL(glUniform3fv(getUniformLocation(name), 1, &v[0]));
 }
-void Shader::SetUniform(const std::string &name, const glm::vec4 &v) {
-    GLCALL(glUniform4fv(GetUniformLocation(name), 1, &v[0]));
+void Shader::setUniform(const std::string &name, const glm::vec4 &v) {
+    GLCALL(glUniform4fv(getUniformLocation(name), 1, &v[0]));
 }
 
 // Matrix uniforms
-void Shader::SetUniform(const std::string &name, const glm::mat4 &m) {
-    GLCALL(glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, glm::value_ptr(m)));
+void Shader::setUniform(const std::string &name, const glm::mat4 &m) {
+    GLCALL(glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(m)));
 
 }
 
-int Shader::GetUniformLocation(const std::string &name)
+int Shader::getUniformLocation(const std::string &name)
 {
+    // Check cache first
     if (m_UniformLocationCache.find(name) != m_UniformLocationCache.end())
     {
         return m_UniformLocationCache[name];
     }
+
+    // Not found in cache, query OpenGL
     GLCALL(int location = glGetUniformLocation(m_RendererID, name.c_str()));
     if (location == -1)
     {
         std::cerr << "Uniform " << name << " not found!" << std::endl;
     }
+    
+    // Cache the location
     m_UniformLocationCache[name] = location;
     return location;
 }

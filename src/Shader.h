@@ -34,19 +34,21 @@ public:
     Shader();
     ~Shader();
 
+    unsigned int getID() const { return m_RendererID; }
+
     void addShader(const std::string &name, ShaderType type);
 
-    void CreateProgram();
+    void createProgram();
     
-    void Bind() const;
-    void Unbind() const;
+    void bind() const;
+    void unbind() const;
 
-    void SetUniform(const std::string &name, int value);
-    void SetUniform(const std::string &name, float value);
-    void SetUniform(const std::string &name, const glm::vec2 &v);
-    void SetUniform(const std::string &name, const glm::vec3 &v);
-    void SetUniform(const std::string &name, const glm::vec4 &v);
-    void SetUniform(const std::string &name, const glm::mat4 &m);
+    void setUniform(const std::string &name, int value);
+    void setUniform(const std::string &name, float value);
+    void setUniform(const std::string &name, const glm::vec2 &v);
+    void setUniform(const std::string &name, const glm::vec3 &v);
+    void setUniform(const std::string &name, const glm::vec4 &v);
+    void setUniform(const std::string &name, const glm::mat4 &m);
 
 
 private:    
@@ -58,7 +60,7 @@ private:
      * @param source 
      * @return unsigned int 
      */
-    unsigned int CompileShader(ShaderType type, const std::string &source);
+    unsigned int compileShader(ShaderType type, const std::string &source);
     
     /**
      * @brief Läs shaderfilen och samlar datan som behövs för att kompilera och binda ett shaderprogram rätt.
@@ -67,7 +69,7 @@ private:
      * @param type shadertyp, e.g. vertex shader eller fragment shader
      * @return ShaderProgramSource Det som behövs för att kompilera och binda ett shaderprogram rätt 
      */
-    ShaderProgramSource ParseShader(const std::string &filepath, ShaderType type);
+    ShaderProgramSource parseShader(const std::string &filepath, ShaderType type);
 
-    int GetUniformLocation(const std::string &name);
+    int getUniformLocation(const std::string &name);
 };

@@ -15,10 +15,11 @@ public:
     Texture(const std::string &path, unsigned int slot);
     ~Texture();
 
-    void BindNew(unsigned int newslot);
-    void Bind() const;
-    void Unbind() const;
+    unsigned int getID() const { return m_RendererID; }
+    void bindNew(unsigned int newslot);
+    void bind() const;
+    void unbind() const;
 
-    inline int GetWidth() const { return m_Width; }
-    inline int GetHeight() const { return m_Height; }
+    inline int getWidth() const { return m_Width; }
+    inline int getHeight() const { return m_Height; }
 };

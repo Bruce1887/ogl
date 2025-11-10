@@ -18,6 +18,8 @@ public:
 
     ~VertexBuffer();
 
-    void Bind() const;
-    void Unbind() const;
+    // behöver vi nånsin hämta id här, iochmed att datan ligger i VAOn?
+    // unsigned int getID() const { return m_RendererID; }
+    void bind() const;
+    void unbind() const;
 };

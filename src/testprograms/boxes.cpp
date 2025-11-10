@@ -119,32 +119,32 @@ int main(int, char **)
             22, 23, 20};
 
         VertexArray va;
-        va.Bind();
+        va.bind();
 
         VertexBuffer vb(vertices, sizeof(vertices));
 
         VertexBufferLayout layout;
-        layout.Push<float>(3);
-        layout.Push<float>(2);
+        layout.push<float>(3);
+        layout.push<float>(2);
 
-        va.AddBuffer(vb, layout);
+        va.addBuffer(vb, layout);
 
         IndexBuffer ib(indices, sizeof(indices) / sizeof(unsigned int));
 
         Shader shader;
         shader.addShader((SHADER_DIR / "3D.vert").string(), ShaderType::VERTEX);
         shader.addShader((SHADER_DIR / "3D.frag").string(), ShaderType::FRAGMENT);
-        shader.CreateProgram();
+        shader.createProgram();
 
         Texture texture1((TEXTURE_DIR / "container.jpg").string(), 0);
-        texture1.Bind();
+        texture1.bind();
 
         Texture texture2((TEXTURE_DIR / "cowday.png").string(), 1);
-        texture2.Bind();
+        texture2.bind();
 
-        shader.Bind();
-        shader.SetUniform("u_texture1", 0);
-        shader.SetUniform("u_texture2", 1);
+        shader.bind();
+        shader.setUniform("u_texture1", 0);
+        shader.setUniform("u_texture2", 1);
 
         std::vector<glm::vec3> cubePositions = {
             glm::vec3(0.0f, 0.0f, 0.0f),
@@ -188,35 +188,38 @@ int main(int, char **)
 
         while (!glfwWindowShouldClose(window))
         {
-            Renderer::Clear();
+            Renderer::clear();
 
-            shader.Bind();
+            shader.bind();
 
             float frameTime = static_cast<float>(glfwGetTime());
 
-            // model_matrix = glm::translate(model_matrix, glm::vec3(2.0f, 0.0f, -5.0f)); // right 2, back 5
+            
+            glm::mat4 viewMatrix = glm::mat4(1.0f);
+            glm::vec3 cameraPos = glm::vec3(cos(frameTime * 0.3), 0.0f, sin(frameTime * 0.3)) * 15.0f;
+            viewMatrix = glm::translate(viewMatrix, cameraPos);
+            viewMatrix = glm::lookAt(cameraPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+            glm::mat4 projectionMatrix = glm::mat4(1.0f);
+
+            // set view and projection matrices (camera)
+            projectionMatrix = glm::perspective(glm::radians(w_settings.fov), w_settings.aspect, 0.1f, 100.0f);
+            shader.bind();
+            shader.setUniform("view", viewMatrix);
+            shader.setUniform("projection", projectionMatrix);
+
+
+            // set model matrix and draw cubes
             for (size_t i = 0; i < cubePositions.size(); i++)
             {
-                glm::mat4 model_matrix = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-                model_matrix = glm::translate(model_matrix, cubePositions[i]);
+                glm::mat4 modelMatrix = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+                modelMatrix = glm::translate(modelMatrix, cubePositions[i]);
                 if (i % 3 == 0)
-                    model_matrix = glm::rotate(model_matrix, frameTime * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+                    modelMatrix = glm::rotate(modelMatrix, frameTime * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
 
-                glm::mat4 view_matrix = glm::mat4(1.0f);
-                glm::vec3 cameraPos = glm::vec3(cos(frameTime * 0.3), 0.0f, sin(frameTime * 0.3)) * 15.0f;
-                view_matrix = glm::translate(view_matrix, cameraPos);
-                view_matrix = glm::lookAt(cameraPos, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-                glm::mat4 projection_matrix = glm::mat4(1.0f);
-
-                projection_matrix = glm::perspective(glm::radians(w_settings.fov), w_settings.aspect, 0.1f, 100.0f);
-
-                shader.Bind();
-                shader.SetUniform("model", model_matrix);
-                shader.SetUniform("view", view_matrix);
-                shader.SetUniform("projection", projection_matrix);
-
-                Renderer::Draw(va, ib, shader);
+                shader.setUniform("model", modelMatrix);
+                    
+                Renderer::draw(va, ib, shader);
             }
 
             glfwSwapBuffers(window);

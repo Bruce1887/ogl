@@ -15,46 +15,6 @@
 #include <sstream>
 #include <cassert>
 
-void CameraOrbitControl(Camera &camera, float deltaTime)
-{
-    int FORWARD = 0;
-    int RIGHT = 0;
-    bool SHIFT = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS;
-
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        FORWARD += 1;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        FORWARD -= 1;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        RIGHT -= 1;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        RIGHT += 1;
-
-    float speed = 5.0f * deltaTime;
-    if (SHIFT)
-        speed *= 5.0f;
-
-
-    glm::vec3 offset = camera.m_Position - camera.m_Target;
-    float distance = glm::length(offset);
-
-    if (RIGHT != 0)
-    {
-        float angle = RIGHT * speed;
-        glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
-        offset = glm::vec3(rotation * glm::vec4(offset, 1.0f));
-    }
-
-    if (FORWARD != 0)
-    {
-        distance -= FORWARD * speed * 3.0f;
-        distance = glm::max(distance, 1.0f); // Don't get too close
-        offset = glm::normalize(offset) * distance;
-    }
-
-    camera.m_Position = camera.m_Target + offset;
-}
-
 int main(int, char **)
 {
     // Initialise GLAD and GLFW
@@ -121,32 +81,32 @@ int main(int, char **)
             22, 23, 20};
 
         VertexArray box_va;
-        box_va.Bind();
+        box_va.bind();
 
         VertexBuffer box_vb(box_vertices, sizeof(box_vertices));
 
         VertexBufferLayout box_layout;
-        box_layout.Push<float>(3);
-        box_layout.Push<float>(2);
+        box_layout.push<float>(3);
+        box_layout.push<float>(2);
 
-        box_va.AddBuffer(box_vb, box_layout);
+        box_va.addBuffer(box_vb, box_layout);
 
         IndexBuffer box_ib(box_indices, sizeof(box_indices) / sizeof(unsigned int));
 
         Shader shader;
         shader.addShader((SHADER_DIR / "3D.vert").string(), ShaderType::VERTEX);
         shader.addShader((SHADER_DIR / "3D.frag").string(), ShaderType::FRAGMENT);
-        shader.CreateProgram();
+        shader.createProgram();
 
         Texture texture1((TEXTURE_DIR / "container.jpg").string(), 0);
-        texture1.Bind();
+        texture1.bind();
 
         Texture texture2((TEXTURE_DIR / "cowday.png").string(), 1);
-        texture2.Bind();
+        texture2.bind();
 
-        shader.Bind();
-        shader.SetUniform("u_texture1", 0);
-        shader.SetUniform("u_texture2", 1);
+        shader.bind();
+        shader.setUniform("u_texture1", 0);
+        shader.setUniform("u_texture2", 1);
 
         CameraConfiguration cam_config{
             .fov = 45.0f,
@@ -164,25 +124,26 @@ int main(int, char **)
 
         while (!glfwWindowShouldClose(window))
         {
-            Renderer::Clear();
+            Renderer::clear();
 
             float currentFrame = static_cast<float>(glfwGetTime());
             deltaTime = currentFrame - lastFrame;
             lastFrame = currentFrame;
 
-            shader.Bind();
+            shader.bind();
 
-            CameraOrbitControl(camera, deltaTime);
+            MovementInput movementInput = getUserMovementInput(window);
+            cameraOrbitControl(camera, movementInput, deltaTime);
             glm::mat4 model_matrix = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
             model_matrix = glm::translate(model_matrix, glm::vec3(0.0f, 0.0f, 0.0f));
             model_matrix = glm::rotate(model_matrix, glm::radians(10.0f), glm::vec3(1.0f, 0.0f, 1.0));
 
-            shader.Bind();
-            shader.SetUniform("model", model_matrix);
-            shader.SetUniform("view", camera.GetViewMatrix());
-            shader.SetUniform("projection", camera.GetProjectionMatrix());
+            shader.bind();
+            shader.setUniform("model", model_matrix);
+            shader.setUniform("view", camera.GetViewMatrix());
+            shader.setUniform("projection", camera.GetProjectionMatrix());
 
-            Renderer::Draw(box_va, box_ib, shader);
+            Renderer::draw(box_va, box_ib, shader);
             glfwSwapBuffers(window);
             glfwPollEvents();
         }
