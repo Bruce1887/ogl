@@ -15,11 +15,17 @@
 #include <cassert>
 #include <cmath>
 
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 600;
+
 int main(int, char **)
 {
     // Initialise GLAD and GLFW
     if (oogaboogaInit(__FILE__))
         goto out;
+        
+    // glfw: initialize and configure
+    // ------------------------------
     {
         float vertices[] = {
             -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, // bottom left red
@@ -75,6 +81,6 @@ int main(int, char **)
 
 out:
     oogaboogaExit();
-
+    
     return 0;
 }
