@@ -50,8 +50,8 @@ int main()
     Shader shader;
     shader.addShader("resources/shaders/shader.vert", ShaderType::VERTEX);
     shader.addShader("resources/shaders/shader.frag", ShaderType::FRAGMENT);
-    shader.CreateProgram();
-    shader.Bind();
+    shader.createProgram();
+    shader.bind();
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
     float vertices[] = {
@@ -96,7 +96,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // render the triangle
-        shader.Bind();
+        shader.bind();
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 

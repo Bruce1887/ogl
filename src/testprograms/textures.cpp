@@ -52,8 +52,8 @@ int main()
     Shader shader;
     shader.addShader("resources/shaders/texture.vert", ShaderType::VERTEX);
     shader.addShader("resources/shaders/texture.frag", ShaderType::FRAGMENT);
-    shader.CreateProgram();
-    shader.Bind();
+    shader.createProgram();
+    shader.bind();
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -137,8 +137,8 @@ int main()
         std::cout << "Failed to load texture" << std::endl;
     }
     stbi_image_free(data);
-    shader.SetUniform("texture1", 0);
-    shader.SetUniform("texture2", 1);
+    shader.setUniform("texture1", 0);
+    shader.setUniform("texture2", 1);
 
 
     // render loop
@@ -159,10 +159,10 @@ int main()
         glBindTexture(GL_TEXTURE_2D, texture1);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
-        shader.SetUniform("mixValue", mixValue);
+        shader.setUniform("mixValue", mixValue);
 
         // render container
-        shader.Bind();
+        shader.bind();
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
