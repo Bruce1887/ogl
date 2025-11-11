@@ -1,4 +1,5 @@
 #include "Scene.h"
+#include "Renderable.h"
 
 #include <algorithm>
 
@@ -35,9 +36,13 @@ void MeshRenderable::render(glm::mat4 view, glm::mat4 projection)
         m_shaderRef->setUniform("view", view);
         m_shaderRef->setUniform("projection", projection);
         m_shaderRef->setUniform("model", getTransform());
+		
 
-        m_mesh->vertexBuffer->bind();
-        m_mesh->indexBuffer->bind();
+		
+        m_mesh->vertexArray->bind();
+        m_mesh->indexBuffer->bind();		
+		
+
 
         GLCALL(glDrawElements(GL_TRIANGLES, m_mesh->indexBuffer->getCount(), GL_UNSIGNED_INT, nullptr));
     }

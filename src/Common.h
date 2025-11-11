@@ -9,6 +9,7 @@
 
 #include "Enums.h"
 #include "Error.h"
+#include "basic_shapes.h"
 
 #include <iostream>
 #include <filesystem>

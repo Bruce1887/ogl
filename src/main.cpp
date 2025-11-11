@@ -23,92 +23,6 @@ int main(int, char **)
         goto out;
 
     {
-        float box_vertices[] = {
-            // Front face (z = 0.5)
-            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // [0]
-            0.5f, -0.5f, 0.5f, 1.0f, 0.0f,  // [1]
-            0.5f, 0.5f, 0.5f, 1.0f, 1.0f,   // [2]
-            -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,  // [3]
-
-            // Back face (z = -0.5)
-            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // [4]
-            0.5f, -0.5f, -0.5f, 1.0f, 0.0f,  // [5]
-            0.5f, 0.5f, -0.5f, 1.0f, 1.0f,   // [6]
-            -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,  // [7]
-
-            // Left face (x = -0.5)
-            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // [8]
-            -0.5f, -0.5f, 0.5f, 1.0f, 0.0f,  // [9]
-            -0.5f, 0.5f, 0.5f, 1.0f, 1.0f,   // [10]
-            -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,  // [11]
-
-            // Right face (x = 0.5)
-            0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // [12]
-            0.5f, -0.5f, 0.5f, 1.0f, 0.0f,  // [13]
-            0.5f, 0.5f, 0.5f, 1.0f, 1.0f,   // [14]
-            0.5f, 0.5f, -0.5f, 0.0f, 1.0f,  // [15]
-
-            // Top face (y = 0.5)
-            -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, // [16]
-            -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,  // [17]
-            0.5f, 0.5f, 0.5f, 1.0f, 1.0f,   // [18]
-            0.5f, 0.5f, -0.5f, 0.0f, 1.0f,  // [19]
-
-            // Bottom face (y = -0.5)
-            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // [20]
-            -0.5f, -0.5f, 0.5f, 1.0f, 0.0f,  // [21]
-            0.5f, -0.5f, 0.5f, 1.0f, 1.0f,   // [22]
-            0.5f, -0.5f, -0.5f, 0.0f, 1.0f   // [23]
-        };
-
-        unsigned int box_indices[] = {
-            // Front face
-            0, 1, 2,
-            2, 3, 0,
-            // Back face
-            4, 5, 6,
-            6, 7, 4,
-            // Left face
-            8, 9, 10,
-            10, 11, 8,
-            // Right face
-            12, 13, 14,
-            14, 15, 12,
-            // Top face
-            16, 17, 18,
-            18, 19, 16,
-            // Bottom face
-            20, 21, 22,
-            22, 23, 20};
-
-        VertexArray box_va;
-        box_va.bind();
-
-        VertexBuffer box_vb(box_vertices, sizeof(box_vertices));
-
-        VertexBufferLayout box_layout;
-        box_layout.push<float>(3);
-        box_layout.push<float>(2);
-
-        box_va.addBuffer(box_vb, box_layout);
-
-        IndexBuffer box_ib(box_indices, sizeof(box_indices) / sizeof(unsigned int));
-
-        Shader shader;
-        shader.addShader((SHADER_DIR / "3D.vert").string(), ShaderType::VERTEX);
-        shader.addShader((SHADER_DIR / "3D.frag").string(), ShaderType::FRAGMENT);
-        shader.createProgram();
-
-        Texture texture1((TEXTURE_DIR / "container.jpg").string(), 0);
-        texture1.bind();
-
-        Texture texture2((TEXTURE_DIR / "cowday.png").string(), 1);
-        texture2.bind();
-
-        shader.bind();
-        shader.setUniform("u_texture1", 0);
-        shader.setUniform("u_texture2", 1);
-
         CameraConfiguration cam_config{
             .fov = 45.0f,
             .aspect = (float)window_X / (float)window_Y,
@@ -122,17 +36,79 @@ int main(int, char **)
 
         Scene scene(camera);
 
-        Mesh box_mesh(&box_vb, &box_ib);
+        VertexBufferLayout layout;
+        layout.push<float>(3);
+        layout.push<float>(2);
+
+        // ######## BOX ########
+        
+        VertexArray box_va;
+        box_va.bind();
+
+        VertexBuffer box_vb(box_vertices, sizeof(box_vertices));
+
+        box_va.addBuffer(box_vb, layout);
+
+        IndexBuffer box_ib(box_indices, sizeof(box_indices) / sizeof(unsigned int));
+
+        Shader shader;
+        shader.addShader((SHADER_DIR / "3D.vert").string(), ShaderType::VERTEX);
+        shader.addShader((SHADER_DIR / "3D.frag").string(), ShaderType::FRAGMENT);
+        shader.createProgram();
+
+        Texture box_tex_1((TEXTURE_DIR / "container.jpg").string(), 0);
+        box_tex_1.bind();
+
+        Texture box_tex_2((TEXTURE_DIR / "cowday.png").string(), 1);
+        box_tex_2.bind();
+
+        shader.bind();
+        shader.setUniform("u_texture1", 0);
+        shader.setUniform("u_texture2", 1);
+
+        Mesh box_mesh(&box_va, &box_ib);
         MeshRenderable box_renderable1(&box_mesh, &shader);
         scene.addRenderable(&box_renderable1);
 
         MeshRenderable box_renderable2(&box_mesh, &shader);
-        box_renderable2.m_position = glm::vec3(2.0f, 0.0f, 0.0f);
-        scene.addRenderable(&box_renderable2);
+        box_renderable2.setPosition(glm::vec3(2.0f, 1.0f, 1.0f));
 
-        MeshRenderable box_renderable3(&box_mesh, &shader);
-        box_renderable3.m_position = glm::vec3(-2.0f, 1.0f, 1.0f);
-        scene.addRenderable(&box_renderable3);
+        scene.addRenderable(&box_renderable2);
+        
+        // ######## PLANE ########
+
+        VertexArray plane_va;
+        plane_va.bind();
+        VertexBuffer plane_vb(plane_vertices, 4 * 5 * sizeof(float));
+        plane_va.addBuffer(plane_vb, layout);
+        IndexBuffer plane_ib(plane_indices, 6);
+
+        Shader shader2;
+        shader2.addShader((SHADER_DIR / "3D.vert").string(), ShaderType::VERTEX);
+        shader2.addShader((SHADER_DIR / "3D.frag").string(), ShaderType::FRAGMENT);
+        shader2.createProgram();
+
+        Texture plane_tex_1((TEXTURE_DIR / "grass.jpg").string(), 3);
+        plane_tex_1.bind();
+
+        Texture plane_tex_2((TEXTURE_DIR / "alf.png").string(), 4);
+        plane_tex_2.bind();
+
+        shader2.bind();
+        shader2.setUniform("u_texture1", 3);
+        shader2.setUniform("u_texture2", 4);
+
+        Mesh plane_mesh(&plane_va, &plane_ib);
+        MeshRenderable plane_renderable(&plane_mesh, &shader2);
+        plane_renderable.setTransform(glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 1.0f, 10.0f)));
+        plane_renderable.setTransform(
+            glm::rotate(
+                glm::scale(glm::mat4(1.0f), glm::vec3(10.0f, 1.0f, 10.0f)),
+                glm::radians(90.0f),
+                glm::vec3(1.0f, 0.0f, 1.0f)));
+        scene.addRenderable(&plane_renderable);
+
+        // #######################
 
         float deltaTime = 0.0f;
         float lastFrame = 0.0f;

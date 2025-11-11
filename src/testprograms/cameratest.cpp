@@ -1,6 +1,5 @@
 #include <iostream>
 
-#include "Renderer.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "VertexArray.h"
@@ -22,76 +21,20 @@ int main(int, char **)
         goto out;
 
     {
-        float box_vertices[] = {
-            // Front face (z = 0.5)
-            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, // [0]
-            0.5f, -0.5f, 0.5f, 1.0f, 0.0f,  // [1]
-            0.5f, 0.5f, 0.5f, 1.0f, 1.0f,   // [2]
-            -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,  // [3]
+        VertexArray va;
+        va.bind();
 
-            // Back face (z = -0.5)
-            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // [4]
-            0.5f, -0.5f, -0.5f, 1.0f, 0.0f,  // [5]
-            0.5f, 0.5f, -0.5f, 1.0f, 1.0f,   // [6]
-            -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,  // [7]
+        constexpr const float* vertices = plane_vertices;
+        constexpr const unsigned int* indices = plane_indices;
+        VertexBuffer vb(vertices, 4 * 5 * sizeof(float));
 
-            // Left face (x = -0.5)
-            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // [8]
-            -0.5f, -0.5f, 0.5f, 1.0f, 0.0f,  // [9]
-            -0.5f, 0.5f, 0.5f, 1.0f, 1.0f,   // [10]
-            -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,  // [11]
+        VertexBufferLayout layout;
+        layout.push<float>(3);
+        layout.push<float>(2);
 
-            // Right face (x = 0.5)
-            0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // [12]
-            0.5f, -0.5f, 0.5f, 1.0f, 0.0f,  // [13]
-            0.5f, 0.5f, 0.5f, 1.0f, 1.0f,   // [14]
-            0.5f, 0.5f, -0.5f, 0.0f, 1.0f,  // [15]
+        va.addBuffer(vb, layout);
 
-            // Top face (y = 0.5)
-            -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, // [16]
-            -0.5f, 0.5f, 0.5f, 1.0f, 0.0f,  // [17]
-            0.5f, 0.5f, 0.5f, 1.0f, 1.0f,   // [18]
-            0.5f, 0.5f, -0.5f, 0.0f, 1.0f,  // [19]
-
-            // Bottom face (y = -0.5)
-            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, // [20]
-            -0.5f, -0.5f, 0.5f, 1.0f, 0.0f,  // [21]
-            0.5f, -0.5f, 0.5f, 1.0f, 1.0f,   // [22]
-            0.5f, -0.5f, -0.5f, 0.0f, 1.0f   // [23]
-        };
-
-        unsigned int box_indices[] = {
-            // Front face
-            0, 1, 2,
-            2, 3, 0,
-            // Back face
-            4, 5, 6,
-            6, 7, 4,
-            // Left face
-            8, 9, 10,
-            10, 11, 8,
-            // Right face
-            12, 13, 14,
-            14, 15, 12,
-            // Top face
-            16, 17, 18,
-            18, 19, 16,
-            // Bottom face
-            20, 21, 22,
-            22, 23, 20};
-
-        VertexArray box_va;
-        box_va.bind();
-
-        VertexBuffer box_vb(box_vertices, sizeof(box_vertices));
-
-        VertexBufferLayout box_layout;
-        box_layout.push<float>(3);
-        box_layout.push<float>(2);
-
-        box_va.addBuffer(box_vb, box_layout);
-
-        IndexBuffer box_ib(box_indices, sizeof(box_indices) / sizeof(unsigned int));
+        IndexBuffer ib(indices, 6);
 
         Shader shader;
         shader.addShader((SHADER_DIR / "3D.vert").string(), ShaderType::VERTEX);
@@ -124,7 +67,7 @@ int main(int, char **)
 
         while (!glfwWindowShouldClose(window))
         {
-            Renderer::clear();
+            GLCALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
             float currentFrame = static_cast<float>(glfwGetTime());
             deltaTime = currentFrame - lastFrame;
@@ -143,7 +86,10 @@ int main(int, char **)
             shader.setUniform("view", camera.GetViewMatrix());
             shader.setUniform("projection", camera.GetProjectionMatrix());
 
-            Renderer::draw(box_va, box_ib, shader);
+            va.bind();
+            ib.bind();
+            GLCALL(glDrawElements(GL_TRIANGLES, ib.getCount(), GL_UNSIGNED_INT, nullptr));
+
             glfwSwapBuffers(window);
             glfwPollEvents();
         }

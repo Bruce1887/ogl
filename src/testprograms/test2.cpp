@@ -1,6 +1,5 @@
 #include <iostream>
 
-#include "Renderer.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "VertexArray.h"
@@ -65,16 +64,17 @@ int main(int, char **)
         shader.unbind();
 
         glfwSetKeyCallback(window, keyCallback);
-
-        Renderer renderer;
-
+        
         while (!glfwWindowShouldClose(window))
         {
-            renderer.clear();
+            GLCALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
             shader.bind(); // we dont need to bind shader for rendering purposes, but for updating the uniforms.
 
-            renderer.draw(va, ib, shader);
+            va.bind();
+            ib.bind();
+            GLCALL(glDrawElements(GL_TRIANGLES, ib.getCount(), GL_UNSIGNED_INT, nullptr));
+
             glfwSwapBuffers(window);
             glfwPollEvents();
         }

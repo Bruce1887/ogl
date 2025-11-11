@@ -1,6 +1,5 @@
 #include <iostream>
 
-#include "Renderer.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "VertexArray.h"
@@ -201,7 +200,7 @@ int main(int, char **)
 
         while (!glfwWindowShouldClose(window))
         {
-            Renderer::clear();
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             float frameTime = static_cast<float>(glfwGetTime());
 
@@ -226,7 +225,7 @@ int main(int, char **)
             modelBase = glm::scale(modelBase, glm::vec3(2.0f, 1.0f, 1.5f)); // width, height, depth
             modelBase = glm::translate(modelBase, glm::vec3(0.0f, 0.0f, 0.0f));
             shader.setUniform("model", modelBase);
-            Renderer::draw(baseVA, baseIB, shader);
+            GLCALL(glDrawElements(GL_TRIANGLES, baseIB.getCount(), GL_UNSIGNED_INT, nullptr));
 
             // Draw roof
             // bind roof texture to unit 0 and transparent unit 1
@@ -239,7 +238,7 @@ int main(int, char **)
             glm::mat4 modelRoof = glm::mat4(1.0f);
             // roof vertices were authored in world-space sized for base width ~2.0 and depth ~1.5
             shader.setUniform("model", modelRoof);
-            Renderer::draw(roofVA, roofIB, shader);
+            GLCALL(glDrawElements(GL_TRIANGLES, roofIB.getCount(), GL_UNSIGNED_INT, nullptr));
 
             // Draw door: bind door texture to unit 0 and transparent unit 1
             door.bindNew(0);
@@ -250,7 +249,8 @@ int main(int, char **)
             doorIB.bind();
             glm::mat4 modelDoor = glm::mat4(1.0f);
             shader.setUniform("model", modelDoor);
-            Renderer::draw(doorVA, doorIB, shader);
+
+            GLCALL(glDrawElements(GL_TRIANGLES, doorIB.getCount(), GL_UNSIGNED_INT, nullptr));
 
             glfwSwapBuffers(window);
             glfwPollEvents();

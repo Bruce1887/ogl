@@ -1,6 +1,5 @@
 #include <iostream>
 
-#include "Renderer.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 #include "VertexArray.h"
@@ -188,13 +187,12 @@ int main(int, char **)
 
         while (!glfwWindowShouldClose(window))
         {
-            Renderer::clear();
+            GLCALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
             shader.bind();
 
             float frameTime = static_cast<float>(glfwGetTime());
 
-            
             glm::mat4 viewMatrix = glm::mat4(1.0f);
             glm::vec3 cameraPos = glm::vec3(cos(frameTime * 0.3), 0.0f, sin(frameTime * 0.3)) * 15.0f;
             viewMatrix = glm::translate(viewMatrix, cameraPos);
@@ -208,7 +206,6 @@ int main(int, char **)
             shader.setUniform("view", viewMatrix);
             shader.setUniform("projection", projectionMatrix);
 
-
             // set model matrix and draw cubes
             for (size_t i = 0; i < cubePositions.size(); i++)
             {
@@ -218,8 +215,10 @@ int main(int, char **)
                     modelMatrix = glm::rotate(modelMatrix, frameTime * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
 
                 shader.setUniform("model", modelMatrix);
-                    
-                Renderer::draw(va, ib, shader);
+
+                va.bind();
+                ib.bind();
+                GLCALL(glDrawElements(GL_TRIANGLES, ib.getCount(), GL_UNSIGNED_INT, nullptr));
             }
 
             glfwSwapBuffers(window);
