@@ -9,10 +9,11 @@
 #include "Texture.h"
 #include "Camera.h"
 
+
 class Scene
 {
 public:
-    Scene(const Camera &defaultCamera)
+    Scene(Camera defaultCamera)
         : m_activeCamera(defaultCamera)
     {
     }
@@ -29,7 +30,20 @@ public:
     void removeCamera(const Camera &camera);
     void setActiveCamera(int index);
 
-private:
+    inline void tick()
+    {
+        // Clear the screen at the start of each frame
+        GLCALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+
+        // Poll for and process events
+        glfwPollEvents();
+    }
+
+private:    
+    // A list of all renderables in the scene
     std::vector<Renderable *> m_renderables;
+    unsigned int m_nextVacantID = 0; // For assigning unique IDs to renderables
+
+    // A list of all cameras in the scene //TODO: implement this one day
     std::vector<Camera> m_cameras;
 };

@@ -103,37 +103,51 @@ Shader::~Shader()
 void Shader::bind() const
 {
     GLCALL(glUseProgram(m_RendererID));
+    RenderingContext *rContext = RenderingContext::Current();
+    rContext->m_boundShader = m_RendererID;
 }
 
 void Shader::unbind() const
 {
     GLCALL(glUseProgram(0));
+    RenderingContext *rContext = RenderingContext::Current();
+    rContext->m_boundShader = 0;
 }
 
-void Shader::setUniform(const std::string &name, int value) {
+void Shader::setUniform(const std::string &name, int value)
+{
+    GLCALL(glUniform1i(getUniformLocation(name), value));
+}
+
+void Shader::setUniform(const std::string &name, unsigned int value)
+{    
     GLCALL(glUniform1i(getUniformLocation(name), value));
 }
 
 // Float/double uniforms
-void Shader::setUniform(const std::string &name, float value) {
+void Shader::setUniform(const std::string &name, float value)
+{
     GLCALL(glUniform1f(getUniformLocation(name), value));
 }
 
 // Float vector uniforms
-void Shader::setUniform(const std::string &name, const glm::vec2 &v) {
-    GLCALL(glUniform2fv(getUniformLocation(name), 1, &v[0]));   
+void Shader::setUniform(const std::string &name, const glm::vec2 &v)
+{
+    GLCALL(glUniform2fv(getUniformLocation(name), 1, &v[0]));
 }
-void Shader::setUniform(const std::string &name, const glm::vec3 &v) {
+void Shader::setUniform(const std::string &name, const glm::vec3 &v)
+{
     GLCALL(glUniform3fv(getUniformLocation(name), 1, &v[0]));
 }
-void Shader::setUniform(const std::string &name, const glm::vec4 &v) {
+void Shader::setUniform(const std::string &name, const glm::vec4 &v)
+{
     GLCALL(glUniform4fv(getUniformLocation(name), 1, &v[0]));
 }
 
 // Matrix uniforms
-void Shader::setUniform(const std::string &name, const glm::mat4 &m) {
+void Shader::setUniform(const std::string &name, const glm::mat4 &m)
+{
     GLCALL(glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(m)));
-
 }
 
 int Shader::getUniformLocation(const std::string &name)
@@ -150,7 +164,7 @@ int Shader::getUniformLocation(const std::string &name)
     {
         std::cerr << "Uniform " << name << " not found!" << std::endl;
     }
-    
+
     // Cache the location
     m_UniformLocationCache[name] = location;
     return location;

@@ -5,21 +5,26 @@
 class Texture
 {
 private:
-    unsigned int m_RendererID;
-    std::string m_FilePath;
-    unsigned char *m_LocalBuffer;
-    int m_Width, m_Height, m_BPP;
-    unsigned int m_Slot;
+    GLuint m_rendererID;
+    const std::string m_targetUniformName;
+    GLuint m_slot;
+
+    std::string m_filePath;
+    unsigned char *m_localBuffer;
+    int m_width, m_height, m_BPP;
 
 public:
-    Texture(const std::string &path, unsigned int slot);
+    Texture(const std::string &path, GLuint slot);
     ~Texture();
 
-    unsigned int getID() const { return m_RendererID; }
-    void bindNew(unsigned int newslot);
+    GLuint getID() const { return m_rendererID; }
+    GLuint getSlot() const { return m_slot; }
+    void bindNew(GLuint newslot);
     void bind() const;
     void unbind() const;
 
-    inline int getWidth() const { return m_Width; }
-    inline int getHeight() const { return m_Height; }
+    std::string targetUniform = "BAD_UNIFORM_NAME";
+
+    inline int getWidth() const { return m_width; }
+    inline int getHeight() const { return m_height; }
 };

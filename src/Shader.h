@@ -6,6 +6,7 @@
 #include <vector>
 #include <unordered_map>
 
+
 enum class ShaderType
 {
     VERTEX =  GL_VERTEX_SHADER,
@@ -27,14 +28,14 @@ class Shader // två "private" i class def, hur snyggt är det
 {
 private:
     std::vector<ShaderProgramSource> m_programSources;
-    unsigned int m_RendererID; // Unique ID for the buffer
+    GLuint m_RendererID; // Unique ID for the buffer
     std::unordered_map<std::string, int> m_UniformLocationCache;
 
 public:
     Shader();
     ~Shader();
 
-    unsigned int getID() const { return m_RendererID; }
+    GLuint getID() const { return m_RendererID; }
 
     void addShader(const std::string &name, ShaderType type);
 
@@ -44,6 +45,7 @@ public:
     void unbind() const;
 
     void setUniform(const std::string &name, int value);
+    void setUniform(const std::string &name, unsigned int value);
     void setUniform(const std::string &name, float value);
     void setUniform(const std::string &name, const glm::vec2 &v);
     void setUniform(const std::string &name, const glm::vec3 &v);

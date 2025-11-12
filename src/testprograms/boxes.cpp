@@ -116,7 +116,7 @@ int main(int, char **)
             // Bottom face
             20, 21, 22,
             22, 23, 20};
-
+            
         VertexArray va;
         va.bind();
 

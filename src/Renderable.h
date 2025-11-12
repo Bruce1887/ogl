@@ -4,7 +4,7 @@
 #include "VertexArray.h"
 #include "IndexBuffer.h"
 #include "Shader.h"
-
+#include "Texture.h"
 class Renderable
 {
 public:
@@ -13,13 +13,18 @@ public:
 
     // Potentially shared among multiple renderables.
     Shader *m_shaderRef;
+    std::vector<Texture *> m_textureReferences;
+    
+    inline unsigned int getID() const { return m_ID; }
 
 private:
-    unsigned int VAO_ID;
-    // unsigned int VBO_ID;
-    unsigned int IBO_ID;
-    unsigned int shader_ID;
-    std::vector<unsigned int> texture_IDs;
+    unsigned int m_ID = 0;
+
+    GLuint m_VAO_ID = 0;
+    // GLuint m_VBO_ID = 0;
+    GLuint m_IBO_ID = 0;
+    GLuint m_shader_ID = 0;
+    std::vector<GLuint> m_texture_IDs;
 };
 
 // Something that exists in the world and can be rendered, e.g. a player, an enemy, a tree, etc.

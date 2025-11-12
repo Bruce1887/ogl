@@ -1,5 +1,6 @@
 #include "Common.h"
 
+RenderingContext *rContext = nullptr;
 GLsizei window_X = 640;
 GLsizei window_Y = 480;
 GLFWwindow *window = nullptr;
@@ -15,6 +16,26 @@ void setupDefaultGLFWCallbacks()
             // std::cout << "key: " << key << ", action: " << action  << ", mods:" << mods << std::endl;
             if (key == GLFW_KEY_W && mods & GLFW_MOD_CONTROL)
                 glfwSetWindowShouldClose(wdw, GLFW_TRUE); });
+}
+
+int checkTextureUnits()
+{
+    GLint maxTextureUnits;
+    
+    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);  // Fragment shader
+    if( maxTextureUnits < NUM_TEXTURE_UNITS) 
+    {
+        std::cout << "Warning: You have " << maxTextureUnits << " texture image units (fragment shader). You need " << NUM_TEXTURE_UNITS << std::endl;
+        return -1;
+    }
+
+    glGetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);  // Vertex shader
+    if( maxTextureUnits < NUM_TEXTURE_UNITS)
+    {
+        std::cout << "Warning: You have " << maxTextureUnits << " texture image units (vertex shader). You need " << NUM_TEXTURE_UNITS << std::endl;
+        return -1;
+    }
+    return 0;
 }
 
 int oogaboogaInit(const std::string &windowname)
@@ -45,10 +66,13 @@ int oogaboogaInit(const std::string &windowname)
 
         return -1;
     }
+    glfwMakeContextCurrent(window);
+
+    rContext = new RenderingContext();
+    rContext->makeCurrent();
 
     setupDefaultGLFWCallbacks();
 
-    glfwMakeContextCurrent(window);
 
     // Enable V-Sync.
     glfwSwapInterval(1);
@@ -64,8 +88,9 @@ int oogaboogaInit(const std::string &windowname)
     // Print OpenGL version
     std::cout << "OpenGL " << glGetString(GL_VERSION) << std::endl;
 
-    GLCALL(glClearColor(0.2f, 0.1f, 0.2f, 1.0f)); // dark purple background color
-
+    // GLCALL(glClearColor(0.2f, 0.1f, 0.2f, 1.0f)); // dark purple background color
+    GLCALL(glClearColor(0.0f, 0.0f, 0.0f, 1.0f)); // black background color
+    
     // Enable blending and set the blend function
     GLCALL(glEnable(GL_BLEND));
     GLCALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
@@ -73,14 +98,22 @@ int oogaboogaInit(const std::string &windowname)
     // Enable depth testing
     glEnable(GL_DEPTH_TEST);
 
+    if( checkTextureUnits() != 0 )         
+        return -1;
+        
     return 0;
 }
 
+
 int oogaboogaExit()
 {
-    // Cleanup
-
     glfwTerminate();
+
+    if(rContext != nullptr)
+    {
+        delete rContext;
+        rContext = nullptr;
+    }
 
     return 0;
 }

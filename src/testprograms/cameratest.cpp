@@ -24,9 +24,9 @@ int main(int, char **)
         VertexArray va;
         va.bind();
 
-        constexpr const float* vertices = plane_vertices;
-        constexpr const unsigned int* indices = plane_indices;
-        VertexBuffer vb(vertices, 4 * 5 * sizeof(float));
+        constexpr const float* vertices = BOX_VERTICES;
+        constexpr const unsigned int* indices = BOX_INDICES;
+        VertexBuffer vb(vertices, 23 * 5 * sizeof(float));
 
         VertexBufferLayout layout;
         layout.push<float>(3);
@@ -34,7 +34,7 @@ int main(int, char **)
 
         va.addBuffer(vb, layout);
 
-        IndexBuffer ib(indices, 6);
+        IndexBuffer ib(indices, 36);
 
         Shader shader;
         shader.addShader((SHADER_DIR / "3D.vert").string(), ShaderType::VERTEX);
@@ -77,8 +77,8 @@ int main(int, char **)
 
             MovementInput movementInput = getUserMovementInput(window);
             cameraOrbitControl(camera, movementInput, deltaTime);
-            glm::mat4 model_matrix = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-            model_matrix = glm::translate(model_matrix, glm::vec3(0.0f, 0.0f, 0.0f));
+
+            glm::mat4 model_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
             model_matrix = glm::rotate(model_matrix, glm::radians(10.0f), glm::vec3(1.0f, 0.0f, 1.0));
 
             shader.bind();

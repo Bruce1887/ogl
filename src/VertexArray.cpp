@@ -29,9 +29,14 @@ void VertexArray::addBuffer(const VertexBuffer &vb, const VertexBufferLayout &la
 void VertexArray::bind() const
 {
     GLCALL(glBindVertexArray(m_RendererID));
+
+    RenderingContext *rContext = RenderingContext::Current();
+    rContext->m_boundVAO = m_RendererID;    
 }
 
 void VertexArray::unbind() const
 {
     GLCALL(glBindVertexArray(0));
+    RenderingContext *rContext = RenderingContext::Current();
+    rContext->m_boundVAO = 0;    
 }

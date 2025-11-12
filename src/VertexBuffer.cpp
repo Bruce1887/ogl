@@ -13,7 +13,7 @@ VertexBuffer::~VertexBuffer()
 }
 
 void VertexBuffer::bind() const
-{
+{ 
     GLCALL(glBindBuffer(GL_ARRAY_BUFFER, m_RendererID));
 }
 

@@ -20,6 +20,8 @@ public:
 
     // behöver vi nånsin hämta id här, iochmed att datan ligger i VAOn?
     // unsigned int getID() const { return m_RendererID; }
+
+    // behöver inte renderingcontext här eftersom vi inte trackar VBOs (datan är väl bunden via VAOn?)
     void bind() const;
     void unbind() const;
 };

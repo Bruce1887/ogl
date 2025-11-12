@@ -24,9 +24,13 @@ IndexBuffer::~IndexBuffer()
 void IndexBuffer::bind() const
 {
     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID));
+    RenderingContext *rContext = RenderingContext::Current();
+    rContext->m_boundIBO = m_RendererID;
 }
 
 void IndexBuffer::unbind() const
 {
     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    RenderingContext *rContext = RenderingContext::Current();
+    rContext->m_boundIBO = 0;    
 }

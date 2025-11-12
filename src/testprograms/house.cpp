@@ -178,6 +178,7 @@ int main(int, char **)
         Texture stone((TEXTURE_DIR / "stoneWall.png").string(), 0);
         Texture roofTex((TEXTURE_DIR / "roof.jpg").string(), 2);
 
+        /*
         // Create a 1x1 transparent texture bound to slot 1
         unsigned int transparentTex = 0;
         glGenTextures(1, &transparentTex);
@@ -187,11 +188,12 @@ int main(int, char **)
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, clearPixel);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
+        */
+       
         // Set shader samplers
         shader.bind();
         shader.setUniform("u_texture1", 0);
-        shader.setUniform("u_texture2", 1);
+        // shader.setUniform("u_texture2", 1);
 
         // Simple camera settings similar to boxes.cpp
         float fov = 45.0f;
@@ -218,8 +220,9 @@ int main(int, char **)
             baseIB.bind();
             // bind stone to unit 0 and transparent unit 1
             stone.bindNew(0);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, transparentTex);
+
+            // glActiveTexture(GL_TEXTURE1);
+            // glBindTexture(GL_TEXTURE_2D, transparentTex);
 
             glm::mat4 modelBase = glm::mat4(1.0f);
             modelBase = glm::scale(modelBase, glm::vec3(2.0f, 1.0f, 1.5f)); // width, height, depth
@@ -230,8 +233,8 @@ int main(int, char **)
             // Draw roof
             // bind roof texture to unit 0 and transparent unit 1
             roofTex.bindNew(0);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, transparentTex);
+            // glActiveTexture(GL_TEXTURE1);
+            // glBindTexture(GL_TEXTURE_2D, transparentTex);
 
             roofVA.bind();
             roofIB.bind();
@@ -242,8 +245,8 @@ int main(int, char **)
 
             // Draw door: bind door texture to unit 0 and transparent unit 1
             door.bindNew(0);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, transparentTex);
+            // glActiveTexture(GL_TEXTURE1);
+            // glBindTexture(GL_TEXTURE_2D, transparentTex);
 
             doorVA.bind();
             doorIB.bind();

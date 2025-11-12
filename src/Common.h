@@ -10,15 +10,21 @@
 #include "Enums.h"
 #include "Error.h"
 #include "basic_shapes.h"
+#include "RenderingContext.h"
 
 #include <iostream>
 #include <filesystem>
 #include <vector>
 
+
 namespace fs = std::filesystem;
 inline const fs::path SHADER_DIR  = fs::path("resources") / "shaders";
 inline const fs::path TEXTURE_DIR = fs::path("resources") / "textures";
 
+const int NUM_TEXTURE_UNITS = 32;
+
+// Global variables 
+extern RenderingContext *rContext;
 extern GLsizei window_X;
 extern GLsizei window_Y;
 extern GLFWwindow *window;
