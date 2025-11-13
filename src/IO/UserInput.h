@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Common.h"
+#include <GLFW/glfw3.h>
 
 /**
  * @brief Struct to hold WASD input state
@@ -41,3 +41,20 @@ struct MovementInput
  * @return MovementInput Struct containing the current movement input state.
  */
 MovementInput getUserMovementInput(GLFWwindow *const wdw);
+
+
+struct MouseInput
+{
+    double deltaX;
+    double deltaY;
+    double scrollX;
+    double scrollY;
+};
+
+/**
+ * @brief Get the mouse input state from the given GLFW window.
+ * 
+ * @param wdw Pointer to the GLFW window.
+ * @return MouseInput Struct containing the current mouse input state.
+ */
+// MouseInput getUserMouseInput(GLFWwindow *const wdw);

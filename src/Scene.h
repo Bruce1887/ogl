@@ -8,14 +8,15 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "Camera.h"
-
+#include "Lighting.h"
 
 class Scene
 {
 public:
-    Scene(Camera defaultCamera)
-        : m_activeCamera(defaultCamera)
+Scene(Camera defaultCamera, PhongLightConfig phongLight)
+: m_activeCamera(defaultCamera), m_PhongLight(phongLight)
     {
+
     }
 
     ~Scene() = default;
@@ -29,6 +30,13 @@ public:
     int addCamera(const Camera &camera);
     void removeCamera(const Camera &camera);
     void setActiveCamera(int index);
+
+    // One single light for now (maybe ever)
+    PhongLightConfig m_PhongLight;    
+    glm::vec3 getLightPosition() const { return m_PhongLight.lightPosition; }
+    glm::vec3 getLightAmbient() const { return m_PhongLight.ambientLight; }
+    glm::vec3 getLightDiffuse() const { return m_PhongLight.diffuseLight; }
+    glm::vec3 getLightSpecular() const { return m_PhongLight.specularLight; }
 
     inline void tick()
     {

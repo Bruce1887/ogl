@@ -26,7 +26,7 @@ void Scene::renderScene()
 	// Render each object in the scene
 	for (auto &r : m_renderables)
 	{
-		r->render(view, projection);
+		r->render(view, projection, &m_PhongLight);
 	}
 
 	// Swap buffers

@@ -1,9 +1,14 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <iostream>
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow* window);
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <cassert>
+
+void framebuffer_size_callback(GLFWwindow* wdw, int width, int height);
+void processInput(GLFWwindow* wdw);
 
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
@@ -149,13 +154,13 @@ int main()
     return 0;
 }
 
-void processInput(GLFWwindow* window)
+void processInput(GLFWwindow* wdw)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
+    if (glfwGetKey(wdw, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(wdw, true);
 }
 
-void framebuffer_size_callback(GLFWwindow*, int width, int height)
+void framebuffer_size_callback(GLFWwindow* /*wdw*/, int width, int height)
 {
     glViewport(0, 0, width, height);
 }

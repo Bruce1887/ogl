@@ -43,7 +43,7 @@ int main(int, char **)
             scene.tick();
 
             MovementInput movementInput = getUserMovementInput(window);
-            cameraOrbitControl(scene.m_activeCamera, movementInput, frameTimer.getDeltaTime());
+            scene.m_activeCamera.orbitControl(movementInput, frameTimer.getDeltaTime());
 
             scene.renderScene();
         }

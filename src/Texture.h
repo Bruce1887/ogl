@@ -19,11 +19,18 @@ public:
 
     GLuint getID() const { return m_rendererID; }
     GLuint getSlot() const { return m_slot; }
+
+    /**
+     * @brief Bind the texture to a new slot.
+     */
     void bindNew(GLuint newslot);
+    /**
+     * @brief Bind the texture to its assigned slot.
+     */
     void bind() const;
     void unbind() const;
 
-    std::string targetUniform = "BAD_UNIFORM_NAME";
+    std::string targetUniform = "[NO TARGET UNIFORM SET]";
 
     inline int getWidth() const { return m_width; }
     inline int getHeight() const { return m_height; }

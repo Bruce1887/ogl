@@ -1,9 +1,8 @@
-#include <iostream>
-
-// #include "Renderer.h"
-#include "VertexBuffer.h"
-#include "IndexBuffer.h"
 #include "VertexArray.h"
+#include "VertexBuffer.h"
+#include "VertexBufferLayout.h"
+#include "IndexBuffer.h"
+
 #include "Shader.h"
 #include "Texture.h"
 #include "Common.h"
@@ -11,7 +10,6 @@
 #include "Scene.h"
 #include "Frametimer.h"
 
-#include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
@@ -34,8 +32,15 @@ int main(int, char **)
         camera.m_Position = glm::vec3(0.0f, 20.0f, 35.0f);
         camera.m_Target = glm::vec3(0.0f, 0.0f, 0.0f);
         camera.m_Up = glm::vec3(0.0f, 1.0f, 0.0f);
+            
+        PhongLightConfig lightConfig{
+            .lightPosition = glm::vec3(10.0f, 10.0f, 10.0f),
+            .ambientLight = glm::vec3(0.2f, 0.2f, 0.2f),
+            .diffuseLight = glm::vec3(1.0f, 1.0f, 1.0f),
+            .specularLight = glm::vec3(1.0f, 1.0f, 1.0f)
+        };
 
-        Scene scene(camera);
+        Scene scene(camera, lightConfig);
 
         // ######## SHARED ########
         // Layout and shader is shared between these two renderables (box and plane)
@@ -44,8 +49,8 @@ int main(int, char **)
         layout.push<float>(2);
 
         Shader shader;
-        shader.addShader((SHADER_DIR / "3D.vert").string(), ShaderType::VERTEX);
-        shader.addShader((SHADER_DIR / "3D.frag").string(), ShaderType::FRAGMENT);
+        shader.addShader("3D_TEX.vert", ShaderType::VERTEX);
+        shader.addShader("2TEX_AB.frag", ShaderType::FRAGMENT);
         shader.createProgram();
         shader.bind();
         shader.setUniform("u_texture1", 0);
@@ -54,19 +59,20 @@ int main(int, char **)
         // ######## BOX ########
         VertexArray box_va;
         box_va.bind();
-        VertexBuffer box_vb(BOX_VERTICES, BOX_VERTICES_SIZE);
+        VertexBuffer box_vb(BOX_VERTICES_TEX, BOX_VERTICES_TEX_SIZE, &box_va);
         box_va.addBuffer(box_vb, layout);
-        IndexBuffer box_ib(BOX_INDICES, BOX_INDICES_COUNT);
-
-        Mesh box_mesh(&box_va, &box_ib);
+        IndexBuffer box_ib(BOX_INDICES_TEX, BOX_INDICES_TEX_COUNT);
 
         Texture box_tex_1((TEXTURE_DIR / "container.jpg").string(), 0);
         box_tex_1.targetUniform = "u_texture1";
         Texture box_tex_2((TEXTURE_DIR / "cowday.png").string(), 1);
         box_tex_2.targetUniform = "u_texture2";
 
-        MeshRenderable box_renderable1(&box_mesh, &shader);
+        // Create mesh (shared data)
+        Mesh box_mesh(&box_va, &box_ib);
 
+        // Create renderable (per-instance data, has reference to shared mesh and shader)
+        MeshRenderable box_renderable1(&box_mesh, &shader);
         box_renderable1.setTransform(glm::scale(glm::mat4(1.0f), glm::vec3(5.0f)));
         box_renderable1.m_textureReferences = std::vector<Texture *>{&box_tex_1, &box_tex_2};
 
@@ -85,7 +91,7 @@ int main(int, char **)
 
         VertexArray plane_va;
         plane_va.bind();
-        VertexBuffer plane_vb(PLANE_VERTICES, PLANE_VERTICES_SIZE);
+        VertexBuffer plane_vb(PLANE_VERTICES_TEX, PLANE_VERTICES_TEX_SIZE, &plane_va);
         plane_va.addBuffer(plane_vb, layout);
         IndexBuffer plane_ib(PLANE_INDICES, PLANE_INDICES_COUNT);
 
@@ -110,7 +116,7 @@ int main(int, char **)
             scene.tick();
 
             MovementInput movementInput = getUserMovementInput(window);
-            cameraOrbitControl(scene.m_activeCamera, movementInput, frameTimer.getDeltaTime());
+            scene.m_activeCamera.orbitControl(movementInput, frameTimer.getDeltaTime());
 
             scene.renderScene();
         }

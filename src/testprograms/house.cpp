@@ -1,13 +1,12 @@
-#include <iostream>
-
-#include "VertexBuffer.h"
-#include "IndexBuffer.h"
 #include "VertexArray.h"
+#include "VertexBuffer.h"
+#include "VertexBufferLayout.h"
+#include "IndexBuffer.h"
+
 #include "Shader.h"
 #include "Texture.h"
 #include "Common.h"
 
-#include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
@@ -85,7 +84,7 @@ int main(int, char **)
         VertexArray baseVA;
         baseVA.bind();
 
-        VertexBuffer baseVB(cubeVertices, sizeof(cubeVertices));
+        VertexBuffer baseVB(cubeVertices, sizeof(cubeVertices), &baseVA);
 
         VertexBufferLayout baseLayout;
         baseLayout.push<float>(3);
@@ -136,7 +135,7 @@ int main(int, char **)
 
         VertexArray roofVA;
         roofVA.bind();
-        VertexBuffer roofVB(roofVertices, sizeof(roofVertices));
+        VertexBuffer roofVB(roofVertices, sizeof(roofVertices), &roofVA);
         VertexBufferLayout roofLayout;
         roofLayout.push<float>(3);
         roofLayout.push<float>(2);
@@ -159,7 +158,7 @@ int main(int, char **)
 
         VertexArray doorVA;
         doorVA.bind();
-        VertexBuffer doorVB(doorVerts, sizeof(doorVerts));
+        VertexBuffer doorVB(doorVerts, sizeof(doorVerts), &doorVA);
         VertexBufferLayout doorLayout;
         doorLayout.push<float>(3);
         doorLayout.push<float>(2);
@@ -167,33 +166,17 @@ int main(int, char **)
         IndexBuffer doorIB(doorIdx, sizeof(doorIdx) / sizeof(unsigned int));
 
         // Door texture
-        Texture door((TEXTURE_DIR / "door.jpg").string(), 0);
-
+        
         // Shaders and textures
         Shader shader;
-        shader.addShader((SHADER_DIR / "3D.vert").string(), ShaderType::VERTEX);
-        shader.addShader((SHADER_DIR / "3D.frag").string(), ShaderType::FRAGMENT);
+        shader.addShader("3D_TEX.vert", ShaderType::VERTEX);
+        shader.addShader("TEX.frag", ShaderType::FRAGMENT);
         shader.createProgram();
-
+        
         Texture stone((TEXTURE_DIR / "stoneWall.png").string(), 0);
+        Texture door((TEXTURE_DIR / "door.jpg").string(), 1);
         Texture roofTex((TEXTURE_DIR / "roof.jpg").string(), 2);
-
-        /*
-        // Create a 1x1 transparent texture bound to slot 1
-        unsigned int transparentTex = 0;
-        glGenTextures(1, &transparentTex);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, transparentTex);
-        unsigned char clearPixel[4] = {255, 255, 255, 0};
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, clearPixel);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        */
        
-        // Set shader samplers
-        shader.bind();
-        shader.setUniform("u_texture1", 0);
-        // shader.setUniform("u_texture2", 1);
 
         // Simple camera settings similar to boxes.cpp
         float fov = 45.0f;
@@ -219,7 +202,9 @@ int main(int, char **)
             baseVA.bind();
             baseIB.bind();
             // bind stone to unit 0 and transparent unit 1
-            stone.bindNew(0);
+
+            // 0 for stone wall
+            shader.setUniform("u_texture", 0);
 
             // glActiveTexture(GL_TEXTURE1);
             // glBindTexture(GL_TEXTURE_2D, transparentTex);
@@ -232,7 +217,8 @@ int main(int, char **)
 
             // Draw roof
             // bind roof texture to unit 0 and transparent unit 1
-            roofTex.bindNew(0);
+            // 2 for roof
+            shader.setUniform("u_texture", 2);
             // glActiveTexture(GL_TEXTURE1);
             // glBindTexture(GL_TEXTURE_2D, transparentTex);
 
@@ -244,7 +230,9 @@ int main(int, char **)
             GLCALL(glDrawElements(GL_TRIANGLES, roofIB.getCount(), GL_UNSIGNED_INT, nullptr));
 
             // Draw door: bind door texture to unit 0 and transparent unit 1
-            door.bindNew(0);
+            
+            // 1 for door
+            shader.setUniform("u_texture", 1);
             // glActiveTexture(GL_TEXTURE1);
             // glBindTexture(GL_TEXTURE_2D, transparentTex);
 

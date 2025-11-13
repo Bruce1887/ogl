@@ -1,18 +1,18 @@
-#include <iostream>
-
-#include "VertexBuffer.h"
-#include "IndexBuffer.h"
 #include "VertexArray.h"
+#include "VertexBuffer.h"
+#include "VertexBufferLayout.h"
+#include "IndexBuffer.h"
+
+#include "Camera.h"
 #include "Shader.h"
 #include "Texture.h"
 #include "Common.h"
-#include "Camera.h"
 
-#include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
 #include <cassert>
+#include <cmath>
 
 int main(int, char **)
 {
@@ -24,9 +24,9 @@ int main(int, char **)
         VertexArray va;
         va.bind();
 
-        constexpr const float* vertices = BOX_VERTICES;
-        constexpr const unsigned int* indices = BOX_INDICES;
-        VertexBuffer vb(vertices, 23 * 5 * sizeof(float));
+        constexpr const float* vertices = BOX_VERTICES_TEX;
+        constexpr const unsigned int* indices = BOX_INDICES_TEX;
+        VertexBuffer vb(vertices, BOX_VERTICES_TEX_SIZE, &va);
 
         VertexBufferLayout layout;
         layout.push<float>(3);
@@ -37,8 +37,8 @@ int main(int, char **)
         IndexBuffer ib(indices, 36);
 
         Shader shader;
-        shader.addShader((SHADER_DIR / "3D.vert").string(), ShaderType::VERTEX);
-        shader.addShader((SHADER_DIR / "3D.frag").string(), ShaderType::FRAGMENT);
+        shader.addShader("3D_TEX.vert", ShaderType::VERTEX);
+        shader.addShader("2TEX_AB.frag", ShaderType::FRAGMENT);
         shader.createProgram();
 
         Texture texture1((TEXTURE_DIR / "container.jpg").string(), 0);
@@ -76,7 +76,7 @@ int main(int, char **)
             shader.bind();
 
             MovementInput movementInput = getUserMovementInput(window);
-            cameraOrbitControl(camera, movementInput, deltaTime);
+            camera.orbitControl(movementInput, deltaTime);
 
             glm::mat4 model_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
             model_matrix = glm::rotate(model_matrix, glm::radians(10.0f), glm::vec3(1.0f, 0.0f, 1.0));

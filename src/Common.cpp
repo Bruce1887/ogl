@@ -38,8 +38,9 @@ int checkTextureUnits()
     return 0;
 }
 
+
 int oogaboogaInit(const std::string &windowname)
-{
+{    
     if (!glfwInit())
     {
         std::cerr << "Failed to initialize GLFW" << std::endl;
@@ -73,7 +74,6 @@ int oogaboogaInit(const std::string &windowname)
 
     setupDefaultGLFWCallbacks();
 
-
     // Enable V-Sync.
     glfwSwapInterval(1);
 
@@ -97,10 +97,9 @@ int oogaboogaInit(const std::string &windowname)
 
     // Enable depth testing
     glEnable(GL_DEPTH_TEST);
-
+    
     if( checkTextureUnits() != 0 )         
-        return -1;
-        
+        return -1;    
     return 0;
 }
 

@@ -15,7 +15,16 @@ private:
     static RenderingContext* s_current;  // ONE shared pointer for ALL instances
 
 public:
-    static RenderingContext* Current() { return s_current; }  // Get the current one
+    // Get the current one
+    static RenderingContext* Current() { 
+        #ifdef DEBUG
+        if (s_current == nullptr) {
+            std::cerr << "Warning: No current RenderingContext set!" << std::endl;
+        }
+        #endif
+        return s_current;
+    }
+
     void makeCurrent() { s_current = this; }  // Set THIS instance as current
 
     GLuint m_boundTextures[32] = {0}; // Assuming exactly 32 texture slots

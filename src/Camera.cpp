@@ -1,13 +1,13 @@
 #include "Camera.h"
 
-void cameraOrbitControl(Camera &camera, MovementInput movementInput, float deltaTime)
+void Camera::orbitControl(MovementInput movementInput, float deltaTime)
 {
 
 	float speed = 5.0f * deltaTime;
 	if (movementInput.shiftDown)
 		speed *= 5.0f;
 
-	glm::vec3 offset = camera.m_Position - camera.m_Target;
+	glm::vec3 offset = this->m_Position - this->m_Target;
 	float distance = glm::length(offset);
 
 	int right = movementInput.wasd.right;
@@ -15,7 +15,7 @@ void cameraOrbitControl(Camera &camera, MovementInput movementInput, float delta
 	if (right != 0)
 	{
 		float angle = right * speed;
-		glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), angle, camera.m_Up);
+		glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), angle, this->m_Up);
 		offset = glm::vec3(rotation * glm::vec4(offset, 1.0f));
 	}
 
@@ -26,5 +26,5 @@ void cameraOrbitControl(Camera &camera, MovementInput movementInput, float delta
 		offset = glm::normalize(offset) * distance;
 	}
 
-	camera.m_Position = camera.m_Target + offset;
+	this->m_Position = this->m_Target + offset;
 }

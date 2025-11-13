@@ -16,9 +16,15 @@
 #include <filesystem>
 #include <vector>
 
+// #include "VertexArray.h"
+// #include "VertexBuffer.h"
+// #include "VertexBufferLayout.h"
+// #include "IndexBuffer.h"
 
 namespace fs = std::filesystem;
-inline const fs::path SHADER_DIR  = fs::path("resources") / "shaders";
+inline const fs::path VERTEX_SHADER_DIR  = fs::path("resources") / "shaders" / "vertex";
+inline const fs::path FRAGMENT_SHADER_DIR = fs::path("resources") / "shaders" / "fragment";
+
 inline const fs::path TEXTURE_DIR = fs::path("resources") / "textures";
 
 const int NUM_TEXTURE_UNITS = 32;
@@ -30,5 +36,17 @@ extern GLsizei window_Y;
 extern GLFWwindow *window;
 extern GLFWmonitor *monitor;
 
+/**
+ * Sets up various stuff which is mandatory to get OpenGL running with this framework, and some nice to have stuff as well.
+ * 
+ * Sets up a GLFW window with OpenGL context, initializes GLAD, creates a RenderingContext instance and makes it current,
+ * 
+ * @param windowname Name of the created window.
+ * 
+ */
 int oogaboogaInit(const std::string &windowname);
+
+/**
+ * Clean up whatever allocations were made in oogaboogaInit(), and call glfwTerminate().
+ */
 int oogaboogaExit();

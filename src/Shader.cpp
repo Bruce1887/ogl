@@ -67,11 +67,13 @@ void Shader::createProgram()
 
     std::vector<unsigned int> shader_references;
     shader_references.reserve(m_programSources.size());
-
-    for (size_t i = 0; i < m_programSources.size(); i++)
+    size_t i = 0; 
+    for (i; i < m_programSources.size(); i++)
     {
         const auto &ps = m_programSources[i];
         unsigned int shader_ref = compileShader(ps.type, ps.content);
+        if (shader_ref == 0)
+            exit(-1);
         glAttachShader(program, shader_ref);
         shader_references.push_back(shader_ref);
     }
@@ -90,9 +92,20 @@ void Shader::createProgram()
 Shader::Shader()
     : m_RendererID(0) {}
 
-void Shader::addShader(const std::string &path, ShaderType type)
+void Shader::addShader(const std::string &filename_nopath, ShaderType type)
 {
-    m_programSources.push_back(parseShader(path, type));
+    fs::path directory;
+    if (type == ShaderType::VERTEX)
+        directory = VERTEX_SHADER_DIR;
+    else if (type == ShaderType::FRAGMENT)
+        directory = FRAGMENT_SHADER_DIR;
+    else
+    {
+        std::cerr << "Error: Unsupported shader type for automatic directory selection." << std::endl;
+        return;
+    }
+
+    m_programSources.push_back(parseShader((directory / filename_nopath).string(), type));
 }
 
 Shader::~Shader()
@@ -116,7 +129,7 @@ void Shader::unbind() const
 
 void Shader::setUniform(const std::string &name, int value)
 {
-    GLCALL(glUniform1i(getUniformLocation(name), value));
+    GLCALL(glUniform1i(getUniformLocation(name), value));    
 }
 
 void Shader::setUniform(const std::string &name, unsigned int value)

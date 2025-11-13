@@ -11,7 +11,6 @@ public:
     /** 
      * @brief Returns the time elapsed since the last call to getDeltaTime in seconds. Updates timestamp of last frame.
      * @return float Delta time in seconds.
-     *      
      */
     float getDeltaTime()
     {

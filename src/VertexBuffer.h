@@ -3,13 +3,16 @@
 #include "Common.h"
 #include <vector>
 
+class VertexArray;
+
+
 class VertexBuffer
 {
 private:
     unsigned int m_RendererID; // Unique ID for the buffer
 
 public:
-    VertexBuffer(const void* data, unsigned int size, BufferUsage usage = BufferUsage::STATIC_DRAW);
+    VertexBuffer(const void* data, unsigned int size, VertexArray *associatedVAO, BufferUsage usage = BufferUsage::STATIC_DRAW);
 
     template<typename T>
     VertexBuffer(const std::vector<T>& data, BufferUsage usage = BufferUsage::STATIC_DRAW)

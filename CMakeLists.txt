@@ -54,9 +54,12 @@ file(GLOB TEST_PROGRAMS "src/testprograms/*.cpp")
 foreach(TEST_SRC ${TEST_PROGRAMS})
     get_filename_component(TEST_NAME ${TEST_SRC} NAME_WE)
     add_gl_executable(${TEST_NAME} ${TEST_SRC})
+    target_compile_options(${TEST_NAME} PRIVATE -g)
+
 endforeach()
 
-add_gl_executable(oogabooga src/main.cpp)
+# --- Main executable ---
+# add_gl_executable(oogabooga src/main.cpp)
 
 # --- (Optional) Install rule ---
 # install(TARGETS oogabooga_common RUNTIME DESTINATION bin)

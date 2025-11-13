@@ -6,8 +6,9 @@ class IndexBuffer
 {
 private:
     GLuint m_RendererID; // Unique ID for the buffer
-    unsigned int m_Count;      // Number of indices
+    unsigned int m_Count; // Number of indices
 public:
+    
     IndexBuffer(const unsigned int *data, unsigned int count, BufferUsage usage = BufferUsage::STATIC_DRAW);
     
     template<typename T>

@@ -46,6 +46,15 @@ public:
 		return glm::perspective(glm::radians(m_Config.fov), m_Config.aspect, m_Config.near, m_Config.far);
 	};
 
+	/**
+	 * Orbit control around the target based on user input
+	 * @param movementInput The user input
+	 * @param deltaTime Time elapsed since last frame, used to make movement-speed framerate independent
+	 */
+	void orbitControl(MovementInput movementInput, float deltaTime);
+
+
+	
 	// glm::vec3 getRight() const {
 	// 	return glm::normalize(glm::cross(m_Target - m_Position, m_Up));
 	// }
@@ -58,5 +67,3 @@ public:
 	glm::vec3 WorldUp;
 	CameraConfiguration m_Config;
 };
-
-void cameraOrbitControl(Camera &camera, MovementInput movementInput, float deltaTime);

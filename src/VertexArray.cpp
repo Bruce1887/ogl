@@ -1,4 +1,6 @@
 #include "VertexArray.h"
+#include "VertexBuffer.h"
+#include "VertexBufferLayout.h"
 
 VertexArray::VertexArray()
 {
@@ -12,6 +14,9 @@ VertexArray::~VertexArray()
 
 void VertexArray::addBuffer(const VertexBuffer &vb, const VertexBufferLayout &layout)
 {
+    m_VertexCount = m_VBO_size / layout.getStride();
+    // std::cout << "[VertexArray] Setting vertex count to " << m_VertexCount << " based on VBO size " << m_VBO_size << " and layout stride " << layout.getStride() << std::endl;
+
     bind();
     vb.bind();
     const auto &elements = layout.getElements();
@@ -29,7 +34,6 @@ void VertexArray::addBuffer(const VertexBuffer &vb, const VertexBufferLayout &la
 void VertexArray::bind() const
 {
     GLCALL(glBindVertexArray(m_RendererID));
-
     RenderingContext *rContext = RenderingContext::Current();
     rContext->m_boundVAO = m_RendererID;    
 }

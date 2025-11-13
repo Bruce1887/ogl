@@ -1,13 +1,12 @@
-#include <iostream>
-
-#include "VertexBuffer.h"
-#include "IndexBuffer.h"
 #include "VertexArray.h"
+#include "VertexBuffer.h"
+#include "VertexBufferLayout.h"
+#include "IndexBuffer.h"
+
 #include "Shader.h"
 #include "Texture.h"
 #include "Common.h"
 
-#include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
@@ -120,7 +119,7 @@ int main(int, char **)
         VertexArray va;
         va.bind();
 
-        VertexBuffer vb(vertices, sizeof(vertices));
+        VertexBuffer vb(vertices, sizeof(vertices), &va);
 
         VertexBufferLayout layout;
         layout.push<float>(3);
@@ -131,8 +130,8 @@ int main(int, char **)
         IndexBuffer ib(indices, sizeof(indices) / sizeof(unsigned int));
 
         Shader shader;
-        shader.addShader((SHADER_DIR / "3D.vert").string(), ShaderType::VERTEX);
-        shader.addShader((SHADER_DIR / "3D.frag").string(), ShaderType::FRAGMENT);
+        shader.addShader("3D_TEX.vert", ShaderType::VERTEX);
+        shader.addShader("2TEX_AB.frag", ShaderType::FRAGMENT);
         shader.createProgram();
 
         Texture texture1((TEXTURE_DIR / "container.jpg").string(), 0);
@@ -175,11 +174,12 @@ int main(int, char **)
                 glfwSetWindowShouldClose(wdw, true);
             else {
                 settings *w_settings_ref = (settings *)glfwGetWindowUserPointer(wdw);
-                std::cout << "[fov,aspect] : [" << w_settings_ref->fov << ", " << w_settings_ref->aspect << "]" << std::endl;
                 if (key == GLFW_KEY_K) w_settings_ref->fov -= 1.0f;
                 else if (key == GLFW_KEY_L) w_settings_ref->fov += 1.0f;
                 else if (key == GLFW_KEY_N && action == GLFW_PRESS) w_settings_ref->aspect -= 0.3f;
                 else if (key == GLFW_KEY_M && action == GLFW_PRESS) w_settings_ref->aspect += 0.3f;
+                else return;
+                std::cout << "[fov,aspect] : [" << w_settings_ref->fov << ", " << w_settings_ref->aspect << "]" << std::endl;
             } });
 
         std::cout << "Use K/L to decrease/increase FOV" << std::endl;

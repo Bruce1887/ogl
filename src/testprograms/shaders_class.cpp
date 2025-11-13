@@ -1,9 +1,19 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
+#include "VertexArray.h"
+#include "VertexBuffer.h"
+#include "VertexBufferLayout.h"
+#include "IndexBuffer.h"
 
-#include <Shader.h>
+#include "Shader.h"
+#include "Texture.h"
+#include "Common.h"
+#include "Camera.h"
+#include "Scene.h"
+#include "Frametimer.h"
 
-#include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <cassert>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow *window);
@@ -48,8 +58,8 @@ int main()
     // build and compile our shader program
     // ------------------------------------
     Shader shader;
-    shader.addShader("resources/shaders/shader.vert", ShaderType::VERTEX);
-    shader.addShader("resources/shaders/shader.frag", ShaderType::FRAGMENT);
+    shader.addShader("shader.vert", ShaderType::VERTEX);
+    shader.addShader("shader.frag", ShaderType::FRAGMENT);
     shader.createProgram();
     shader.bind();
     // set up vertex data (and buffer(s)) and configure vertex attributes
