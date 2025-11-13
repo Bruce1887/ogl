@@ -13,9 +13,9 @@
 class Scene
 {
 public:
-Scene(Camera defaultCamera, PhongLightConfig phongLight)
-: m_activeCamera(defaultCamera), m_PhongLight(phongLight)
-    {
+Scene(Camera defaultCamera, LightSource lightSource)
+: m_activeCamera(defaultCamera), m_lightSource(lightSource)
+    {  
 
     }
 
@@ -32,11 +32,11 @@ Scene(Camera defaultCamera, PhongLightConfig phongLight)
     void setActiveCamera(int index);
 
     // One single light for now (maybe ever)
-    PhongLightConfig m_PhongLight;    
-    glm::vec3 getLightPosition() const { return m_PhongLight.lightPosition; }
-    glm::vec3 getLightAmbient() const { return m_PhongLight.ambientLight; }
-    glm::vec3 getLightDiffuse() const { return m_PhongLight.diffuseLight; }
-    glm::vec3 getLightSpecular() const { return m_PhongLight.specularLight; }
+    LightSource m_lightSource;        
+    glm::vec3 getLightPosition() const { return m_lightSource.config.lightPosition; }
+    glm::vec3 getLightAmbient() const { return m_lightSource.config.ambientLight; }
+    glm::vec3 getLightDiffuse() const { return m_lightSource.config.diffuseLight; }
+    glm::vec3 getLightSpecular() const { return m_lightSource.config.specularLight; }
 
     inline void tick()
     {
@@ -52,6 +52,7 @@ private:
     std::vector<Renderable *> m_renderables;
     unsigned int m_nextVacantID = 0; // For assigning unique IDs to renderables
 
+    void renderSmallBoxAtLightPosition();
     // A list of all cameras in the scene //TODO: implement this one day
     std::vector<Camera> m_cameras;
 };

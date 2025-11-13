@@ -9,6 +9,8 @@
 #include "Camera.h"
 #include "Scene.h"
 #include "Frametimer.h"
+#include "MeshRenderable.h"
+#include "Lighting.h"
 
 #include <fstream>
 #include <string>
@@ -22,6 +24,7 @@ int main(int, char **)
         goto out;
 
     {
+        // ######## CAMERA ########
         CameraConfiguration cam_config{
             .fov = 45.0f,
             .aspect = (float)window_X / (float)window_Y,
@@ -32,18 +35,22 @@ int main(int, char **)
         camera.m_Position = glm::vec3(0.0f, 20.0f, 35.0f);
         camera.m_Target = glm::vec3(0.0f, 0.0f, 0.0f);
         camera.m_Up = glm::vec3(0.0f, 1.0f, 0.0f);
-            
+
+        // ######## Light source ########
         PhongLightConfig lightConfig{
             .lightPosition = glm::vec3(10.0f, 10.0f, 10.0f),
             .ambientLight = glm::vec3(0.2f, 0.2f, 0.2f),
             .diffuseLight = glm::vec3(1.0f, 1.0f, 1.0f),
             .specularLight = glm::vec3(1.0f, 1.0f, 1.0f)
         };
+        LightSource lightSource {
+            .config = lightConfig,
+            .visualRepresentation = nullptr
+        };
 
-        Scene scene(camera, lightConfig);
+        Scene scene(camera, lightSource);
 
-        // ######## SHARED ########
-        // Layout and shader is shared between these two renderables (box and plane)
+        // ######## SHARED ######## Layout and shader is shared between these two renderables (box and plane)        
         VertexBufferLayout layout;
         layout.push<float>(3);
         layout.push<float>(2);
@@ -56,7 +63,7 @@ int main(int, char **)
         shader.setUniform("u_texture1", 0);
         shader.setUniform("u_texture2", 1);
 
-        // ######## BOX ########
+        // ######## BOX (1st renderable) ########
         VertexArray box_va;
         box_va.bind();
         VertexBuffer box_vb(BOX_VERTICES_TEX, BOX_VERTICES_TEX_SIZE, &box_va);
@@ -72,22 +79,13 @@ int main(int, char **)
         Mesh box_mesh(&box_va, &box_ib);
 
         // Create renderable (per-instance data, has reference to shared mesh and shader)
-        MeshRenderable box_renderable1(&box_mesh, &shader);
-        box_renderable1.setTransform(glm::scale(glm::mat4(1.0f), glm::vec3(5.0f)));
-        box_renderable1.m_textureReferences = std::vector<Texture *>{&box_tex_1, &box_tex_2};
+        MeshRenderable box_renderable(&box_mesh, &shader);
+        box_renderable.setTransform(glm::scale(glm::mat4(1.0f), glm::vec3(5.0f)));
+        box_renderable.m_textureReferences = std::vector<Texture *>{&box_tex_1, &box_tex_2};
 
-        scene.addRenderable(&box_renderable1);
+        scene.addRenderable(&box_renderable);
 
-        /*
-        // A second box renderable to test multiple renderables
-        MeshRenderable box_renderable2(&box_mesh, &shader);
-        box_renderable2.setPosition(glm::vec3(2.0f, 1.0f, 1.0f));
-        box_renderable2.m_textureReferences = std::vector<Texture *>{&box_tex_1, &box_tex_2};
-
-        scene.addRenderable(&box_renderable2);
-        */
-
-        // ######## PLANE ########
+        // ######## PLANE (2nd renderable) ########
 
         VertexArray plane_va;
         plane_va.bind();

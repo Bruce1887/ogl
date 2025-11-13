@@ -2,8 +2,9 @@
 #version 400 core
 out vec4 FragColor;
 
+uniform vec3 u_color;
+
 void main()
-{
-	// Standard just a white color
-	FragColor = vec4(1.0);
+{	
+	FragColor = vec4(u_color, 1.0);
 }

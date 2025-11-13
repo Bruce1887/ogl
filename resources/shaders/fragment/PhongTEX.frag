@@ -27,12 +27,12 @@ void main()
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = light_diffuse * diff * vec3(texture(u_texture, texCoord));  
     
-    // specular
+    // // specular
     vec3 viewDir = normalize(u_camPos - fragPos);
     vec3 reflectDir = reflect(-lightDir, norm);  
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
     vec3 specular = light_specular * spec * vec3(texture(u_texture, texCoord));  
-        
+
     vec3 result = ambient + diffuse + specular;
     FragColor = vec4(result, 1.0);    
 }

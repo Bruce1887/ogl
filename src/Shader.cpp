@@ -30,6 +30,7 @@ ShaderProgramSource Shader::parseShader(const std::string &filepath, ShaderType 
 unsigned int Shader::compileShader(ShaderType type, const std::string &shader_str)
 {
     unsigned int id = glCreateShader((int)type);
+    std::cout << "Created shader with ID: " << id << std::endl;
 #ifdef DEBUG
     if (id == 0)
     {
@@ -110,6 +111,7 @@ void Shader::addShader(const std::string &filename_nopath, ShaderType type)
 
 Shader::~Shader()
 {
+    std::cout << "Deleting shader program ID: " << m_RendererID << std::endl;
     GLCALL(glDeleteProgram(m_RendererID));
 }
 

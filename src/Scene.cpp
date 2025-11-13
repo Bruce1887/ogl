@@ -1,5 +1,7 @@
 #include "Scene.h"
 #include "Renderable.h"
+#include "VertexBufferLayout.h"
+#include "MeshRenderable.h"
 
 #include <algorithm>
 
@@ -26,7 +28,14 @@ void Scene::renderScene()
 	// Render each object in the scene
 	for (auto &r : m_renderables)
 	{
-		r->render(view, projection, &m_PhongLight);
+		r->render(view, projection, &m_lightSource.config);
+	}
+
+	// Optionally render the light source's visual representation
+	if (m_lightSource.visualRepresentation != nullptr)
+	{
+		m_lightSource.visualRepresentation->setPosition(m_lightSource.config.lightPosition);
+		m_lightSource.visualRepresentation->render(view, projection, nullptr);
 	}
 
 	// Swap buffers
