@@ -103,10 +103,9 @@ int oogaboogaInit(const std::string &windowname)
     return 0;
 }
 
-
 int oogaboogaExit()
 {
-    std::cout << "Exiting and terminating GLFW" << std::endl;
+    glfwDestroyWindow(window);    
     glfwTerminate();
 
     if(rContext != nullptr)

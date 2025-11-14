@@ -21,4 +21,9 @@ public:
         // std::cout << "FPS: " << 1.0f / deltaTime << std::endl;
         return deltaTime;
     }
+
+    float getCurrentTime() const
+    {
+        return static_cast<float>(glfwGetTime());
+    }
 };

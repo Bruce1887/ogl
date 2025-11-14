@@ -23,6 +23,7 @@ int main(int, char **)
         goto out;
 
     {
+        // ######## Camera setup ########
         CameraConfiguration cam_config{
             .fov = 45.0f,
             .aspect = (float)window_X / (float)window_Y,
@@ -37,9 +38,9 @@ int main(int, char **)
         // ######## Light source ########
         PhongLightConfig lightConfig{
             .lightPosition = glm::vec3(15.0f, 10.0f, 10.0f),
-            .ambientLight = glm::vec3(0.2f, 0.2f, 0.2f),
+            .ambientLight = glm::vec3(0.3f, 0.3f, 0.3f),
             .diffuseLight = glm::vec3(1.0f, 1.0f, 0.5f),
-            .specularLight = glm::vec3(1.0f, 1.0f, 1.0f)
+            .specularLight = glm::vec3(1.0f, 1.0f, 0.5f)
         };
         LightSource lightSource {
             .config = lightConfig,
@@ -57,7 +58,7 @@ int main(int, char **)
         Mesh lightBox_mesh(&lightBox_VA, &lightBox_IBO);
         Shader lightBox_shader;
         lightBox_shader.addShader("3D.vert", ShaderType::VERTEX);
-        lightBox_shader.addShader("constColor.frag", ShaderType::FRAGMENT);
+        lightBox_shader.addShader("constColor.frag", ShaderType::FRAGMENT);        
         lightBox_shader.createProgram();
         lightBox_shader.bind();
         lightBox_shader.setUniform("u_color", lightSource.config.diffuseLight); // Yellow color for the light box
@@ -67,6 +68,7 @@ int main(int, char **)
         // create the scene
         Scene scene(camera, lightSource);
 
+        // Create the main object (a big box)
         VertexArray box_VA;
         box_VA.bind();
         VertexBuffer box_VB(BOX_VERTICES_NORM_TEX, BOX_VERTICES_NORM_TEX_SIZE, &box_VA);
@@ -78,8 +80,8 @@ int main(int, char **)
         Mesh box_mesh(&box_VA, nullptr);
 
         Shader phongShader;
-        phongShader.addShader("PhongTEX.vert", ShaderType::VERTEX);
-        phongShader.addShader("PhongTEX.frag", ShaderType::FRAGMENT);
+        phongShader.addShader("3DLighting_Tex.vert", ShaderType::VERTEX);
+        phongShader.addShader("PhongTEX.frag", ShaderType::FRAGMENT);        
         phongShader.createProgram();
 
         MeshRenderable box_renderable(&box_mesh, &phongShader);
@@ -97,7 +99,8 @@ int main(int, char **)
         {
             scene.tick();
 
-            scene.m_lightSource.config.lightPosition = glm::vec3(15.0f * sinf((float)glfwGetTime()), 10.0f, 15.0f * cosf((float)glfwGetTime()));
+            float slowedTime = frameTimer.getCurrentTime() * 0.5f;
+            scene.m_lightSource.config.lightPosition = glm::vec3(15.0f * sinf(slowedTime), 15.0f * sinf(slowedTime), 15.0f * cosf(slowedTime));
             MovementInput movementInput = getUserMovementInput(window);
             scene.m_activeCamera.orbitControl(movementInput, frameTimer.getDeltaTime());
 

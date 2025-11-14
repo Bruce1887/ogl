@@ -35,16 +35,18 @@ void MeshRenderable::render(glm::mat4 view, glm::mat4 projection, PhongLightConf
     }
 
     // Set other uniforms
-    m_shaderRef->setUniform("view", view);
-    m_shaderRef->setUniform("projection", projection);
-    m_shaderRef->setUniform("model", getTransform());
+    m_shaderRef->setUniform("u_view", view);
+    m_shaderRef->setUniform("u_projection", projection);
+    m_shaderRef->setUniform("u_model", getTransform());
     
     if(phongLight != nullptr)
     {
-        m_shaderRef->setUniform("light_position", phongLight->lightPosition);
-        m_shaderRef->setUniform("light_ambient", phongLight->ambientLight);
-        m_shaderRef->setUniform("light_diffuse", phongLight->diffuseLight);
-        m_shaderRef->setUniform("light_specular", phongLight->specularLight);
+        m_shaderRef->setUniform("u_light_position", phongLight->lightPosition);
+        m_shaderRef->setUniform("u_light_ambient", phongLight->ambientLight);
+        m_shaderRef->setUniform("u_light_diffuse", phongLight->diffuseLight);
+        m_shaderRef->setUniform("u_light_specular", phongLight->specularLight);
+        glm::vec3 camPos = glm::vec3(glm::inverse(view)[3]);
+        m_shaderRef->setUniform("u_camPos", camPos);        
     }
 
     if (rContext->m_boundVAO != m_mesh->vertexArray->getID())

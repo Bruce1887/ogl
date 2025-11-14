@@ -30,12 +30,12 @@ ShaderProgramSource Shader::parseShader(const std::string &filepath, ShaderType 
 unsigned int Shader::compileShader(ShaderType type, const std::string &shader_str)
 {
     unsigned int id = glCreateShader((int)type);
-    std::cout << "Created shader with ID: " << id << std::endl;
 #ifdef DEBUG
+    std::cout << __FILE__ << " : " << __LINE__ << "- glCreateShader returned ID: " << id << std::endl;
     if (id == 0)
     {
-        std::cerr << "Could not create shader with type: " << type << std : endl;
-        std::cerr << "shader_str: " << shader_str << std : endl;
+        std::cerr << "Could not create shader with type: " << type << std::endl;
+        std::cerr << "shader_str: " << shader_str << std::endl;
     }
 #endif
 
@@ -65,16 +65,22 @@ unsigned int Shader::compileShader(ShaderType type, const std::string &shader_st
 void Shader::createProgram()
 {
     unsigned int program = glCreateProgram();
+#ifdef DEBUG
+    std::cout << __FILE__ << " : " << __LINE__ << "- Created shader program with ID: " << program << std::endl;
+#endif
 
     std::vector<unsigned int> shader_references;
     shader_references.reserve(m_programSources.size());
-    size_t i = 0; 
+    size_t i = 0;
     for (i; i < m_programSources.size(); i++)
     {
         const auto &ps = m_programSources[i];
         unsigned int shader_ref = compileShader(ps.type, ps.content);
         if (shader_ref == 0)
+        {
+            GLCALL(glDeleteProgram(program));
             exit(-1);
+        }
         glAttachShader(program, shader_ref);
         shader_references.push_back(shader_ref);
     }
@@ -111,7 +117,9 @@ void Shader::addShader(const std::string &filename_nopath, ShaderType type)
 
 Shader::~Shader()
 {
-    std::cout << "Deleting shader program ID: " << m_RendererID << std::endl;
+#ifdef DEBUG
+    std::cout << __FILE__ << " : " << __LINE__ << "- Deleting shader program ID: " << m_RendererID << std::endl;
+#endif
     GLCALL(glDeleteProgram(m_RendererID));
 }
 
@@ -131,11 +139,11 @@ void Shader::unbind() const
 
 void Shader::setUniform(const std::string &name, int value)
 {
-    GLCALL(glUniform1i(getUniformLocation(name), value));    
+    GLCALL(glUniform1i(getUniformLocation(name), value));
 }
 
 void Shader::setUniform(const std::string &name, unsigned int value)
-{    
+{
     GLCALL(glUniform1i(getUniformLocation(name), value));
 }
 

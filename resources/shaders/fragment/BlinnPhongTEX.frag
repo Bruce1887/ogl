@@ -7,7 +7,7 @@ in vec3 fragPos;
 in vec2 texCoord;
 
 uniform sampler2D u_texture;
-uniform vec3 u_camPos;
+uniform vec3 u_camPos; // we get this from in variable
 
 // light parameters
 uniform vec3 u_light_ambient;
@@ -28,9 +28,11 @@ void main()
     
     // specular
     vec3 viewDir = normalize(u_camPos - fragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);  
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-    vec3 specular = u_light_specular * spec * vec3(texture(u_texture, texCoord));  
+    vec3 halfwayDir = normalize(lightDir + viewDir);  // Blinn-Phong approach
+    float spec = pow(max(dot(norm, halfwayDir), 0.0), 32);
+    
+    // Don't multiply specular by texture - use light color only
+    vec3 specular = u_light_specular * spec;  
 
     vec3 result = ambient + diffuse + specular;
     FragColor = vec4(result, 1.0);    
