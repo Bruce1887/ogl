@@ -9,13 +9,31 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # --- Dependencies ---
 find_package(OpenGL REQUIRED)
-find_package(glfw3 REQUIRED)
+
+# Platform-specific dependency handling
+if(WIN32)
+    # Manual GLFW setup for Windows
+    set(GLFW_DIR "C:/libs/glfw-3.4.bin.WIN64")
+    
+    # Create imported target for GLFW
+    add_library(glfw SHARED IMPORTED)
+    set_target_properties(glfw PROPERTIES
+        IMPORTED_LOCATION "${GLFW_DIR}/lib-vc2022/glfw3.dll"
+        IMPORTED_IMPLIB "${GLFW_DIR}/lib-vc2022/glfw3dll.lib"
+        INTERFACE_INCLUDE_DIRECTORIES "${GLFW_DIR}/include"
+    )
+else()
+    # Linux: use system packages
+    find_package(glfw3 REQUIRED)
+endif()
+
+# GLM is header-only - include from vendor directory (works on all platforms)
+include_directories(vendor/glm)
 
 # --- Global include directory ---
 include_directories(src)
 
 # --- Gather shared/common sources ---
-# Glob common sources from src root and one-level subdirectories (covers src/IO and similar)
 file(GLOB_RECURSE COMMON_SOURCES "src/*.cpp" "src/*.c" "src/*/*.cpp" "src/*/*.c")
 list(FILTER COMMON_SOURCES EXCLUDE REGEX "src/vendor/.*")
 list(FILTER COMMON_SOURCES EXCLUDE REGEX "src/glad/.*")
@@ -47,6 +65,15 @@ function(add_gl_executable TARGET_NAME SOURCE_FILE)
     elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         target_compile_options(${TARGET_NAME} PRIVATE /W4 /permissive-)
     endif()
+    
+    # On Windows, copy GLFW DLL to output directory
+    if(WIN32)
+        add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${GLFW_DIR}/lib-vc2022/glfw3.dll"
+            $<TARGET_FILE_DIR:${TARGET_NAME}>
+        )
+    endif()
 endfunction()
 
 # --- Automatically add all test programs ---
@@ -55,11 +82,7 @@ foreach(TEST_SRC ${TEST_PROGRAMS})
     get_filename_component(TEST_NAME ${TEST_SRC} NAME_WE)
     add_gl_executable(${TEST_NAME} ${TEST_SRC})
     target_compile_options(${TEST_NAME} PRIVATE -g)
-
 endforeach()
 
 # --- Main executable ---
 # add_gl_executable(oogabooga src/main.cpp)
-
-# --- (Optional) Install rule ---
-# install(TARGETS oogabooga_common RUNTIME DESTINATION bin)

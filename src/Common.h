@@ -16,11 +16,6 @@
 #include <filesystem>
 #include <vector>
 
-// #include "VertexArray.h"
-// #include "VertexBuffer.h"
-// #include "VertexBufferLayout.h"
-// #include "IndexBuffer.h"
-
 namespace fs = std::filesystem;
 inline const fs::path VERTEX_SHADER_DIR  = fs::path("resources") / "shaders" / "vertex";
 inline const fs::path FRAGMENT_SHADER_DIR = fs::path("resources") / "shaders" / "fragment";

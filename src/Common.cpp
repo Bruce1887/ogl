@@ -16,21 +16,24 @@ void setupDefaultGLFWCallbacks()
             // std::cout << "key: " << key << ", action: " << action  << ", mods:" << mods << std::endl;
             if (key == GLFW_KEY_W && mods & GLFW_MOD_CONTROL)
                 glfwSetWindowShouldClose(wdw, GLFW_TRUE); });
+
+    // glfwSetCursorPosCallback(window, [](GLFWwindow * /*window*/, double xpos, double ypos)
+    //                          { std::cout << "xpos,ypos: " << xpos << ", " << ypos << std::endl; });
 }
 
 int checkTextureUnits()
 {
     GLint maxTextureUnits;
-    
-    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);  // Fragment shader
-    if( maxTextureUnits < NUM_TEXTURE_UNITS) 
+
+    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits); // Fragment shader
+    if (maxTextureUnits < NUM_TEXTURE_UNITS)
     {
         std::cout << "Warning: You have " << maxTextureUnits << " texture image units (fragment shader). You need " << NUM_TEXTURE_UNITS << std::endl;
         return -1;
     }
 
-    glGetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &maxTextureUnits);  // Vertex shader
-    if( maxTextureUnits < NUM_TEXTURE_UNITS)
+    glGetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &maxTextureUnits); // Vertex shader
+    if (maxTextureUnits < NUM_TEXTURE_UNITS)
     {
         std::cout << "Warning: You have " << maxTextureUnits << " texture image units (vertex shader). You need " << NUM_TEXTURE_UNITS << std::endl;
         return -1;
@@ -38,9 +41,8 @@ int checkTextureUnits()
     return 0;
 }
 
-
 int oogaboogaInit(const std::string &windowname)
-{    
+{
     if (!glfwInit())
     {
         std::cerr << "Failed to initialize GLFW" << std::endl;
@@ -69,6 +71,9 @@ int oogaboogaInit(const std::string &windowname)
     }
     glfwMakeContextCurrent(window);
 
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+    
     rContext = new RenderingContext();
     rContext->makeCurrent();
 
@@ -90,25 +95,25 @@ int oogaboogaInit(const std::string &windowname)
 
     // GLCALL(glClearColor(0.2f, 0.1f, 0.2f, 1.0f)); // dark purple background color
     GLCALL(glClearColor(0.0f, 0.0f, 0.0f, 1.0f)); // black background color
-    
+
     // Enable blending and set the blend function
     GLCALL(glEnable(GL_BLEND));
     GLCALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
     // Enable depth testing
     glEnable(GL_DEPTH_TEST);
-    
-    if( checkTextureUnits() != 0 )         
-        return -1;    
+
+    if (checkTextureUnits() != 0)
+        return -1;
     return 0;
 }
 
 int oogaboogaExit()
 {
-    glfwDestroyWindow(window);    
+    glfwDestroyWindow(window);
     glfwTerminate();
 
-    if(rContext != nullptr)
+    if (rContext != nullptr)
     {
         delete rContext;
         rContext = nullptr;
