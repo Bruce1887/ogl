@@ -93,26 +93,21 @@ int main(int, char **)
 
         FrameTimer frameTimer;
 
-        double lastX = window_X / 2.0;
-        double lastY = window_Y / 2.0;
-
-        while (!glfwWindowShouldClose(window))
+        while (!glfwWindowShouldClose(g_window))
         {
             scene.tick();
 
             float slowedTime = frameTimer.getCurrentTime() * 0.5f;
             scene.m_lightSource.config.lightPosition = glm::vec3(15.0f * sinf(slowedTime), 15.0f * sinf(slowedTime), 15.0f * cosf(slowedTime));
-            MovementInput movementInput = getUserMovementInput(window);
+            MovementInput movementInput = getUserMovementInput(g_window);
             scene.m_activeCamera.orbitControl(movementInput, frameTimer.getDeltaTime());
 
-            // mouse test
-            double xpos, ypos;
-            glfwGetCursorPos(window, &xpos, &ypos);
-            double xoffset = xpos - lastX;
-            double yoffset = lastY - ypos; // invert Y
-            lastX = xpos;
-            lastY = ypos;
-            std::cout << "Mouse delta: (" << xoffset << ", " << yoffset << ")\n";
+            if (g_InputManager->mouseInput.fetchHasUnprocessedInput())
+            {
+                double deltaX, deltaY;
+                g_InputManager->mouseInput.fetchDeltas(deltaX, deltaY);
+                std::cout << "Mouse moved: deltaX=" << deltaX << ", deltaY=" << deltaY << std::endl;
+            }
 
             scene.renderScene();
         }

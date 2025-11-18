@@ -65,7 +65,7 @@ int main(int, char **)
         float deltaTime = 0.0f;
         float lastFrame = 0.0f;
 
-        while (!glfwWindowShouldClose(window))
+        while (!glfwWindowShouldClose(g_window))
         {
             GLCALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
@@ -75,22 +75,22 @@ int main(int, char **)
 
             shader.bind();
 
-            MovementInput movementInput = getUserMovementInput(window);
+            MovementInput movementInput = getUserMovementInput(g_window);
             camera.orbitControl(movementInput, deltaTime);
 
             glm::mat4 model_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
             model_matrix = glm::rotate(model_matrix, glm::radians(10.0f), glm::vec3(1.0f, 0.0f, 1.0));
 
             shader.bind();
-            shader.setUniform("model", model_matrix);
-            shader.setUniform("view", camera.GetViewMatrix());
-            shader.setUniform("projection", camera.GetProjectionMatrix());
+            shader.setUniform("u_model", model_matrix);
+            shader.setUniform("u_view", camera.GetViewMatrix());
+            shader.setUniform("u_projection", camera.GetProjectionMatrix());
 
             va.bind();
             ib.bind();
             GLCALL(glDrawElements(GL_TRIANGLES, ib.getCount(), GL_UNSIGNED_INT, nullptr));
 
-            glfwSwapBuffers(window);
+            glfwSwapBuffers(g_window);
             glfwPollEvents();
         }
     }

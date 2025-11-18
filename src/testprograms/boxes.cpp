@@ -166,9 +166,9 @@ int main(int, char **)
 
         settings w_settings{fov, (float)window_X / (float)window_Y};
 
-        glfwSetWindowUserPointer(window, &w_settings);
+        glfwSetWindowUserPointer(g_window, &w_settings);
 
-        glfwSetKeyCallback(window, [](GLFWwindow *wdw, int key, int /* scancode */, int action, int mods)
+        glfwSetKeyCallback(g_window, [](GLFWwindow *wdw, int key, int /* scancode */, int action, int mods)
                            {
             if (key == GLFW_KEY_W && mods & GLFW_MOD_CONTROL)
                 glfwSetWindowShouldClose(wdw, true);
@@ -185,7 +185,7 @@ int main(int, char **)
         std::cout << "Use K/L to decrease/increase FOV" << std::endl;
         std::cout << "Use N/M to decrease/increase Aspect Ratio" << std::endl;
 
-        while (!glfwWindowShouldClose(window))
+        while (!glfwWindowShouldClose(g_window))
         {
             GLCALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
@@ -203,8 +203,8 @@ int main(int, char **)
             // set view and projection matrices (camera)
             projectionMatrix = glm::perspective(glm::radians(w_settings.fov), w_settings.aspect, 0.1f, 100.0f);
             shader.bind();
-            shader.setUniform("view", viewMatrix);
-            shader.setUniform("projection", projectionMatrix);
+            shader.setUniform("u_view", viewMatrix);
+            shader.setUniform("u_projection", projectionMatrix);
 
             // set model matrix and draw cubes
             for (size_t i = 0; i < cubePositions.size(); i++)
@@ -214,14 +214,13 @@ int main(int, char **)
                 if (i % 3 == 0)
                     modelMatrix = glm::rotate(modelMatrix, frameTime * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
 
-                shader.setUniform("model", modelMatrix);
-
+                shader.setUniform("u_model", modelMatrix);
                 va.bind();
                 ib.bind();
                 GLCALL(glDrawElements(GL_TRIANGLES, ib.getCount(), GL_UNSIGNED_INT, nullptr));
             }
 
-            glfwSwapBuffers(window);
+            glfwSwapBuffers(g_window);
             glfwPollEvents();
         }
     }

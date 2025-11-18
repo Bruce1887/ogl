@@ -3,7 +3,7 @@
 WasdInput getWASDDirection(GLFWwindow *const wdw)
 {
 
-    WasdInput wasd = {.forward = 0, .right = 0};
+    WasdInput wasd;
     if (glfwGetKey(wdw, GLFW_KEY_W) == GLFW_PRESS)
         wasd.forward += 1;
     if (glfwGetKey(wdw, GLFW_KEY_S) == GLFW_PRESS)

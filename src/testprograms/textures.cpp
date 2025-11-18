@@ -202,9 +202,9 @@ int main()
 
         settings w_settings{fov, (float)window_X / (float)window_Y};
 
-        glfwSetWindowUserPointer(window, &w_settings);
+        glfwSetWindowUserPointer(g_window, &w_settings);
 
-        glfwSetKeyCallback(window, [](GLFWwindow *wdw, int key, int /* scancode */, int action, int mods)
+        glfwSetKeyCallback(g_window, [](GLFWwindow *wdw, int key, int /* scancode */, int action, int mods)
                            {
         if (key == GLFW_KEY_W && mods & GLFW_MOD_CONTROL)
             glfwSetWindowShouldClose(wdw, true);
@@ -222,11 +222,11 @@ int main()
 
         // render loop
         // -----------
-        while (!glfwWindowShouldClose(window))
+        while (!glfwWindowShouldClose(g_window))
         {
             // input
             // -----
-            processInput(window);
+            processInput(g_window);
 
             // render
             // ------
@@ -277,7 +277,7 @@ int main()
 
             // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
             // -------------------------------------------------------------------------------
-            glfwSwapBuffers(window);
+            glfwSwapBuffers(g_window);
             glfwPollEvents();
         }
 
@@ -306,7 +306,7 @@ void processInput(GLFWwindow *wdw)
         if (mixValue >= 1.0f)
             mixValue = 1.0f;
     }
-    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+    if (glfwGetKey(g_window, GLFW_KEY_DOWN) == GLFW_PRESS)
     {
         mixValue -= 0.001f; // change this value accordingly (might be too slow or too fast based on system hardware)
         if (mixValue <= 0.0f)

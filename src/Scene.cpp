@@ -39,5 +39,5 @@ void Scene::renderScene()
 	}
 
 	// Swap buffers
-	glfwSwapBuffers(window);
+	glfwSwapBuffers(g_window);
 }

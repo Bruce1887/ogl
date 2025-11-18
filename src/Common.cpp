@@ -3,22 +3,33 @@
 RenderingContext *rContext = nullptr;
 GLsizei window_X = 640;
 GLsizei window_Y = 480;
-GLFWwindow *window = nullptr;
-GLFWmonitor *monitor = nullptr;
+GLFWwindow *g_window = nullptr;
+GLFWmonitor *g_monitor = nullptr;
+InputManager* g_InputManager = nullptr;
 
 void setupDefaultGLFWCallbacks()
-{
+{    
+    // we need to have set up these first
+    assert(g_window != nullptr);
+    assert(g_InputManager != nullptr);
+    assert(rContext != nullptr);
+    // assert (g_monitor != nullptr); // g_monitor may be null if not fullscreen
+
     // set window-resize-callback (resize viewport)
-    glfwSetFramebufferSizeCallback(window, [](GLFWwindow * /*window*/, int width, int height)
+    glfwSetFramebufferSizeCallback(g_window, [](GLFWwindow * /*window*/, int width, int height)
                                    { glViewport(0, 0, width, height); });
-    glfwSetKeyCallback(window, [](GLFWwindow *wdw, int key, int /*scancode*/, int action, int mods)
+                                   
+    glfwSetKeyCallback(g_window, [](GLFWwindow *wdw, int key, int /*scancode*/, int action, int mods)
                        {
             // std::cout << "key: " << key << ", action: " << action  << ", mods:" << mods << std::endl;
             if (key == GLFW_KEY_W && mods & GLFW_MOD_CONTROL)
                 glfwSetWindowShouldClose(wdw, GLFW_TRUE); });
 
-    // glfwSetCursorPosCallback(window, [](GLFWwindow * /*window*/, double xpos, double ypos)
-    //                          { std::cout << "xpos,ypos: " << xpos << ", " << ypos << std::endl; });
+    glfwSetCursorPosCallback(g_window, [](GLFWwindow * /*window*/, double xpos, double ypos)
+                             { 
+                                double inverted_y = window_Y - ypos; // Invert Y to match OpenGL coords
+                                g_InputManager->mouseInput.updateDeltas(xpos, inverted_y);
+                             });
 }
 
 int checkTextureUnits()
@@ -59,9 +70,9 @@ int oogaboogaInit(const std::string &windowname)
 
     // monitor = glfwGetPrimaryMonitor(); // for fullscreen maybe?
 
-    window = glfwCreateWindow(window_X, window_Y, windowname.c_str(), monitor, NULL);
+    g_window = glfwCreateWindow(window_X, window_Y, windowname.c_str(), g_monitor, NULL);
 
-    if (!window)
+    if (!g_window)
     {
         const char **e_msg = nullptr;
         glfwGetError(e_msg);
@@ -69,14 +80,15 @@ int oogaboogaInit(const std::string &windowname)
 
         return -1;
     }
-    glfwMakeContextCurrent(window);
+    glfwMakeContextCurrent(g_window);
 
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
     
     rContext = new RenderingContext();
     rContext->makeCurrent();
 
+    g_InputManager = new InputManager();
     setupDefaultGLFWCallbacks();
 
     // Enable V-Sync.
@@ -86,7 +98,6 @@ int oogaboogaInit(const std::string &windowname)
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cerr << "Failed to initialize GLAD" << std::endl;
-        // glfwTerminate();
         return -1;
     }
 
@@ -110,13 +121,19 @@ int oogaboogaInit(const std::string &windowname)
 
 int oogaboogaExit()
 {
-    glfwDestroyWindow(window);
+    glfwDestroyWindow(g_window);
     glfwTerminate();
 
-    if (rContext != nullptr)
+    if (rContext)
     {
         delete rContext;
         rContext = nullptr;
+    }
+
+    if (g_InputManager)
+    {
+        delete g_InputManager;
+        g_InputManager = nullptr;
     }
 
     return 0;

@@ -11,6 +11,7 @@
 #include "Error.h"
 #include "basic_shapes.h"
 #include "RenderingContext.h"
+#include "Input/UserInput.h"
 
 #include <iostream>
 #include <filesystem>
@@ -28,8 +29,9 @@ const int NUM_TEXTURE_UNITS = 32;
 extern RenderingContext *rContext;
 extern GLsizei window_X;
 extern GLsizei window_Y;
-extern GLFWwindow *window;
-extern GLFWmonitor *monitor;
+extern GLFWwindow *g_window;
+extern GLFWmonitor *g_monitor;
+extern InputManager* g_InputManager;
 
 /**
  * Sets up various stuff which is mandatory to get OpenGL running with this framework, and some nice to have stuff as well.

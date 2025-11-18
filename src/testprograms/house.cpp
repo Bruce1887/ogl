@@ -181,9 +181,9 @@ int main(int, char **)
         // Simple camera settings similar to boxes.cpp
         float fov = 45.0f;
         struct settings { float fov; float aspect; } w_settings{fov, (float)window_X / (float)window_Y};
-        glfwSetWindowUserPointer(window, &w_settings);
+        glfwSetWindowUserPointer(g_window, &w_settings);
 
-        while (!glfwWindowShouldClose(window))
+        while (!glfwWindowShouldClose(g_window))
         {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -195,8 +195,8 @@ int main(int, char **)
             glm::mat4 projectionMatrix = glm::perspective(glm::radians(w_settings.fov), w_settings.aspect, 0.1f, 100.0f);
 
             shader.bind();
-            shader.setUniform("view", viewMatrix);
-            shader.setUniform("projection", projectionMatrix);
+            shader.setUniform("u_view", viewMatrix);
+            shader.setUniform("u_projection", projectionMatrix);
 
             // Draw base (scale cube to be house rectangle)
             baseVA.bind();
@@ -212,7 +212,7 @@ int main(int, char **)
             glm::mat4 modelBase = glm::mat4(1.0f);
             modelBase = glm::scale(modelBase, glm::vec3(2.0f, 1.0f, 1.5f)); // width, height, depth
             modelBase = glm::translate(modelBase, glm::vec3(0.0f, 0.0f, 0.0f));
-            shader.setUniform("model", modelBase);
+            shader.setUniform("u_model", modelBase);
             GLCALL(glDrawElements(GL_TRIANGLES, baseIB.getCount(), GL_UNSIGNED_INT, nullptr));
 
             // Draw roof
@@ -226,7 +226,7 @@ int main(int, char **)
             roofIB.bind();
             glm::mat4 modelRoof = glm::mat4(1.0f);
             // roof vertices were authored in world-space sized for base width ~2.0 and depth ~1.5
-            shader.setUniform("model", modelRoof);
+            shader.setUniform("u_model", modelRoof);
             GLCALL(glDrawElements(GL_TRIANGLES, roofIB.getCount(), GL_UNSIGNED_INT, nullptr));
 
             // Draw door: bind door texture to unit 0 and transparent unit 1
@@ -239,11 +239,11 @@ int main(int, char **)
             doorVA.bind();
             doorIB.bind();
             glm::mat4 modelDoor = glm::mat4(1.0f);
-            shader.setUniform("model", modelDoor);
+            shader.setUniform("u_model", modelDoor);
 
             GLCALL(glDrawElements(GL_TRIANGLES, doorIB.getCount(), GL_UNSIGNED_INT, nullptr));
 
-            glfwSwapBuffers(window);
+            glfwSwapBuffers(g_window);
             glfwPollEvents();
         }
     }
