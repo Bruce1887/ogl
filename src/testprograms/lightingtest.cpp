@@ -38,9 +38,9 @@ int main(int, char **)
         // ######## Light source ########
         PhongLightConfig lightConfig{
             .lightPosition = glm::vec3(15.0f, 10.0f, 10.0f),
-            .ambientLight = glm::vec3(0.3f, 0.3f, 0.3f),
-            .diffuseLight = glm::vec3(1.0f, 1.0f, 0.5f),
-            .specularLight = glm::vec3(1.0f, 1.0f, 0.5f)};
+            .ambientLight = glm::vec3(0.2f, 0.2f, 0.2f),
+            .diffuseLight = glm::vec3(1.0f, 1.0f, 0.7f),
+            .specularLight = glm::vec3(1.0f, 1.0f, 1.0f)};
         LightSource lightSource{
             .config = lightConfig,
             .visualRepresentation = nullptr};
@@ -59,7 +59,7 @@ int main(int, char **)
         lightBox_shader.addShader("constColor.frag", ShaderType::FRAGMENT);
         lightBox_shader.createProgram();
         lightBox_shader.bind();
-        lightBox_shader.setUniform("u_color", lightSource.config.diffuseLight); // Yellow color for the light box
+        lightBox_shader.setUniform("u_color", lightSource.config.diffuseLight); // Set the box color to the light's diffuse color
         MeshRenderable lightBox_renderable(&lightBox_mesh, &lightBox_shader);
         lightSource.visualRepresentation = &lightBox_renderable;
 
@@ -99,14 +99,13 @@ int main(int, char **)
 
             float slowedTime = frameTimer.getCurrentTime() * 0.5f;
             scene.m_lightSource.config.lightPosition = glm::vec3(15.0f * sinf(slowedTime), 15.0f * sinf(slowedTime), 15.0f * cosf(slowedTime));
-            MovementInput movementInput = getUserMovementInput(g_window);
-            scene.m_activeCamera.orbitControl(movementInput, frameTimer.getDeltaTime());
 
-            if (g_InputManager->mouseInput.fetchHasUnprocessedInput())
+            scene.m_activeCamera.orbitControl(g_InputManager, frameTimer.getDeltaTime());
+
+            double deltaX, deltaY;
+            if (g_InputManager->mouseMoveInput.fetchDeltas(deltaX, deltaY))
             {
-                double deltaX, deltaY;
-                g_InputManager->mouseInput.fetchDeltas(deltaX, deltaY);
-                std::cout << "Mouse moved: deltaX=" << deltaX << ", deltaY=" << deltaY << std::endl;
+                // std::cout << "Mouse moved: deltaX=" << deltaX << ", deltaY=" << deltaY << std::endl;
             }
 
             scene.renderScene();

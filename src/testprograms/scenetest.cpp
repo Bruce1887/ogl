@@ -112,9 +112,8 @@ int main(int, char **)
         while (!glfwWindowShouldClose(g_window))
         {
             scene.tick();
-
-            MovementInput movementInput = getUserMovementInput(g_window);
-            scene.m_activeCamera.orbitControl(movementInput, frameTimer.getDeltaTime());
+            
+            scene.m_activeCamera.orbitControl(g_InputManager, frameTimer.getDeltaTime());
 
             scene.renderScene();
         }

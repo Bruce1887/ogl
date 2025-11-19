@@ -51,8 +51,7 @@ private:
     // A list of all renderables in the scene
     std::vector<Renderable *> m_renderables;
     unsigned int m_nextVacantID = 0; // For assigning unique IDs to renderables
-
-    void renderSmallBoxAtLightPosition();
+    
     // A list of all cameras in the scene //TODO: implement this one day
     std::vector<Camera> m_cameras;
 };

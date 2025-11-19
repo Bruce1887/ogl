@@ -31,7 +31,7 @@ void Scene::renderScene()
 		r->render(view, projection, &m_lightSource.config);
 	}
 
-	// Optionally render the light source's visual representation
+	// render the light source's visual representation if any 
 	if (m_lightSource.visualRepresentation != nullptr)
 	{
 		m_lightSource.visualRepresentation->setPosition(m_lightSource.config.lightPosition);

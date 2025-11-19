@@ -1,62 +1,77 @@
 #include "UserInput.h"
 
-WasdInput getWASDDirection(GLFWwindow *const wdw)
+// MovementInput implementations
+void MovementInput::updateMovement(int key, int action, int /* mods */)
 {
-
-    WasdInput wasd;
-    if (glfwGetKey(wdw, GLFW_KEY_W) == GLFW_PRESS)
-        wasd.forward += 1;
-    if (glfwGetKey(wdw, GLFW_KEY_S) == GLFW_PRESS)
-        wasd.forward -= 1;
-    if (glfwGetKey(wdw, GLFW_KEY_A) == GLFW_PRESS)
-        wasd.right -= 1;
-    if (glfwGetKey(wdw, GLFW_KEY_D) == GLFW_PRESS)
-        wasd.right += 1;
-
-    return wasd;
-}
-
-MovementInput getUserMovementInput(GLFWwindow *const wdw)
-{
-    MovementInput input;
-    input.wasd = getWASDDirection(wdw);
-    input.shiftDown = (glfwGetKey(wdw, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS);
-    return input;
-}
-
-/*
-MouseInput getUserMouseInput(GLFWwindow *const wdw)
-{
-    static double lastX = 0.0;
-    static double lastY = 0.0;
-    static bool firstCall = true;
-
-    double currentX, currentY;
-    glfwGetCursorPos(wdw, &currentX, &currentY);
-
-    MouseInput input;
-    if (firstCall)
+    bool isPressed = action != GLFW_RELEASE;
+    switch (key)
     {
-        input.deltaX = 0.0;
-        input.deltaY = 0.0;
-        firstCall = false;
+    case GLFW_KEY_W:
+        wasd.w_down = isPressed;
+        break;
+    case GLFW_KEY_A:
+        wasd.a_down = isPressed;
+        break;
+    case GLFW_KEY_S:
+        wasd.s_down = isPressed;
+        break;
+    case GLFW_KEY_D:
+        wasd.d_down = isPressed;
+        break;
+    case GLFW_KEY_LEFT_SHIFT:
+        shiftDown = isPressed;
+        break;
+    default:
+        break;
     }
-    else
-    {
-        input.deltaX = currentX - lastX;
-        input.deltaY = currentY - lastY;
-    }
-
-    lastX = currentX;
-    lastY = currentY;
-
-    double scrollX = 0.0;
-    double scrollY = 0.0;
-    // Note: GLFW scroll callback would be better for this, but for simplicity we poll here.
-    // This requires more complex state management to track scroll deltas per frame.
-    input.scrollX = scrollX;
-    input.scrollY = scrollY;
-
-    return input;
+    markUpdated();
 }
-*/
+
+void MovementInput::fetchMovement(int &outForward, int &outRight, bool &outShiftDown)
+{
+    outForward = (wasd.w_down ? 1 : 0) + (wasd.s_down ? -1 : 0);
+    outRight = (wasd.d_down ? 1 : 0) + (wasd.a_down ? -1 : 0);
+    outShiftDown = shiftDown;
+    clearUpdated(); 
+}
+
+// MouseMoveInput implementations
+void MouseMoveInput::updateDeltas(double xpos, double ypos)
+{
+    deltaX = xpos - lastX;
+    deltaY = ypos - lastY;
+    lastX = xpos;
+    lastY = ypos;
+    markUpdated();
+}
+
+bool MouseMoveInput::fetchDeltas(double &outDeltaX, double &outDeltaY)
+{
+    if (!hasInput())
+        return false;
+
+    outDeltaX = deltaX;
+    outDeltaY = deltaY;
+    clearUpdated();
+    return true;
+}
+
+// MouseScrollInput implementations
+void MouseScrollInput::updateScroll(double xoffset, double yoffset)
+{
+    scrollX = xoffset;
+    scrollY = yoffset;
+    markUpdated();
+}
+
+bool MouseScrollInput::fetchScroll(double &outScrollX, double &outScrollY)
+{
+    if (!hasInput())
+        return false;
+
+    std::cout << "Fetching scroll: " << scrollX << ", " << scrollY << std::endl;
+    outScrollX = scrollX;
+    outScrollY = scrollY;
+    clearUpdated();
+    return true;
+}

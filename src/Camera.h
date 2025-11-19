@@ -51,9 +51,7 @@ public:
 	 * @param movementInput The user input
 	 * @param deltaTime Time elapsed since last frame, used to make movement-speed framerate independent
 	 */
-	void orbitControl(MovementInput movementInput, float deltaTime);
-
-
+	void orbitControl(InputManager *inputManager, float deltaTime);
 	
 	// glm::vec3 getRight() const {
 	// 	return glm::normalize(glm::cross(m_Target - m_Position, m_Up));
@@ -63,7 +61,8 @@ public:
 	// private:
 	glm::vec3 m_Position;
 	glm::vec3 m_Up;
-	glm::vec3 m_Target;
+	glm::vec3 m_Target; // used in oribit control
+	
 	glm::vec3 WorldUp;
 	CameraConfiguration m_Config;
 };

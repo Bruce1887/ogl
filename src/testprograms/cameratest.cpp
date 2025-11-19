@@ -68,15 +68,14 @@ int main(int, char **)
         while (!glfwWindowShouldClose(g_window))
         {
             GLCALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-
+                
             float currentFrame = static_cast<float>(glfwGetTime());
             deltaTime = currentFrame - lastFrame;
             lastFrame = currentFrame;
 
             shader.bind();
-
-            MovementInput movementInput = getUserMovementInput(g_window);
-            camera.orbitControl(movementInput, deltaTime);
+            
+            camera.orbitControl(g_InputManager, deltaTime);
 
             glm::mat4 model_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
             model_matrix = glm::rotate(model_matrix, glm::radians(10.0f), glm::vec3(1.0f, 0.0f, 1.0));
