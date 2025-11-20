@@ -46,23 +46,29 @@ public:
 		return glm::perspective(glm::radians(m_Config.fov), m_Config.aspect, m_Config.near, m_Config.far);
 	};
 
-	/**
-	 * Orbit control around the target based on user input
-	 * @param movementInput The user input
-	 * @param deltaTime Time elapsed since last frame, used to make movement-speed framerate independent
-	 */
-	void orbitControl(InputManager *inputManager, float deltaTime);
-	
+
+	//move the camera around a target point based on user input
+    void orbitControl(InputManager *inputManager, float deltaTime);
+
+    // move the camera freely based on user input
+	void flyControl(InputManager *inputManager, float deltaTime);
+
 	// glm::vec3 getRight() const {
 	// 	return glm::normalize(glm::cross(m_Target - m_Position, m_Up));
 	// }
 
-	// TODO: What should be private?
-	// private:
+	// TODO: Should these be private?	
 	glm::vec3 m_Position;
 	glm::vec3 m_Up;
-	glm::vec3 m_Target; // used in oribit control
+	glm::vec3 m_Target;
+	// glm::vec3 m_Forward; // forward can be derived from position and target
 	
 	glm::vec3 WorldUp;
 	CameraConfiguration m_Config;
+
+	private:
+	// Changes m_config.fov based on scroll input
+	void zoomCamera(InputManager *inputManager);
+	void pointCameraWithMouse(InputManager *inputManager, glm::vec3 &offset);
+	void pointCameraWithMouseFly(InputManager *inputManager);
 };

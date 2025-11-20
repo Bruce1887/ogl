@@ -21,21 +21,21 @@ void setupDefaultGLFWCallbacks()
 
     // set key-callback (for movement input)
     glfwSetKeyCallback(g_window, [](GLFWwindow *wdw, int key, int /*scancode*/, int action, int mods)
-                       {        
+                       {
         if (key == GLFW_KEY_W && mods & GLFW_MOD_CONTROL)
-            glfwSetWindowShouldClose(wdw, GLFW_TRUE); 
-        
+            glfwSetWindowShouldClose(wdw, GLFW_TRUE);
+
         g_InputManager->movementInput.updateMovement(key, action, mods); });
 
     // set cursor position callback (for mouse movement input)
     glfwSetCursorPosCallback(g_window, [](GLFWwindow * /*window*/, double xpos, double ypos)
-                             {         
-        double inverted_y = -ypos + static_cast<double>(window_Y); // Invert Y axis to match OpenGL coordinates
-        g_InputManager->mouseMoveInput.updateDeltas(xpos, inverted_y); });
+                             {
+        // double inverted_y = -ypos + static_cast<double>(window_Y); // Invert Y axis to match OpenGL coordinates
+        g_InputManager->mouseMoveInput.updateDeltas(xpos, ypos); });
 
     // set scroll callback (for mouse scroll input)
     glfwSetScrollCallback(g_window, [](GLFWwindow * /*window*/, double xoffset, double yoffset)
-                          {         
+                          {
         g_InputManager->scrollInput.updateScroll(xoffset, yoffset); });
 }
 
@@ -74,6 +74,7 @@ int oogaboogaInit(const std::string &windowname)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_SAMPLES, 4); // 4x MSAA (multi-sample anti-aliasing)
 
     // monitor = glfwGetPrimaryMonitor(); // for fullscreen maybe?
 
@@ -120,6 +121,9 @@ int oogaboogaInit(const std::string &windowname)
 
     // Enable depth testing
     glEnable(GL_DEPTH_TEST);
+
+    // Enable multisampling for anti-aliasing (maybe redundant but cant hurt)
+    glEnable(GL_MULTISAMPLE);
 
     if (checkTextureUnits() != 0)
         return -1;

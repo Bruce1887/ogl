@@ -3,16 +3,20 @@
 #include "VertexBufferLayout.h"
 #include "IndexBuffer.h"
 
-#include "Camera.h"
 #include "Shader.h"
 #include "Texture.h"
 #include "Common.h"
+#include "Camera.h"
+#include "Scene.h"
+#include "Frametimer.h"
+#include "MeshRenderable.h"
 
 #include <fstream>
 #include <string>
 #include <sstream>
 #include <cassert>
-#include <cmath>
+
+bool cameraFunctionMode = true; // true = fly, false = orbit
 
 int main(int, char **)
 {
@@ -20,77 +24,101 @@ int main(int, char **)
     if (oogaboogaInit(__FILE__))
         goto out;
 
+    // set key-callback (for movement input)
+    glfwSetKeyCallback(g_window, [](GLFWwindow *wdw, int key, int /*scancode*/, int action, int mods)
+                       {        
+        if (key == GLFW_KEY_W && mods & GLFW_MOD_CONTROL)
+            glfwSetWindowShouldClose(wdw, GLFW_TRUE); 
+        if (key == GLFW_KEY_SPACE && action == GLFW_PRESS){
+            std::cout << "Toggling camera function mode. Now in " << (cameraFunctionMode ? "orbit" : "fly") << " mode." << std::endl;
+            cameraFunctionMode = !cameraFunctionMode;
+        }
+
+        g_InputManager->movementInput.updateMovement(key, action, mods); });
     {
-        VertexArray va;
-        va.bind();
-
-        constexpr const float* vertices = BOX_VERTICES_TEX;
-        constexpr const unsigned int* indices = BOX_INDICES_TEX;
-        VertexBuffer vb(vertices, BOX_VERTICES_TEX_SIZE, &va);
-
-        VertexBufferLayout layout;
-        layout.push<float>(3);
-        layout.push<float>(2);
-
-        va.addBuffer(vb, layout);
-
-        IndexBuffer ib(indices, 36);
-
-        Shader shader;
-        shader.addShader("3D_TEX.vert", ShaderType::VERTEX);
-        shader.addShader("2TEX_AB.frag", ShaderType::FRAGMENT);
-        shader.createProgram();
-
-        Texture texture1((TEXTURE_DIR / "container.jpg").string(), 0);
-        texture1.bind();
-
-        Texture texture2((TEXTURE_DIR / "cowday.png").string(), 1);
-        texture2.bind();
-
-        shader.bind();
-        shader.setUniform("u_texture1", 0);
-        shader.setUniform("u_texture2", 1);
-
+        // ######## Camera setup ########
         CameraConfiguration cam_config{
             .fov = 45.0f,
             .aspect = (float)window_X / (float)window_Y,
-            .near = 0.1f,
-            .far = 100.0f};
+            .near = 1.0f,
+            .far = 300.0f};
 
         Camera camera(cam_config);
+        camera.m_Position = glm::vec3(0.0f, 20.0f, 35.0f);
         camera.m_Target = glm::vec3(0.0f, 0.0f, 0.0f);
         camera.m_Up = glm::vec3(0.0f, 1.0f, 0.0f);
-        camera.m_Position = glm::vec3(0.0f, 0.0f, 15.0f);
 
-        float deltaTime = 0.0f;
-        float lastFrame = 0.0f;
+        // ######## Light source ########
+        PhongLightConfig lightConfig{
+            .lightPosition = glm::vec3(15.0f, 10.0f, 10.0f),
+            .ambientLight = glm::vec3(0.2f, 0.2f, 0.2f),
+            .diffuseLight = glm::vec3(1.0f, 1.0f, 0.7f),
+            .specularLight = glm::vec3(1.0f, 1.0f, 1.0f)};
+        LightSource lightSource{
+            .config = lightConfig,
+            .visualRepresentation = nullptr};
+
+        // Create a small box to visualize the light source
+        VertexArray lightBox_VA;
+        lightBox_VA.bind();
+        VertexBuffer lightBox_VB(BOX_VERTICES, BOX_VERTICES_SIZE, &lightBox_VA);
+        VertexBufferLayout lightBox_layout;
+        lightBox_layout.push<float>(3); // position
+        lightBox_VA.addBuffer(lightBox_VB, lightBox_layout);
+        IndexBuffer lightBox_IBO(BOX_INDICES, BOX_INDICES_COUNT);
+        Mesh lightBox_mesh(&lightBox_VA, &lightBox_IBO);
+        Shader lightBox_shader;
+        lightBox_shader.addShader("3D.vert", ShaderType::VERTEX);
+        lightBox_shader.addShader("constColor.frag", ShaderType::FRAGMENT);
+        lightBox_shader.createProgram();
+        lightBox_shader.bind();
+        lightBox_shader.setUniform("u_color", lightSource.config.diffuseLight); // Set the box color to the light's diffuse color
+        MeshRenderable lightBox_renderable(&lightBox_mesh, &lightBox_shader);
+        lightSource.visualRepresentation = &lightBox_renderable;
+
+        // create the scene
+        Scene scene(camera, lightSource);
+
+        // Create the main object (a big box)
+        VertexArray box_VA;
+        box_VA.bind();
+        VertexBuffer box_VB(BOX_VERTICES_NORM_TEX, BOX_VERTICES_NORM_TEX_SIZE, &box_VA);
+        VertexBufferLayout layout_normals;
+        layout_normals.push<float>(3); // position
+        layout_normals.push<float>(3); // normal
+        layout_normals.push<float>(2); // texture coord
+        box_VA.addBuffer(box_VB, layout_normals);
+        Mesh box_mesh(&box_VA, nullptr);
+
+        Shader phongShader;
+        phongShader.addShader("3DLighting_Tex.vert", ShaderType::VERTEX);
+        phongShader.addShader("PhongTEX.frag", ShaderType::FRAGMENT);
+        phongShader.createProgram();
+
+        MeshRenderable box_renderable(&box_mesh, &phongShader);
+        box_renderable.setTransform(glm::scale(glm::mat4(1.0f), glm::vec3(5.0f)));
+
+        Texture box_tex((TEXTURE_DIR / "container.jpg").string(), 0);
+        box_tex.targetUniform = "u_texture";
+        box_renderable.m_textureReferences = std::vector<Texture *>{&box_tex};
+
+        scene.addRenderable(&box_renderable);
+
+        FrameTimer frameTimer;
 
         while (!glfwWindowShouldClose(g_window))
         {
-            GLCALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-                
-            float currentFrame = static_cast<float>(glfwGetTime());
-            deltaTime = currentFrame - lastFrame;
-            lastFrame = currentFrame;
+            scene.tick();
 
-            shader.bind();
-            
-            camera.orbitControl(g_InputManager, deltaTime);
+            float slowedTime = frameTimer.getCurrentTime() * 0.5f;
+            scene.m_lightSource.config.lightPosition = glm::vec3(15.0f * sinf(slowedTime), 15.0f * sinf(slowedTime), 15.0f * cosf(slowedTime));
 
-            glm::mat4 model_matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-            model_matrix = glm::rotate(model_matrix, glm::radians(10.0f), glm::vec3(1.0f, 0.0f, 1.0));
+            if (cameraFunctionMode)
+                scene.m_activeCamera.flyControl(g_InputManager, frameTimer.getDeltaTime());
+            else
+                scene.m_activeCamera.orbitControl(g_InputManager, frameTimer.getDeltaTime());
 
-            shader.bind();
-            shader.setUniform("u_model", model_matrix);
-            shader.setUniform("u_view", camera.GetViewMatrix());
-            shader.setUniform("u_projection", camera.GetProjectionMatrix());
-
-            va.bind();
-            ib.bind();
-            GLCALL(glDrawElements(GL_TRIANGLES, ib.getCount(), GL_UNSIGNED_INT, nullptr));
-
-            glfwSwapBuffers(g_window);
-            glfwPollEvents();
+            scene.renderScene();
         }
     }
 

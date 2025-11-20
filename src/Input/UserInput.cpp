@@ -38,11 +38,17 @@ void MovementInput::fetchMovement(int &outForward, int &outRight, bool &outShift
 // MouseMoveInput implementations
 void MouseMoveInput::updateDeltas(double xpos, double ypos)
 {
-    deltaX = xpos - lastX;
-    deltaY = ypos - lastY;
+    double newDeltaX = xpos - lastX;
+    double newDeltaY = ypos - lastY;
+    
+    // ACCUMULATE deltas instead of replacing them
+    deltaX += newDeltaX;
+    deltaY += newDeltaY;
+    
     lastX = xpos;
     lastY = ypos;
     markUpdated();
+    std::cout << __func__ << " Mouse deltas: " << deltaX << ", " << deltaY << std::endl;
 }
 
 bool MouseMoveInput::fetchDeltas(double &outDeltaX, double &outDeltaY)
@@ -52,15 +58,18 @@ bool MouseMoveInput::fetchDeltas(double &outDeltaX, double &outDeltaY)
 
     outDeltaX = deltaX;
     outDeltaY = deltaY;
+    deltaX = 0.0;
+    deltaY = 0.0;
     clearUpdated();
+    // std::cout << __func__ << " Mouse deltas: " << deltaX << ", " << deltaY << std::endl;
     return true;
 }
 
 // MouseScrollInput implementations
 void MouseScrollInput::updateScroll(double xoffset, double yoffset)
 {
-    scrollX = xoffset;
-    scrollY = yoffset;
+    scrollX += xoffset;
+    scrollY += yoffset;
     markUpdated();
 }
 
@@ -69,9 +78,11 @@ bool MouseScrollInput::fetchScroll(double &outScrollX, double &outScrollY)
     if (!hasInput())
         return false;
 
-    std::cout << "Fetching scroll: " << scrollX << ", " << scrollY << std::endl;
+    // std::cout << "Fetching scroll: " << scrollX << ", " << scrollY << std::endl;
     outScrollX = scrollX;
     outScrollY = scrollY;
+    scrollX = 0.0;
+    scrollY = 0.0;
     clearUpdated();
     return true;
 }

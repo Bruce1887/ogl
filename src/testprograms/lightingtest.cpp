@@ -92,7 +92,8 @@ int main(int, char **)
         scene.addRenderable(&box_renderable);
 
         FrameTimer frameTimer;
-
+        
+        
         while (!glfwWindowShouldClose(g_window))
         {
             scene.tick();
@@ -100,13 +101,8 @@ int main(int, char **)
             float slowedTime = frameTimer.getCurrentTime() * 0.5f;
             scene.m_lightSource.config.lightPosition = glm::vec3(15.0f * sinf(slowedTime), 15.0f * sinf(slowedTime), 15.0f * cosf(slowedTime));
 
-            scene.m_activeCamera.orbitControl(g_InputManager, frameTimer.getDeltaTime());
-
-            double deltaX, deltaY;
-            if (g_InputManager->mouseMoveInput.fetchDeltas(deltaX, deltaY))
-            {
-                // std::cout << "Mouse moved: deltaX=" << deltaX << ", deltaY=" << deltaY << std::endl;
-            }
+            scene.m_activeCamera.flyControl(g_InputManager, frameTimer.getDeltaTime());
+            // scene.m_activeCamera.orbitControl(g_InputManager, frameTimer.getDeltaTime());
 
             scene.renderScene();
         }
