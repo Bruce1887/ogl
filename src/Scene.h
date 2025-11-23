@@ -23,6 +23,7 @@ Scene(Camera defaultCamera, LightSource lightSource)
 
     void addRenderable(Renderable *renderable);
     void removeRenderable(Renderable *renderable);
+    void clearRenderables(); // Clear all renderables from scene
     void renderScene();
 
     Camera m_activeCamera;

@@ -21,6 +21,8 @@ MovementInput getUserMovementInput(GLFWwindow *const wdw)
     MovementInput input;
     input.wasd = getWASDDirection(wdw);
     input.shiftDown = (glfwGetKey(wdw, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS);
+    input.qDown = (glfwGetKey(wdw, GLFW_KEY_Q) == GLFW_PRESS);
+    input.eDown = (glfwGetKey(wdw, GLFW_KEY_E) == GLFW_PRESS);
     return input;
 }
 
