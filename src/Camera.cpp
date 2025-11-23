@@ -101,8 +101,6 @@ void Camera::pointCameraWithMouseFly(InputManager *inputManager)
 	// Check if there is any new mouse movement input that hasnt been processed
 	if (inputManager->mouseMoveInput.fetchDeltas(mouseDeltaX, mouseDeltaY))
 	{
-		// std::cout << __func__ << " Mouse deltas: " << mouseDeltaX << ", " << mouseDeltaY << std::endl;
-
 		float sensitivity = 0.005f; // adjust as necessary
 		mouseDeltaX *= sensitivity;
 		mouseDeltaY *= sensitivity * -1.0f; // Invert Y for typical fly camera behavior

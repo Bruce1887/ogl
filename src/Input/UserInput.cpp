@@ -48,7 +48,6 @@ void MouseMoveInput::updateDeltas(double xpos, double ypos)
     lastX = xpos;
     lastY = ypos;
     markUpdated();
-    std::cout << __func__ << " Mouse deltas: " << deltaX << ", " << deltaY << std::endl;
 }
 
 bool MouseMoveInput::fetchDeltas(double &outDeltaX, double &outDeltaY)

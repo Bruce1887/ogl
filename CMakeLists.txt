@@ -28,7 +28,7 @@ else()
 endif()
 
 # GLM is header-only - include from vendor directory (works on all platforms)
-include_directories(vendor/glm)
+include_directories(vendor/ )
 
 # --- Global include directory ---
 include_directories(src)
@@ -41,7 +41,7 @@ list(FILTER COMMON_SOURCES EXCLUDE REGEX "src/testprograms/.*")
 list(FILTER COMMON_SOURCES EXCLUDE REGEX "src/main.cpp")
 
 # --- Vendor libraries ---
-add_library(glad src/glad/glad.c)
+add_library(glad STATIC src/glad/glad.c)
 target_include_directories(glad PUBLIC src)
 target_include_directories(glad SYSTEM PRIVATE src/glad)
 
@@ -53,6 +53,24 @@ target_include_directories(stb_image SYSTEM PRIVATE src/vendor/stb_image)
 add_library(oogabooga_common STATIC ${COMMON_SOURCES})
 target_include_directories(oogabooga_common PUBLIC src)
 target_link_libraries(oogabooga_common PUBLIC glad stb_image glfw OpenGL::GL)
+
+# --- Assimp ---
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
+set(ASSIMP_WARNINGS_AS_ERRORS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_NO_EXPORT ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ZLIB OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_OBJ_IMPORTER ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_FBX_IMPORTER ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_GLTF_IMPORTER ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_COLLADA_IMPORTER OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_3DS_IMPORTER OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_STL_IMPORTER OFF CACHE BOOL "" FORCE)
+add_subdirectory(src/vendor/assimp)
+target_link_libraries(oogabooga_common PUBLIC assimp)
 
 # --- Function for building executables ---
 function(add_gl_executable TARGET_NAME SOURCE_FILE)

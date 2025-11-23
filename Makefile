@@ -1,16 +1,21 @@
-.PHONY: all norun clean 
+.PHONY: all norun clean rebuild cmake_force
 
-BUILD_MAKEFILE = build/Makefile
+BUILD_DIR = build
+BUILD_MAKEFILE = $(BUILD_DIR)/Makefile
+CMAKE_GEN = cmake -S . -B $(BUILD_DIR)
 
-CMAKE_GEN = cmake -S . -B build/
-
-# Default target: build (and run) the project
 all: $(BUILD_MAKEFILE)
-	$(MAKE) -C build/
+	@echo "--- Building project ---"
+	$(MAKE) -C $(BUILD_DIR)
 
-# Create or update the CMake build system
-$(BUILD_MAKEFILE):
+cmake_force:
+	@echo "--- Forcing CMake configuration ---"
 	$(CMAKE_GEN)
 
+$(BUILD_MAKEFILE): cmake_force
+
 clean:
-	rm -rf build/
+	@echo "--- Cleaning build directory ---"
+	rm -rf $(BUILD_DIR)/
+	
+rebuild: clean all
