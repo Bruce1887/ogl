@@ -19,6 +19,11 @@ void Scene::removeRenderable(Renderable *renderable)
 	}
 }
 
+void Scene::clearRenderables()
+{
+	m_renderables.clear();
+}
+
 void Scene::renderScene()
 {
 	// Set up view and projection matrices from the active camera

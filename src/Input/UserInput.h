@@ -31,6 +31,8 @@ protected:
  *
  * wasd: WASD input state.
  * shiftDown: true if the shift key is currently pressed, false otherwise.
+ * qDown: true if Q key is pressed (typically down/descend)
+ * eDown: true if E key is pressed (typically up/ascend)
  */
 class MovementInput : public InputSource
 {
