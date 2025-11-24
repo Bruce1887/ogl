@@ -77,7 +77,9 @@ int main(int, char **)
     // Load textures
     Texture groundTexture((TEXTURE_DIR / "ground.jpg").string(), 0);
     Texture grassTexture((TEXTURE_DIR / "grass.jpg").string(), 1);
-    Texture mountainTexture((TEXTURE_DIR / "mountain.jpg").string(), 2); // Using stoneWall as mountain texture
+    Texture mountainTexture((TEXTURE_DIR / "mountain.jpg").string(), 2);
+    Texture blueWaterTexture((TEXTURE_DIR / "blueWater.jpg").string(), 3);
+    Texture whiteWaterTexture((TEXTURE_DIR / "whiteWater.jpg").string(), 4);
 
     // Generate terrain
     std::cout << "[terraintest] Generating terrain..." << std::endl;
@@ -109,6 +111,10 @@ int main(int, char **)
     terrainShader.setUniform("u_texture1", 1);
     mountainTexture.bind();
     terrainShader.setUniform("u_texture2", 2);
+    blueWaterTexture.bind();
+    terrainShader.setUniform("u_texture3", 3);
+    whiteWaterTexture.bind();
+    terrainShader.setUniform("u_texture4", 4);
 
     std::cout << "[terraintest] Controls:" << std::endl;
     std::cout << "  WASD - Move camera" << std::endl;
@@ -119,6 +125,10 @@ int main(int, char **)
 
     FrameTimer frameTimer;
     int frameCount = 0;
+    
+    // Enable blending for water transparency
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     while (!glfwWindowShouldClose(g_window))
     {

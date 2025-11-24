@@ -46,7 +46,7 @@ int main(int, char **)
     glfwSetScrollCallback(g_window, scroll_callback);
     
     CameraConfiguration camConfig{ 
-        .fov = 60.0f, 
+        .fov = 45.0f, 
         .aspect = (float)window_X / (float)window_Y, 
         .near = 0.1f, 
         .far = 2000.0f 
@@ -59,8 +59,8 @@ int main(int, char **)
         .scale = 25.0f,         // Scale for terrain features
         .heightScale = 100.0f,  // Mountain height
         .octaves = 4,           // Increased from 3 for more detail
-        .persistence = 0.5f,    // Better balanced (was 0.9f)
-        .lacunarity = 2.0f,     // Standard value for natural terrain
+        .persistence = 0.4f,    // Better balanced (was 0.9f)
+        .lacunarity = 3.0f,     // Standard value for natural terrain
         .vertexStep = 1         // Not used by chunks
     };
     TerrainGenerator terrainGen(config);
@@ -91,6 +91,8 @@ int main(int, char **)
     Texture groundTexture((TEXTURE_DIR / "ground.jpg").string(), 0);
     Texture grassTexture((TEXTURE_DIR / "grass.jpg").string(), 1);
     Texture mountainTexture((TEXTURE_DIR / "mountain.jpg").string(), 2);
+    Texture blueWaterTexture((TEXTURE_DIR / "blueWater.jpg").string(), 3);
+    Texture whiteWaterTexture((TEXTURE_DIR / "whiteWater.jpg").string(), 4);
 
     terrainShader.bind();
     groundTexture.bind();
@@ -99,11 +101,15 @@ int main(int, char **)
     terrainShader.setUniform("u_texture1", 1);
     mountainTexture.bind();
     terrainShader.setUniform("u_texture2", 2);
+    blueWaterTexture.bind();
+    terrainShader.setUniform("u_texture3", 3);
+    whiteWaterTexture.bind();
+    terrainShader.setUniform("u_texture4", 4);
 
     // Optimized chunk settings
     std::cout << "[chunktest] Setting up chunked terrain system..." << std::endl;
-    int chunkSize = 100;
-    int vertexStep = 3;  // Optimized: 3 gives good balance (9x fewer vertices than step 1)
+    int chunkSize = 100;  // Clean 100x100 chunks
+    int vertexStep = 5;   // 5 divides 100 evenly -> 20x20 grid per chunk
     TerrainChunkManager chunkManager(&terrainGen, chunkSize, vertexStep);
     chunkManager.setShader(&terrainShader);
     
@@ -125,6 +131,10 @@ int main(int, char **)
 
     FrameTimer frameTimer;
     int frameCount = 0;
+    
+    // Enable blending for water transparency
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     while (!glfwWindowShouldClose(g_window))
     {

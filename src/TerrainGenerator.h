@@ -26,6 +26,7 @@ struct TerrainVertex
     glm::vec3 normal;
     glm::vec2 texCoord;
     float height; // Normalized height for texture blending (0-1)
+    float waterMask; // 0.0 = no water, 1.0 = full water
 };
 
 class TerrainGenerator
@@ -42,6 +43,9 @@ public:
     
     // Generate Perlin noise value (public for chunk generation)
     float getPerlinHeight(float x, float z);
+    
+    // Check if location should have water (based on height and area)
+    float getWaterMask(float x, float z);
 
 private:
     TerrainConfig m_config;

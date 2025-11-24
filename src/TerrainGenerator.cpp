@@ -4,6 +4,7 @@
 #include "vendor/stb_image/stb_perlin.h"
 
 #include <algorithm>
+#include <iostream>
 
 TerrainGenerator::TerrainGenerator(const TerrainConfig& config)
     : m_config(config)
@@ -42,12 +43,27 @@ float TerrainGenerator::getPerlinHeight(float x, float z)
     ridgeNoise = (ridgeNoise + 1.0f) * 0.5f;
     hillNoise = (hillNoise + 1.0f) * 0.5f;
     
-    // More ondulated base terrain with rolling hills
-    float baseHeight = hillNoise * 0.10f + 0.03f;
+    // Lake depression noise - sparse, large areas
+    float lakeNoise = stb_perlin_fbm_noise3(x * 0.0008f, z * 0.0008f, 42.0f,
+                                            2.0f,   // lacunarity
+                                            0.5f,   // gain
+                                            3);     // octaves
+    lakeNoise = (lakeNoise + 1.0f) * 0.5f;
+    
+    // Create lake depressions (more common now)
+    float lakeDepression = 0.0f;
+    if (lakeNoise > 0.45f) {  // More common threshold - ~55% of terrain
+        // Stronger depression for larger lakes
+        lakeDepression = (lakeNoise - 0.45f) * 0.5f;  // Up to 0.275 units lower
+    }
+    
+    // Base terrain centered around sea level (0.13) with variation
+    // Range: ~0.08 to 0.20 (some below, some above sea level)
+    float baseHeight = hillNoise * 0.12f + 0.05f;
     
     // Add ridge details for variety across the map
-    float ridgeDetail = ridgeNoise * 0.12f;
-    float total = baseHeight + ridgeDetail;
+    float ridgeDetail = ridgeNoise * 0.08f;
+    float total = baseHeight + ridgeDetail - lakeDepression;
 
     // Center in bottom-left quadrant but make it MUCH wider
     float mountainCenterX = m_config.width * 0.15f;
@@ -180,6 +196,9 @@ Mesh* TerrainGenerator::generateTerrain()
 
     int step = m_config.vertexStep;
 
+    // Sea level in world units
+    const float seaLevel = 0.13f * m_config.heightScale;
+    
     // For flat shading, we need to generate separate vertices for each triangle
     // rather than sharing vertices between triangles
     // Use vertexStep to skip vertices and reduce polygon count
@@ -193,7 +212,13 @@ Mesh* TerrainGenerator::generateTerrain()
             float h_bl = m_heightMap[x][z + step];
             float h_br = m_heightMap[x + step][z + step];
 
-            // Calculate positions (use actual x,z coordinates to maintain world size)
+            // Get water masks
+            float w_tl = getWaterMask((float)x, (float)z);
+            float w_tr = getWaterMask((float)(x + step), (float)z);
+            float w_bl = getWaterMask((float)x, (float)(z + step));
+            float w_br = getWaterMask((float)(x + step), (float)(z + step));
+            
+            // Calculate positions - always use terrain height for terrain mesh
             glm::vec3 pos_tl((float)x - offsetX, h_tl * m_config.heightScale, (float)z - offsetZ);
             glm::vec3 pos_tr((float)(x + step) - offsetX, h_tr * m_config.heightScale, (float)z - offsetZ);
             glm::vec3 pos_bl((float)x - offsetX, h_bl * m_config.heightScale, (float)(z + step) - offsetZ);
@@ -213,6 +238,7 @@ Mesh* TerrainGenerator::generateTerrain()
                 v1.normal = normal;
                 v1.texCoord = glm::vec2((float)x / 10.0f, (float)z / 10.0f);
                 v1.height = h_tl;
+                v1.waterMask = 0.0f;
                 vertices.push_back(v1);
 
                 // Vertex 2 (bottom-left)
@@ -221,6 +247,7 @@ Mesh* TerrainGenerator::generateTerrain()
                 v2.normal = normal;
                 v2.texCoord = glm::vec2((float)x / 10.0f, (float)(z + 1) / 10.0f);
                 v2.height = h_bl;
+                v2.waterMask = 0.0f;
                 vertices.push_back(v2);
 
                 // Vertex 3 (top-right)
@@ -229,6 +256,7 @@ Mesh* TerrainGenerator::generateTerrain()
                 v3.normal = normal;
                 v3.texCoord = glm::vec2((float)(x + 1) / 10.0f, (float)z / 10.0f);
                 v3.height = h_tr;
+                v3.waterMask = 0.0f;
                 vertices.push_back(v3);
 
                 indices.push_back(baseIdx);
@@ -250,6 +278,7 @@ Mesh* TerrainGenerator::generateTerrain()
                 v1.normal = normal;
                 v1.texCoord = glm::vec2((float)(x + 1) / 10.0f, (float)z / 10.0f);
                 v1.height = h_tr;
+                v1.waterMask = 0.0f;
                 vertices.push_back(v1);
 
                 // Vertex 2 (bottom-left)
@@ -258,6 +287,7 @@ Mesh* TerrainGenerator::generateTerrain()
                 v2.normal = normal;
                 v2.texCoord = glm::vec2((float)x / 10.0f, (float)(z + 1) / 10.0f);
                 v2.height = h_bl;
+                v2.waterMask = 0.0f;
                 vertices.push_back(v2);
 
                 // Vertex 3 (bottom-right)
@@ -266,8 +296,90 @@ Mesh* TerrainGenerator::generateTerrain()
                 v3.normal = normal;
                 v3.texCoord = glm::vec2((float)(x + 1) / 10.0f, (float)(z + 1) / 10.0f);
                 v3.height = h_br;
+                v3.waterMask = 0.0f;
                 vertices.push_back(v3);
 
+                indices.push_back(baseIdx);
+                indices.push_back(baseIdx + 1);
+                indices.push_back(baseIdx + 2);
+            }
+        }
+    }
+    
+    // Generate continuous water layer across entire map at sea level
+    for (int z = 0; z < m_config.height - step; z += step)
+    {
+        for (int x = 0; x < m_config.width - step; x += step)
+        {
+            // Create flat water quad at sea level (always, for entire map)
+            glm::vec3 pos_tl((float)x - offsetX, seaLevel, (float)z - offsetZ);
+            glm::vec3 pos_tr((float)(x + step) - offsetX, seaLevel, (float)z - offsetZ);
+            glm::vec3 pos_bl((float)x - offsetX, seaLevel, (float)(z + step) - offsetZ);
+            glm::vec3 pos_br((float)(x + step) - offsetX, seaLevel, (float)(z + step) - offsetZ);
+            
+            glm::vec3 normal(0.0f, 1.0f, 0.0f); // Flat water surface
+            
+            // First triangle
+            {
+                unsigned int baseIdx = vertices.size();
+                
+                TerrainVertex v1;
+                v1.position = pos_tl;
+                v1.normal = normal;
+                v1.texCoord = glm::vec2((float)x / 10.0f, (float)z / 10.0f);
+                v1.height = 0.13f;
+                v1.waterMask = 1.0f;
+                vertices.push_back(v1);
+                
+                TerrainVertex v2;
+                v2.position = pos_bl;
+                v2.normal = normal;
+                v2.texCoord = glm::vec2((float)x / 10.0f, (float)(z + step) / 10.0f);
+                v2.height = 0.13f;
+                v2.waterMask = 1.0f;
+                vertices.push_back(v2);
+                
+                TerrainVertex v3;
+                v3.position = pos_tr;
+                v3.normal = normal;
+                v3.texCoord = glm::vec2((float)(x + step) / 10.0f, (float)z / 10.0f);
+                v3.height = 0.13f;
+                v3.waterMask = 1.0f;
+                vertices.push_back(v3);
+                
+                indices.push_back(baseIdx);
+                indices.push_back(baseIdx + 1);
+                indices.push_back(baseIdx + 2);
+            }
+            
+            // Second triangle
+            {
+                unsigned int baseIdx = vertices.size();
+                
+                TerrainVertex v1;
+                v1.position = pos_tr;
+                v1.normal = normal;
+                v1.texCoord = glm::vec2((float)(x + step) / 10.0f, (float)z / 10.0f);
+                v1.height = 0.13f;
+                v1.waterMask = 1.0f;
+                vertices.push_back(v1);
+                
+                TerrainVertex v2;
+                v2.position = pos_bl;
+                v2.normal = normal;
+                v2.texCoord = glm::vec2((float)x / 10.0f, (float)(z + step) / 10.0f);
+                v2.height = 0.13f;
+                v2.waterMask = 1.0f;
+                vertices.push_back(v2);
+                
+                TerrainVertex v3;
+                v3.position = pos_br;
+                v3.normal = normal;
+                v3.texCoord = glm::vec2((float)(x + step) / 10.0f, (float)(z + step) / 10.0f);
+                v3.height = 0.13f;
+                v3.waterMask = 1.0f;
+                vertices.push_back(v3);
+                
                 indices.push_back(baseIdx);
                 indices.push_back(baseIdx + 1);
                 indices.push_back(baseIdx + 2);
@@ -284,6 +396,7 @@ Mesh* TerrainGenerator::generateTerrain()
     layout.push<float>(3); // normal
     layout.push<float>(2); // texCoord
     layout.push<float>(1); // height
+    layout.push<float>(1); // waterMask
 
     va->addBuffer(*vb, layout);
 
@@ -305,4 +418,41 @@ float TerrainGenerator::getHeightAt(float x, float z) const
         return 0.0f;
 
     return m_heightMap[gridX][gridZ] * m_config.heightScale;
+}
+
+float TerrainGenerator::getWaterMask(float x, float z)
+{
+    // Get the terrain height
+    float height = getPerlinHeight(x, z);
+    
+    // Sea level - if terrain is below this, it's underwater
+    const float seaLevel = 0.13f;
+    
+    // If terrain is above sea level, no water
+    if (height >= seaLevel)
+        return 0.0f;
+    
+    // Use noise to create large bodies of water only (no small puddles)
+    float sampleX = x * 0.0015f; // Even lower frequency for larger bodies
+    float sampleZ = z * 0.0015f;
+    
+    float waterNoise = stb_perlin_fbm_noise3(sampleX, sampleZ, 50.0f, 
+                                             2.0f,   // lacunarity
+                                             0.5f,   // gain
+                                             4);     // more octaves for smoother areas
+    waterNoise = (waterNoise + 1.0f) * 0.5f; // Normalize to 0-1
+    
+    // Much higher threshold - only large continuous areas get water
+    const float waterAreaThreshold = 0.55f;
+    if (waterNoise < waterAreaThreshold)
+        return 0.0f;
+    
+    // Additionally check if terrain is significantly below sea level
+    // This prevents tiny dips from becoming puddles
+    float depth = seaLevel - height;
+    if (depth < 0.02f) // Must be at least 0.02 below sea level
+        return 0.0f;
+    
+    // Water exists here - return full strength for water plane
+    return 1.0f;
 }
