@@ -4,7 +4,7 @@
 #include <memory>
 #include <atomic>
 
-#include "src/Frametimer.h"   // frametimer utility already in project
+#include "../Frametimer.h"   // frametimer utility already in project
 #include "GameClock.h"       // game clock
 #include "Entity.h"          // base entity type (forward usage)
  
@@ -72,7 +72,7 @@ private:
     std::unique_ptr<Scene> m_scene;          // rendering bridge (client)
 
     // Frame timing
-    Frametimer m_framer;                      // utility that computes dt / tick timing
+    FrameTimer m_framer;                      // utility that computes dt / tick timing
 
     // Main loop control
     std::atomic<bool> m_running{false};      // set to false to stop Run()
