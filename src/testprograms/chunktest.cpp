@@ -9,75 +9,26 @@
 #include <sstream>
 #include <iomanip>
 
-// Free-fly camera controller
-static void updateCameraFreeFly(Camera &camera, MovementInput movementInput, float deltaTime)
+// Input callbacks
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    float baseSpeed = 30.0f;
-    if (movementInput.shiftDown)
-        baseSpeed *= 3.0f;
-    float speed = baseSpeed * deltaTime;
-
-    glm::vec3 forwardDir = glm::normalize(camera.m_Target - camera.m_Position);
-    glm::vec3 rightDir = glm::normalize(glm::cross(forwardDir, camera.m_Up));
-
-    camera.m_Position += forwardDir * (float)movementInput.wasd.forward * speed;
-    camera.m_Position += rightDir * (float)movementInput.wasd.right * speed;
-
-    if (movementInput.qDown)
-        camera.m_Position += glm::vec3(0.0f, -1.0f, 0.0f) * speed;
-    if (movementInput.eDown)
-        camera.m_Position += glm::vec3(0.0f, 1.0f, 0.0f) * speed;
-
-    float targetDistance = 50.0f;
-    camera.m_Target = camera.m_Position + forwardDir * targetDistance;
+    InputManager* inputManager = (InputManager*)glfwGetWindowUserPointer(window);
+    if (inputManager)
+        inputManager->movementInput.updateMovement(key, action, mods);
 }
 
-static void handleMouseLook(Camera &camera, double xoffset, double yoffset)
+static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 {
-    float sensitivity = 0.1f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    glm::vec3 direction = glm::normalize(camera.m_Target - camera.m_Position);
-    float radius = glm::length(camera.m_Target - camera.m_Position);
-    float yaw = glm::degrees(atan2(direction.z, direction.x));
-    float pitch = glm::degrees(asin(direction.y));
-
-    yaw += xoffset;
-    pitch -= yoffset;
-
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-    if (pitch < -89.0f)
-        pitch = -89.0f;
-
-    glm::vec3 newDirection;
-    newDirection.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
-    newDirection.y = sin(glm::radians(pitch));
-    newDirection.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
-
-    camera.m_Target = camera.m_Position + glm::normalize(newDirection) * radius;
+    InputManager* inputManager = (InputManager*)glfwGetWindowUserPointer(window);
+    if (inputManager)
+        inputManager->mouseMoveInput.updateDeltas(xpos, ypos);
 }
 
-static double lastX = 400, lastY = 300;
-static bool firstMouse = true;
-static void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    if (firstMouse)
-    {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
-    }
-
-    double xoffset = xpos - lastX;
-    double yoffset = ypos - lastY;
-    lastX = xpos;
-    lastY = ypos;
-
-    Camera* camera = (Camera*)glfwGetWindowUserPointer(window);
-    if (camera)
-        handleMouseLook(*camera, xoffset, yoffset);
+    InputManager* inputManager = (InputManager*)glfwGetWindowUserPointer(window);
+    if (inputManager)
+        inputManager->scrollInput.updateScroll(xoffset, yoffset);
 }
 
 int main(int, char **)
@@ -86,6 +37,13 @@ int main(int, char **)
         return -1;
 
     glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    
+    // Setup input manager
+    InputManager inputManager;
+    glfwSetWindowUserPointer(g_window, &inputManager);
+    glfwSetKeyCallback(g_window, key_callback);
+    glfwSetCursorPosCallback(g_window, cursor_position_callback);
+    glfwSetScrollCallback(g_window, scroll_callback);
     
     CameraConfiguration camConfig{ 
         .fov = 60.0f, 
@@ -112,9 +70,7 @@ int main(int, char **)
     camera.m_Position = glm::vec3(100.0f, 80.0f, 100.0f);  // Same as terraintest
     camera.m_Target = glm::vec3(-50.0f, 60.0f, -50.0f);     // Same as terraintest
     camera.m_Up = glm::vec3(0.0f, 1.0f, 0.0f);
-
-    glfwSetWindowUserPointer(g_window, &camera);
-    glfwSetCursorPosCallback(g_window, mouse_callback);
+    camera.WorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
     PhongLightConfig lightCfg{
         .lightPosition = glm::vec3(200.0f, 300.0f, 200.0f),
@@ -175,8 +131,8 @@ int main(int, char **)
         scene.tick();
         float dt = frameTimer.getDeltaTime();
         
-        MovementInput movementInput = getUserMovementInput(g_window);
-        updateCameraFreeFly(scene.m_activeCamera, movementInput, dt);
+        // Update camera with new input system
+        scene.m_activeCamera.flyControl(&inputManager, dt);
         
         // Update chunks based on UPDATED camera position
         chunkManager.updateChunks(scene.m_activeCamera.m_Position, renderDistance);
