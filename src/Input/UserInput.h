@@ -3,99 +3,86 @@
 #include <GLFW/glfw3.h>
 #include <assert.h>
 
+#include <iostream>
+
 /**
  * @brief Base class for different input sources.
  *
  */
 class InputSource
 {
-protected:
+private:
     // Indicates if theres input to be handled.
     bool hasUnprocessedInput = false;
+
+protected:
+    void markUpdated() { hasUnprocessedInput = true; }
+    void clearUpdated() { hasUnprocessedInput = false; }
+    bool hasInput() const { return hasUnprocessedInput; }
+
+    // would be nice to have these as abstract methods, but the signature varies greatly between different input sources. maybe find a workaround later.
+    // public:
+    //     virtual void update() = 0;
+    //     virtual bool fetchUpdates() = 0;
 };
 
 /**
- * @brief class to hold WASD input state
- *
- * forward: +1 for W, -1 for S, 0 for none.
- * right: +1 for D, -1 for A, 0 for none.
- */
-class WasdInput : InputSource
-{
-public:
-    WasdInput() : forward(0), right(0) {}
-
-    int forward;
-    int right;
-};
-
-/**
- * @brief Get the WASD input state from the given GLFW window.
- *
- * @param wdw Pointer to the GLFW window.
- * @return WasdInput class containing the current WASD input state.
- */
-WasdInput getWASDDirection(GLFWwindow *const wdw);
-
-/**
- * @brief class to hold overall movement input state
+ * @brief class to hold all keyboard-related movement input state
  *
  * wasd: WASD input state.
  * shiftDown: true if the shift key is currently pressed, false otherwise.
  * qDown: true if Q key is pressed (typically down/descend)
  * eDown: true if E key is pressed (typically up/ascend)
  */
-class MovementInput : InputSource
+class MovementInput : public InputSource
 {
-public:
+    /**
+     * @brief struct to hold WASD input state
+     */
+    struct WasdInput
+    {
+        bool w_down;
+        bool a_down;
+        bool s_down;
+        bool d_down;
+    };
     WasdInput wasd;
     bool shiftDown;
-    bool qDown;
-    bool eDown;
+
+public:
+    // Call this method to update movement input state, and set hasUnprocessedInput to true. Intended to be called from a key callback.
+    void updateMovement(int key, int action, int /* mods */);
+
+    void fetchMovement(int &outForward, int &outRight, bool &outShiftDown);
 };
 
-/**
- * @brief Get the overall movement input state from the given GLFW window.
- *
- * @param wdw Pointer to the GLFW window.
- * @return MovementInput class containing the current movement input state.
- */
-MovementInput getUserMovementInput(GLFWwindow *const wdw);
-
-class MouseInput : InputSource
+class MouseMoveInput : public InputSource
 {
 private:
     double lastX = 0.0;
     double lastY = 0.0;
     double deltaX;
     double deltaY;
-    double scrollX;
-    double scrollY;
 
 public:
+    // Call this method to update deltas, and set hasUnprocessedInput to true. Intended to be called from a cursor position callback.
+    void updateDeltas(double xpos, double ypos);
 
-    bool fetchHasUnprocessedInput() const
-    {
-        return hasUnprocessedInput;
-    };
-    void updateDeltas(double xpos, double ypos)
-    {
-        deltaX = xpos - lastX;
-        deltaY = ypos - lastY;
-        lastX = xpos;
-        lastY = ypos;
-        hasUnprocessedInput = true;
-    };
+    // Call this method when fetching the deltas to reset the unprocessed input flag
+    bool fetchDeltas(double &outDeltaX, double &outDeltaY);
+};
 
-    void fetchDeltas(double &outDeltaX, double &outDeltaY)
-    {
-        // Todo: handle this more smoothly probably
-        assert(hasUnprocessedInput && "No unprocessed mouse input available");
+class MouseScrollInput : public InputSource
+{
+private:
+    double scrollX = 0.0;
+    double scrollY = 0.0;
 
-        outDeltaX = deltaX;
-        outDeltaY = deltaY;
-        hasUnprocessedInput = false;
-    };
+public:
+    // Call this method to update scroll offsets, and set hasUnprocessedInput to true. Intended to be called from a scroll callback.
+    void updateScroll(double xoffset, double yoffset);
+
+    bool fetchScroll(double &outScrollX, double &outScrollY);
 };
 
 /**
@@ -105,7 +92,6 @@ public:
  * @return MouseInput class containing the current mouse input state.
  */
 // MouseInput getUserMouseInput(GLFWwindow *const wdw);
-
 class InputManager
 {
 public:
@@ -113,5 +99,6 @@ public:
     ~InputManager() = default;
 
     MovementInput movementInput;
-    MouseInput mouseInput;
+    MouseMoveInput mouseMoveInput;
+    MouseScrollInput scrollInput;
 };

@@ -5,10 +5,10 @@ GLsizei window_X = 640;
 GLsizei window_Y = 480;
 GLFWwindow *g_window = nullptr;
 GLFWmonitor *g_monitor = nullptr;
-InputManager* g_InputManager = nullptr;
+InputManager *g_InputManager = nullptr;
 
 void setupDefaultGLFWCallbacks()
-{    
+{
     // we need to have set up these first
     assert(g_window != nullptr);
     assert(g_InputManager != nullptr);
@@ -18,18 +18,25 @@ void setupDefaultGLFWCallbacks()
     // set window-resize-callback (resize viewport)
     glfwSetFramebufferSizeCallback(g_window, [](GLFWwindow * /*window*/, int width, int height)
                                    { glViewport(0, 0, width, height); });
-                                   
+
+    // set key-callback (for movement input)
     glfwSetKeyCallback(g_window, [](GLFWwindow *wdw, int key, int /*scancode*/, int action, int mods)
                        {
-            // std::cout << "key: " << key << ", action: " << action  << ", mods:" << mods << std::endl;
-            if (key == GLFW_KEY_W && mods & GLFW_MOD_CONTROL)
-                glfwSetWindowShouldClose(wdw, GLFW_TRUE); });
+        if (key == GLFW_KEY_W && mods & GLFW_MOD_CONTROL)
+            glfwSetWindowShouldClose(wdw, GLFW_TRUE);
 
+        g_InputManager->movementInput.updateMovement(key, action, mods); });
+
+    // set cursor position callback (for mouse movement input)
     glfwSetCursorPosCallback(g_window, [](GLFWwindow * /*window*/, double xpos, double ypos)
-                             { 
-                                double inverted_y = window_Y - ypos; // Invert Y to match OpenGL coords
-                                g_InputManager->mouseInput.updateDeltas(xpos, inverted_y);
-                             });
+                             {
+        // double inverted_y = -ypos + static_cast<double>(window_Y); // Invert Y axis to match OpenGL coordinates
+        g_InputManager->mouseMoveInput.updateDeltas(xpos, ypos); });
+
+    // set scroll callback (for mouse scroll input)
+    glfwSetScrollCallback(g_window, [](GLFWwindow * /*window*/, double xoffset, double yoffset)
+                          {
+        g_InputManager->scrollInput.updateScroll(xoffset, yoffset); });
 }
 
 int checkTextureUnits()
@@ -67,6 +74,7 @@ int oogaboogaInit(const std::string &windowname)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_SAMPLES, 4); // 4x MSAA (multi-sample anti-aliasing)
 
     // monitor = glfwGetPrimaryMonitor(); // for fullscreen maybe?
 
@@ -84,7 +92,7 @@ int oogaboogaInit(const std::string &windowname)
 
     glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-    
+
     rContext = new RenderingContext();
     rContext->makeCurrent();
 
@@ -113,6 +121,9 @@ int oogaboogaInit(const std::string &windowname)
 
     // Enable depth testing
     glEnable(GL_DEPTH_TEST);
+
+    // Enable multisampling for anti-aliasing (maybe redundant but cant hurt)
+    glEnable(GL_MULTISAMPLE);
 
     if (checkTextureUnits() != 0)
         return -1;
