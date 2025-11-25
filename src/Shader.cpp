@@ -31,10 +31,10 @@ unsigned int Shader::compileShader(ShaderType type, const std::string &shader_st
 {
     unsigned int id = glCreateShader((int)type);
 #ifdef DEBUG
-    std::cout << __FILE__ << " : " << __LINE__ << "- glCreateShader returned ID: " << id << std::endl;
+    DEBUG_PRINT("Creating shader of type " << (int)type);
     if (id == 0)
     {
-        std::cerr << "Could not create shader with type: " << type << std::endl;
+        std::cerr << "Could not create shader with type: " << (int)type << std::endl;
         std::cerr << "shader_str: " << shader_str << std::endl;
     }
 #endif
@@ -66,7 +66,7 @@ void Shader::createProgram()
 {
     unsigned int program = glCreateProgram();
 #ifdef DEBUG
-    std::cout << __FILE__ << " : " << __LINE__ << "- Created shader program with ID: " << program << std::endl;
+    DEBUG_PRINT("Created shader program with ID: " << program);
 #endif
 
     std::vector<unsigned int> shader_references;
@@ -118,8 +118,8 @@ void Shader::addShader(const std::string &filename_nopath, ShaderType type)
 Shader::~Shader()
 {
 #ifdef DEBUG
-    std::cout << __FILE__ << " : " << __LINE__ << "- Deleting shader program ID: " << m_RendererID << std::endl;
-#endif
+    DEBUG_PRINT("Deleting shader program with ID: " << m_RendererID);
+#endif    
     GLCALL(glDeleteProgram(m_RendererID));
 }
 

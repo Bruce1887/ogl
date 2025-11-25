@@ -10,6 +10,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # --- Dependencies ---
 find_package(OpenGL REQUIRED)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(DEBUG)
+endif()
+
 # Platform-specific dependency handling
 if(WIN32)
     # Manual GLFW setup for Windows
@@ -22,7 +26,7 @@ if(WIN32)
         IMPORTED_IMPLIB "${GLFW_DIR}/lib-vc2022/glfw3dll.lib"
         INTERFACE_INCLUDE_DIRECTORIES "${GLFW_DIR}/include"
     )
-else()
+    else()
     # Linux: use system packages
     find_package(glfw3 REQUIRED)
 endif()
@@ -62,7 +66,11 @@ set(ASSIMP_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
 set(ASSIMP_WARNINGS_AS_ERRORS OFF CACHE BOOL "" FORCE)
 set(ASSIMP_NO_EXPORT ON CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_ZLIB OFF CACHE BOOL "" FORCE)
+if(WIN32)
+    set(ASSIMP_BUILD_ZLIB ON CACHE BOOL "" FORCE)
+else()
+    set(ASSIMP_BUILD_ZLIB OFF CACHE BOOL "" FORCE)
+endif()
 set(ASSIMP_BUILD_OBJ_IMPORTER ON CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_FBX_IMPORTER ON CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_GLTF_IMPORTER ON CACHE BOOL "" FORCE)

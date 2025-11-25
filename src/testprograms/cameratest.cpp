@@ -66,14 +66,18 @@ int main(int, char **)
         lightBox_layout.push<float>(3); // position
         lightBox_VA.addBuffer(lightBox_VB, lightBox_layout);
         IndexBuffer lightBox_IBO(BOX_INDICES, BOX_INDICES_COUNT);
-        Mesh lightBox_mesh(&lightBox_VA, &lightBox_IBO);
+        
+        Mesh lightBox_mesh(std::move(lightBox_VA), std::move(lightBox_IBO));
         Shader lightBox_shader;
         lightBox_shader.addShader("3D.vert", ShaderType::VERTEX);
         lightBox_shader.addShader("constColor.frag", ShaderType::FRAGMENT);
         lightBox_shader.createProgram();
         lightBox_shader.bind();
         lightBox_shader.setUniform("u_color", lightSource.config.diffuseLight); // Set the box color to the light's diffuse color
-        MeshRenderable lightBox_renderable(&lightBox_mesh, &lightBox_shader);
+
+        std::shared_ptr<Shader> lightBox_shader_ptr = std::make_shared<Shader>(lightBox_shader);
+        std::shared_ptr<Mesh> lightBox_mesh_ptr = std::make_shared<Mesh>(lightBox_mesh);
+        MeshRenderable lightBox_renderable(lightBox_mesh_ptr, lightBox_shader_ptr);
         lightSource.visualRepresentation = &lightBox_renderable;
 
         // create the scene
@@ -88,14 +92,18 @@ int main(int, char **)
         layout_normals.push<float>(3); // normal
         layout_normals.push<float>(2); // texture coord
         box_VA.addBuffer(box_VB, layout_normals);
-        Mesh box_mesh(&box_VA, nullptr);
+        
+        Mesh box_mesh(std::move(box_VA));
 
         Shader phongShader;
         phongShader.addShader("3DLighting_Tex.vert", ShaderType::VERTEX);
         phongShader.addShader("PhongTEX.frag", ShaderType::FRAGMENT);
         phongShader.createProgram();
 
-        MeshRenderable box_renderable(&box_mesh, &phongShader);
+        std::shared_ptr<Shader> phongShader_ptr = std::make_shared<Shader>(phongShader);
+        std::shared_ptr<Mesh> box_mesh_ptr = std::make_shared<Mesh>(box_mesh);
+        MeshRenderable box_renderable(box_mesh_ptr, phongShader_ptr);
+        
         box_renderable.setTransform(glm::scale(glm::mat4(1.0f), glm::vec3(5.0f)));
 
         Texture box_tex((TEXTURE_DIR / "container.jpg").string(), 0);

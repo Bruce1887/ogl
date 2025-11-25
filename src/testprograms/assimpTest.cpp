@@ -10,7 +10,7 @@
 #include "Scene.h"
 #include "Frametimer.h"
 #include "MeshRenderable.h"
-#include "AssimpModel.h"
+#include "Model.h"
 
 #include <fstream>
 #include <string>
@@ -60,41 +60,32 @@ int main(int, char **)
 		lightBox_layout.push<float>(3); // position
 		lightBox_VA.addBuffer(lightBox_VB, lightBox_layout);
 		IndexBuffer lightBox_IBO(BOX_INDICES, BOX_INDICES_COUNT);
-		Mesh lightBox_mesh(&lightBox_VA, &lightBox_IBO);
-		Shader lightBox_shader;
-		lightBox_shader.addShader("3D.vert", ShaderType::VERTEX);
-		lightBox_shader.addShader("constColor.frag", ShaderType::FRAGMENT);
-		lightBox_shader.createProgram();
-		lightBox_shader.bind();
-		lightBox_shader.setUniform("u_color", lightSource.config.diffuseLight); // Set the box color to the light's diffuse color
-		MeshRenderable lightBox_renderable(&lightBox_mesh, &lightBox_shader);
+
+		std::shared_ptr<Mesh> lightBox_mesh_ptr = std::make_shared<Mesh>(std::move(lightBox_VA), std::move(lightBox_IBO));
+		
+		std::shared_ptr<Shader> lightBox_shader_ptr = std::make_shared<Shader>();
+		lightBox_shader_ptr->addShader("3D.vert", ShaderType::VERTEX);
+		lightBox_shader_ptr->addShader("constColor.frag", ShaderType::FRAGMENT);
+		lightBox_shader_ptr->createProgram();
+		lightBox_shader_ptr->bind();
+		lightBox_shader_ptr->setUniform("u_color", lightSource.config.diffuseLight); // Set the box color to the light's diffuse color
+		
+
+		MeshRenderable lightBox_renderable(lightBox_mesh_ptr, lightBox_shader_ptr);
 		lightSource.visualRepresentation = &lightBox_renderable;
 
 		// create the scene
 		Scene scene(camera, lightSource);
 
-		Shader phongShader;
-		phongShader.addShader("3DLighting_Tex.vert", ShaderType::VERTEX);
-		phongShader.addShader("PhongTEX.frag", ShaderType::FRAGMENT);
-		phongShader.createProgram();
+		std::shared_ptr<Shader> phongShader_ptr = std::make_shared<Shader>();
+		phongShader_ptr->addShader("3DLighting_Tex.vert", ShaderType::VERTEX);
+		phongShader_ptr->addShader("PhongTEX.frag", ShaderType::FRAGMENT);
+		phongShader_ptr->createProgram();
 
-		const aiScene *ai_scene = importer.ReadFile((MODELS_DIR / "low-poly-pinetree/low-poly-pinetree.obj").string(),
-													aiProcess_CalcTangentSpace |
-														aiProcess_Triangulate |
-														aiProcess_JoinIdenticalVertices |
-														aiProcess_SortByPType);
-		// If the import failed, report it
-		if (nullptr == ai_scene)
-		{
-			std::cout << "Error loading model: " << importer.GetErrorString() << std::endl;
-			return false;
-		}
-		
-		AssimpModel model(ai_scene, &phongShader);
-		model.setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-		model.setTransform(glm::scale(model.getTransform(), glm::vec3(1.0f))); // scale if needed
+		// Load model		
+		Model testModel((MODELS_DIR / "low-poly-pinetree2/pineTree.obj").string());
 
-		scene.addRenderable(&model);
+		scene.addRenderable(&testModel);
 
 		FrameTimer frameTimer;
 
@@ -105,8 +96,8 @@ int main(int, char **)
 			float slowedTime = frameTimer.getCurrentTime() * 0.5f;
 			scene.m_lightSource.config.lightPosition = glm::vec3(15.0f * sinf(slowedTime), 15.0f * sinf(slowedTime), 15.0f * cosf(slowedTime));
 
-			scene.m_activeCamera.flyControl(g_InputManager, frameTimer.getDeltaTime());
-			// scene.m_activeCamera.orbitControl(g_InputManager, frameTimer.getDeltaTime());
+			// scene.m_activeCamera.flyControl(g_InputManager, frameTimer.getDeltaTime());
+			scene.m_activeCamera.orbitControl(g_InputManager, frameTimer.getDeltaTime());
 
 			scene.renderScene();
 		}

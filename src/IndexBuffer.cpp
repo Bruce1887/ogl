@@ -14,10 +14,13 @@ IndexBuffer::IndexBuffer(const unsigned int *data, unsigned int count, BufferUsa
     GLCALL(glGenBuffers(1, &m_RendererID));
     GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_RendererID));
     GLCALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(unsigned int), data, static_cast<GLenum>(usage)));
+
+    std::cout << "Created IndexBuffer with ID: " << m_RendererID << ", count: " << m_Count << std::endl;
 }
 
 IndexBuffer::~IndexBuffer()
 {
+    std::cout << "Deleting IndexBuffer with ID: " << m_RendererID << std::endl;
     GLCALL(glDeleteBuffers(1, &m_RendererID));
 }
 

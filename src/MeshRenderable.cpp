@@ -49,23 +49,24 @@ void MeshRenderable::render(glm::mat4 view, glm::mat4 projection, PhongLightConf
         m_shaderRef->setUniform("u_camPos", camPos);        
     }
 
-    if (rContext->m_boundVAO != m_mesh->vertexArray->getID())
+    if (rContext->m_boundVAO != m_mesh->vertexArray.getID())
     {
-        m_mesh->vertexArray->bind();
-        rContext->m_boundVAO = m_mesh->vertexArray->getID();
+        m_mesh->vertexArray.bind();
+        rContext->m_boundVAO = m_mesh->vertexArray.getID();
     }
 
-    if (m_mesh->indexBuffer != nullptr)
+    if (m_mesh->indexBuffer != std::nullopt)
     {
-        if (rContext->m_boundIBO != m_mesh->indexBuffer->getID())
+        std::cout << "rContext->m_boundIBO: " << rContext->m_boundIBO << ", m_mesh->indexBuffer.value().getID(): " << m_mesh->indexBuffer.value().getID() << std::endl;
+        if (rContext->m_boundIBO != m_mesh->indexBuffer.value().getID())
         {
-            m_mesh->indexBuffer->bind();
-            rContext->m_boundIBO = m_mesh->indexBuffer->getID();
+            m_mesh->indexBuffer.value().bind();
+            rContext->m_boundIBO = m_mesh->indexBuffer.value().getID();
         }
 
-        GLCALL(glDrawElements(GL_TRIANGLES, m_mesh->indexBuffer->getCount(), GL_UNSIGNED_INT, nullptr));
+        GLCALL(glDrawElements(GL_TRIANGLES, m_mesh->indexBuffer.value().getCount(), GL_UNSIGNED_INT, nullptr));
     }
     else {
-        GLCALL(glDrawArrays(GL_TRIANGLES, 0, m_mesh->vertexArray->getCount()));
+        GLCALL(glDrawArrays(GL_TRIANGLES, 0, m_mesh->vertexArray.getCount()));
     }
 }

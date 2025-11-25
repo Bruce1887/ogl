@@ -16,6 +16,7 @@
 #include <iostream>
 #include <filesystem>
 #include <vector>
+#include <memory>
 
 namespace fs = std::filesystem;
 inline const fs::path VERTEX_SHADER_DIR = fs::path("resources") / "shaders" / "vertex";
