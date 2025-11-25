@@ -1,7 +1,7 @@
 #include "VertexBuffer.h"
 #include "VertexArray.h"
 
-VertexBuffer::VertexBuffer(const void* cpu_buffer, unsigned int size, VertexArray *associatedVAO, BufferUsage usage)
+VertexBuffer::VertexBuffer(const void *cpu_buffer, unsigned int size, VertexArray *associatedVAO, BufferUsage usage)
 {
     if (associatedVAO == nullptr)
     {
@@ -17,11 +17,14 @@ VertexBuffer::VertexBuffer(const void* cpu_buffer, unsigned int size, VertexArra
 
 VertexBuffer::~VertexBuffer()
 {
+#ifdef DEBUG
+    DEBUG_PRINT("Deleting VertexBuffer with ID: " << m_RendererID);
+#endif  
     GLCALL(glDeleteBuffers(1, &m_RendererID));
 }
 
 void VertexBuffer::bind() const
-{ 
+{
     GLCALL(glBindBuffer(GL_ARRAY_BUFFER, m_RendererID));
 }
 

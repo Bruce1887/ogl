@@ -27,7 +27,7 @@ void Scene::renderScene()
 	
 	// Render each object in the scene
 	for (auto &r : m_renderables)
-	{
+	{		
 		r->render(view, projection, &m_lightSource.config);
 	}
 
@@ -40,12 +40,5 @@ void Scene::renderScene()
 
 	// Swap buffers
 	glfwSwapBuffers(g_window);
-
-	
-
-#ifdef DEBUG
-		getc(stdin);
-        assert(false);
-#endif
 	
 }

@@ -3,9 +3,9 @@
 void MeshRenderable::render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight)
 {
     RenderingContext *rContext = RenderingContext::Current();
-    // Bind shader if not already bound    
+    // Bind shader if not already bound
     if (rContext->m_boundShader != m_shaderRef->getID())
-    {
+    {        
         m_shaderRef->bind();
     }
 
@@ -20,7 +20,6 @@ void MeshRenderable::render(glm::mat4 view, glm::mat4 projection, PhongLightConf
         if (rContext->m_boundTextures[slot] != texID)
         {
             // TODO: optimize slot finding algorithm maybe
-            
             // We need to bind the texture to some slot, and then update the uniform
             GLuint newslot = (slot + numTextures) % NUM_TEXTURE_UNITS;
             texture->bindNew(newslot);
@@ -38,35 +37,42 @@ void MeshRenderable::render(glm::mat4 view, glm::mat4 projection, PhongLightConf
     m_shaderRef->setUniform("u_view", view);
     m_shaderRef->setUniform("u_projection", projection);
     m_shaderRef->setUniform("u_model", getTransform());
-    
-    if(phongLight != nullptr)
+
+    if (phongLight != nullptr)
     {
         m_shaderRef->setUniform("u_light_position", phongLight->lightPosition);
         m_shaderRef->setUniform("u_light_ambient", phongLight->ambientLight);
         m_shaderRef->setUniform("u_light_diffuse", phongLight->diffuseLight);
         m_shaderRef->setUniform("u_light_specular", phongLight->specularLight);
         glm::vec3 camPos = glm::vec3(glm::inverse(view)[3]);
-        m_shaderRef->setUniform("u_camPos", camPos);        
+        m_shaderRef->setUniform("u_camPos", camPos);
     }
 
-    if (rContext->m_boundVAO != m_mesh->vertexArray.getID())
+    if (rContext->m_boundVAO != m_mesh->vertexArray->getID())
     {
-        m_mesh->vertexArray.bind();
-        rContext->m_boundVAO = m_mesh->vertexArray.getID();
+        m_mesh->vertexArray->bind();
+        rContext->m_boundVAO = m_mesh->vertexArray->getID();
     }
 
-    if (m_mesh->indexBuffer != std::nullopt)
+    if (m_mesh->indexBuffer != nullptr)
     {
-        std::cout << "rContext->m_boundIBO: " << rContext->m_boundIBO << ", m_mesh->indexBuffer.value().getID(): " << m_mesh->indexBuffer.value().getID() << std::endl;
-        if (rContext->m_boundIBO != m_mesh->indexBuffer.value().getID())
+        // std::cout << "Drawing indexed mesh." << std::endl;
+        if (rContext->m_boundIBO != m_mesh->indexBuffer->getID())
         {
-            m_mesh->indexBuffer.value().bind();
-            rContext->m_boundIBO = m_mesh->indexBuffer.value().getID();
+            // std::cout << "Binding index buffer object." << std::endl;
+            m_mesh->indexBuffer->bind();
+            rContext->m_boundIBO = m_mesh->indexBuffer->getID();
         }
 
-        GLCALL(glDrawElements(GL_TRIANGLES, m_mesh->indexBuffer.value().getCount(), GL_UNSIGNED_INT, nullptr));
+        int count = m_mesh->indexBuffer->getCount();
+        // std::cout << "Index count: " << count << std::endl;
+
+        // std::cout << "Issuing glDrawElements call." << std::endl;
+        GLCALL(glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr));
+        // std::cout << "glDrawElements call completed." << std::endl;
     }
-    else {
-        GLCALL(glDrawArrays(GL_TRIANGLES, 0, m_mesh->vertexArray.getCount()));
+    else
+    {        
+        GLCALL(glDrawArrays(GL_TRIANGLES, 0, m_mesh->vertexArray->getCount()));
     }
 }

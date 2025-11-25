@@ -30,8 +30,7 @@ ShaderProgramSource Shader::parseShader(const std::string &filepath, ShaderType 
 unsigned int Shader::compileShader(ShaderType type, const std::string &shader_str)
 {
     unsigned int id = glCreateShader((int)type);
-#ifdef DEBUG
-    DEBUG_PRINT("Creating shader of type " << (int)type);
+#ifdef DEBUG    
     if (id == 0)
     {
         std::cerr << "Could not create shader with type: " << (int)type << std::endl;
@@ -65,9 +64,6 @@ unsigned int Shader::compileShader(ShaderType type, const std::string &shader_st
 void Shader::createProgram()
 {
     unsigned int program = glCreateProgram();
-#ifdef DEBUG
-    DEBUG_PRINT("Created shader program with ID: " << program);
-#endif
 
     std::vector<unsigned int> shader_references;
     shader_references.reserve(m_programSources.size());

@@ -59,15 +59,16 @@ int main(int, char **)
             .visualRepresentation = nullptr};
 
         // Create a small box to visualize the light source
-        VertexArray lightBox_VA;
-        lightBox_VA.bind();
-        VertexBuffer lightBox_VB(BOX_VERTICES, BOX_VERTICES_SIZE, &lightBox_VA);
+        auto lightBox_VA_ptr = std::make_unique<VertexArray>();
+
+        lightBox_VA_ptr->bind();
+        auto lightBox_VB_ptr = std::make_unique<VertexBuffer>(BOX_VERTICES, BOX_VERTICES_SIZE, lightBox_VA_ptr.get());
         VertexBufferLayout lightBox_layout;
         lightBox_layout.push<float>(3); // position
-        lightBox_VA.addBuffer(lightBox_VB, lightBox_layout);
-        IndexBuffer lightBox_IBO(BOX_INDICES, BOX_INDICES_COUNT);
+        lightBox_VA_ptr->addBuffer(lightBox_VB_ptr.get(), lightBox_layout);
+        auto lightBox_IBO_ptr = std::make_unique<IndexBuffer>(BOX_INDICES, BOX_INDICES_COUNT);
         
-        Mesh lightBox_mesh(std::move(lightBox_VA), std::move(lightBox_IBO));
+        auto lightBox_mesh_ptr = std::make_shared<Mesh>(std::move(lightBox_VA_ptr), std::move(lightBox_VB_ptr), std::move(lightBox_IBO_ptr));
         Shader lightBox_shader;
         lightBox_shader.addShader("3D.vert", ShaderType::VERTEX);
         lightBox_shader.addShader("constColor.frag", ShaderType::FRAGMENT);
@@ -75,8 +76,7 @@ int main(int, char **)
         lightBox_shader.bind();
         lightBox_shader.setUniform("u_color", lightSource.config.diffuseLight); // Set the box color to the light's diffuse color
 
-        std::shared_ptr<Shader> lightBox_shader_ptr = std::make_shared<Shader>(lightBox_shader);
-        std::shared_ptr<Mesh> lightBox_mesh_ptr = std::make_shared<Mesh>(lightBox_mesh);
+        auto lightBox_shader_ptr = std::make_shared<Shader>(lightBox_shader);
         MeshRenderable lightBox_renderable(lightBox_mesh_ptr, lightBox_shader_ptr);
         lightSource.visualRepresentation = &lightBox_renderable;
 
@@ -84,24 +84,23 @@ int main(int, char **)
         Scene scene(camera, lightSource);
 
         // Create the main object (a big box)
-        VertexArray box_VA;
-        box_VA.bind();
-        VertexBuffer box_VB(BOX_VERTICES_NORM_TEX, BOX_VERTICES_NORM_TEX_SIZE, &box_VA);
+        auto box_va_ptr = std::make_unique<VertexArray>();
+        box_va_ptr->bind();
+        auto box_VB_ptr = std::make_unique<VertexBuffer>(BOX_VERTICES_NORM_TEX, BOX_VERTICES_NORM_TEX_SIZE, box_va_ptr.get());
         VertexBufferLayout layout_normals;
         layout_normals.push<float>(3); // position
         layout_normals.push<float>(3); // normal
         layout_normals.push<float>(2); // texture coord
-        box_VA.addBuffer(box_VB, layout_normals);
-        
-        Mesh box_mesh(std::move(box_VA));
+        box_va_ptr->addBuffer(box_VB_ptr.get(), layout_normals);
 
+        auto box_mesh_ptr = std::make_shared<Mesh>(std::move(box_va_ptr), std::move(box_VB_ptr));
+            
         Shader phongShader;
         phongShader.addShader("3DLighting_Tex.vert", ShaderType::VERTEX);
         phongShader.addShader("PhongTEX.frag", ShaderType::FRAGMENT);
         phongShader.createProgram();
 
-        std::shared_ptr<Shader> phongShader_ptr = std::make_shared<Shader>(phongShader);
-        std::shared_ptr<Mesh> box_mesh_ptr = std::make_shared<Mesh>(box_mesh);
+        auto phongShader_ptr = std::make_shared<Shader>(phongShader);        
         MeshRenderable box_renderable(box_mesh_ptr, phongShader_ptr);
         
         box_renderable.setTransform(glm::scale(glm::mat4(1.0f), glm::vec3(5.0f)));

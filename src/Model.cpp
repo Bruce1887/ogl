@@ -18,10 +18,10 @@ struct Vertex
     glm::vec3 Tangent;
     // bitangent
     glm::vec3 Bitangent;
-    // bone indexes which will influence this vertex
-    int m_BoneIDs[MAX_BONE_INFLUENCE];
-    // weights from each bone
-    float m_Weights[MAX_BONE_INFLUENCE];
+    //     // bone indexes which will influence this vertex
+    //     int m_BoneIDs[MAX_BONE_INFLUENCE];
+    //     // weights from each bone
+    //     float m_Weights[MAX_BONE_INFLUENCE];
 };
 
 Model::Model(const std::string &path)
@@ -51,13 +51,28 @@ Model::Model(const std::string &path)
 #endif
         aiMesh *mesh = ai_scene->mMeshes[i];
 
+        aiMaterial *material = ai_scene->mMaterials[mesh->mMaterialIndex];
+
+        aiColor3D diffuseColor(0.0f, 0.0f, 0.0f);
+        material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor);
+        glm::vec3 diffuse_glm(diffuseColor.r, diffuseColor.g, diffuseColor.b);
+
+        aiColor3D specularColor(0.0f, 0.0f, 0.0f);
+        material->Get(AI_MATKEY_COLOR_SPECULAR, specularColor);
+        glm::vec3 specular_glm(specularColor.r, specularColor.g, specularColor.b);
+
+        float shininess = 32.0f;
+        material->Get(AI_MATKEY_SHININESS, shininess);
+        // OpenGL power function requires a positive exponent.
+        if (shininess == 0.0f)
+            shininess = 32.0f;
+
 #ifdef DEBUG
         assert(mesh != nullptr);
-        std::cerr << "(mesh->HasPositions()): " << (mesh->HasPositions()) << std::endl;
-        std::cerr << "(mesh->HasNormals()): " << (mesh->HasNormals()) << std::endl;
-        std::cerr << "(mesh->HasTextureCoords(0)): " << (mesh->HasTextureCoords(0)) << std::endl;
-        std::cerr << "(mesh->HasTangentsAndBitangents()): " << (mesh->HasTangentsAndBitangents()) << std::endl;
-
+        assert(mesh->HasPositions());
+        assert(mesh->HasNormals());
+        assert(mesh->HasTextureCoords(0));
+        assert(mesh->HasTangentsAndBitangents());
 #endif
         // Extract vertex data
         std::vector<Vertex> vertices;
@@ -109,51 +124,64 @@ Model::Model(const std::string &path)
         }
 
         // Create buffers and upload data to GPU
-        VertexArray va;
-        va.bind();
-        VertexBuffer vb(vertices.data(), vertices.size() * sizeof(Vertex), &va);
+        auto va_ptr = std::make_unique<VertexArray>();
+        va_ptr->bind();
+        auto vb_ptr = std::make_unique<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex), va_ptr.get());
+
         VertexBufferLayout layout;
         layout.push<float>(3); // position
         layout.push<float>(3); // normal
         layout.push<float>(2); // texCoords
         layout.push<float>(3); // tangent
         layout.push<float>(3); // bitangent
-        va.addBuffer(vb, layout);
+        va_ptr->addBuffer(vb_ptr.get(), layout);
 
         // Extract index data
         std::vector<unsigned int> indices;
         for (unsigned int f = 0; f < mesh->mNumFaces; f++)
         {
             aiFace face = mesh->mFaces[f];
+            // std::cout << "Face " << f << " has " << face.mNumIndices << " indices." << std::endl;
+
             for (unsigned int j = 0; j < face.mNumIndices; j++)
+            {
+                // std::cout << "  Index " << j << ": " << face.mIndices[j] << std::endl;
+                // std::cout << "  Vertex Position: ("
+                //           << vertices[face.mIndices[j]].Position.x << ", "
+                //           << vertices[face.mIndices[j]].Position.y << ", "
+                //           << vertices[face.mIndices[j]].Position.z << ")" << std::endl;
                 indices.push_back(face.mIndices[j]);
+            }
         }
 
-        IndexBuffer ibo(indices.data(), indices.size());
+        auto ibo_ptr = std::make_unique<IndexBuffer>(indices.data(), indices.size());
+
         // create Mesh
-        std::shared_ptr<Mesh> mesh_ptr = std::make_shared<Mesh>(std::move(va), std::move(ibo));
-        
+        auto mesh_ptr = std::make_shared<Mesh>(std::move(va_ptr), std::move(vb_ptr), std::move(ibo_ptr));
+
         // create Shader
-        std::shared_ptr<Shader> shader_ptr = std::make_shared<Shader>();
-        shader_ptr->addShader("3DLighting_Tex.vert", ShaderType::VERTEX); // TEMPORARY
-                                                                          // shader_ptr->addShader("PhongTEX.frag", ShaderType::FRAGMENT);
-        shader_ptr->addShader("constColor.frag", ShaderType::FRAGMENT);
-        shader_ptr->createProgram();                                    // TEMPORARY
-        shader_ptr->bind();                                             // TEMPORARY
-        shader_ptr->setUniform("u_color", glm::vec3(0.2f, 0.2f, 0.6f)); // TEMPORARY
+        auto shader_ptr = std::make_shared<Shader>();
+        shader_ptr->addShader("3D_POS_NORM_TEX_TAN_BIT.vert", ShaderType::VERTEX);
+        // shader_ptr->addShader("PhongConstColor.frag", ShaderType::FRAGMENT);
+        // shader_ptr->createProgram();
+        // shader_ptr->bind();
+        // shader_ptr->setUniform("u_color", glm::vec3(0.02f, 0.4f, 0.1f));
+
+        shader_ptr->addShader("PhongMTL.frag", ShaderType::FRAGMENT);
+        shader_ptr->createProgram();
+        shader_ptr->bind();
+        shader_ptr->setUniform("u_material_diffuse", diffuse_glm);
+        shader_ptr->setUniform("u_material_specular", specular_glm);
+        shader_ptr->setUniform("u_material_shininess", shininess);
 
         // create MeshRenderable and store it
-
-
-
-        
         MeshRenderable *meshRenderable = new MeshRenderable(mesh_ptr, shader_ptr);
 
         m_meshRenderables.push_back(meshRenderable);
     }
 
 #ifdef DEBUG
-    DEBUG_PRINT("Finished processing model. Created " << m_meshRenderables.size() << " MeshRenderables.");
+    DEBUG_PRINT("Finished processing model.");
 #endif
 }
 
@@ -167,6 +195,9 @@ void Model::render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phong
 
 Model::~Model()
 {
+#ifdef DEBUG
+    DEBUG_PRINT("Destroying Model and its MeshRenderables.");
+#endif
     for (auto &mr : m_meshRenderables)
     {
         delete mr;

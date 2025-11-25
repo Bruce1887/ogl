@@ -116,16 +116,16 @@ int main(int, char **)
             20, 21, 22,
             22, 23, 20};
             
-        VertexArray va;
-        va.bind();
+        auto va = std::make_unique<VertexArray>();
+        va->bind();
 
-        VertexBuffer vb(vertices, sizeof(vertices), &va);
+        auto vb = std::make_unique<VertexBuffer>(vertices, sizeof(vertices), va.get());
 
         VertexBufferLayout layout;
         layout.push<float>(3);
         layout.push<float>(2);
 
-        va.addBuffer(vb, layout);
+        va->addBuffer(vb.get(), layout);
 
         IndexBuffer ib(indices, sizeof(indices) / sizeof(unsigned int));
 
@@ -215,7 +215,7 @@ int main(int, char **)
                     modelMatrix = glm::rotate(modelMatrix, frameTime * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
 
                 shader.setUniform("u_model", modelMatrix);
-                va.bind();
+                va->bind();
                 ib.bind();
                 GLCALL(glDrawElements(GL_TRIANGLES, ib.getCount(), GL_UNSIGNED_INT, nullptr));
             }

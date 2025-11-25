@@ -81,16 +81,16 @@ int main(int, char **)
             22, 23, 20};
 
         // Build VAO/VBO/IBO for base cube (we will scale in model matrix)
-        VertexArray baseVA;
-        baseVA.bind();
+        auto baseVA_ptr = std::make_unique<VertexArray>();
+        baseVA_ptr->bind();
 
-        VertexBuffer baseVB(cubeVertices, sizeof(cubeVertices), &baseVA);
+        auto baseVB_ptr = std::make_unique<VertexBuffer>(cubeVertices, sizeof(cubeVertices), baseVA_ptr.get());
 
         VertexBufferLayout baseLayout;
         baseLayout.push<float>(3);
         baseLayout.push<float>(2);
 
-        baseVA.addBuffer(baseVB, baseLayout);
+        baseVA_ptr->addBuffer(baseVB_ptr.get(), baseLayout);
 
         IndexBuffer baseIB(cubeIndices, sizeof(cubeIndices) / sizeof(unsigned int));
 
@@ -133,13 +133,13 @@ int main(int, char **)
             9,10,11
         };
 
-        VertexArray roofVA;
-        roofVA.bind();
-        VertexBuffer roofVB(roofVertices, sizeof(roofVertices), &roofVA);
+        auto roofVA_ptr = std::make_unique<VertexArray>();
+        roofVA_ptr->bind();
+        auto roofVB_ptr = std::make_unique<VertexBuffer>(roofVertices, sizeof(roofVertices), roofVA_ptr.get());
         VertexBufferLayout roofLayout;
         roofLayout.push<float>(3);
         roofLayout.push<float>(2);
-        roofVA.addBuffer(roofVB, roofLayout);
+        roofVA_ptr->addBuffer(roofVB_ptr.get(), roofLayout);
         IndexBuffer roofIB(roofIndices, sizeof(roofIndices) / sizeof(unsigned int));
 
         // Door geometry (world-space quad placed just in front of the front wall)
@@ -156,13 +156,13 @@ int main(int, char **)
         };
         unsigned int doorIdx[] = {0,1,2, 2,3,0};
 
-        VertexArray doorVA;
-        doorVA.bind();
-        VertexBuffer doorVB(doorVerts, sizeof(doorVerts), &doorVA);
+        auto doorVA_ptr = std::make_unique<VertexArray>();
+        doorVA_ptr->bind();
+        auto doorVB_ptr = std::make_unique<VertexBuffer>(doorVerts, sizeof(doorVerts), doorVA_ptr.get());
         VertexBufferLayout doorLayout;
         doorLayout.push<float>(3);
         doorLayout.push<float>(2);
-        doorVA.addBuffer(doorVB, doorLayout);
+        doorVA_ptr->addBuffer(doorVB_ptr.get(), doorLayout);
         IndexBuffer doorIB(doorIdx, sizeof(doorIdx) / sizeof(unsigned int));
 
         // Door texture
@@ -199,7 +199,7 @@ int main(int, char **)
             shader.setUniform("u_projection", projectionMatrix);
 
             // Draw base (scale cube to be house rectangle)
-            baseVA.bind();
+            baseVA_ptr->bind();
             baseIB.bind();
             // bind stone to unit 0 and transparent unit 1
 
@@ -222,7 +222,7 @@ int main(int, char **)
             // glActiveTexture(GL_TEXTURE1);
             // glBindTexture(GL_TEXTURE_2D, transparentTex);
 
-            roofVA.bind();
+            roofVA_ptr->bind();
             roofIB.bind();
             glm::mat4 modelRoof = glm::mat4(1.0f);
             // roof vertices were authored in world-space sized for base width ~2.0 and depth ~1.5
@@ -236,7 +236,7 @@ int main(int, char **)
             // glActiveTexture(GL_TEXTURE1);
             // glBindTexture(GL_TEXTURE_2D, transparentTex);
 
-            doorVA.bind();
+            doorVA_ptr->bind();
             doorIB.bind();
             glm::mat4 modelDoor = glm::mat4(1.0f);
             shader.setUniform("u_model", modelDoor);

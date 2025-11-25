@@ -53,40 +53,33 @@ int main(int, char **)
 			.visualRepresentation = nullptr};
 
 		// Create a small box to visualize the light source
-		VertexArray lightBox_VA;
-		lightBox_VA.bind();
-		VertexBuffer lightBox_VB(BOX_VERTICES, BOX_VERTICES_SIZE, &lightBox_VA);
+		auto lightBox_VA_ptr = std::make_unique<VertexArray>();
+		lightBox_VA_ptr->bind();
+		auto lightBox_VB = std::make_unique<VertexBuffer>(BOX_VERTICES, BOX_VERTICES_SIZE, lightBox_VA_ptr.get());
 		VertexBufferLayout lightBox_layout;
 		lightBox_layout.push<float>(3); // position
-		lightBox_VA.addBuffer(lightBox_VB, lightBox_layout);
-		IndexBuffer lightBox_IBO(BOX_INDICES, BOX_INDICES_COUNT);
-
-		std::shared_ptr<Mesh> lightBox_mesh_ptr = std::make_shared<Mesh>(std::move(lightBox_VA), std::move(lightBox_IBO));
-		
-		std::shared_ptr<Shader> lightBox_shader_ptr = std::make_shared<Shader>();
+		lightBox_VA_ptr->addBuffer(lightBox_VB.get(), lightBox_layout);
+		auto lightbox_ibo_ptr = std::make_unique<IndexBuffer>(BOX_INDICES, BOX_INDICES_COUNT);
+		auto lightBox_mesh_ptr = std::make_shared<Mesh>(std::move(lightBox_VA_ptr), std::move(lightBox_VB), std::move(lightbox_ibo_ptr));
+		auto lightBox_shader_ptr = std::make_shared<Shader>();
 		lightBox_shader_ptr->addShader("3D.vert", ShaderType::VERTEX);
 		lightBox_shader_ptr->addShader("constColor.frag", ShaderType::FRAGMENT);
 		lightBox_shader_ptr->createProgram();
 		lightBox_shader_ptr->bind();
 		lightBox_shader_ptr->setUniform("u_color", lightSource.config.diffuseLight); // Set the box color to the light's diffuse color
 		
-
 		MeshRenderable lightBox_renderable(lightBox_mesh_ptr, lightBox_shader_ptr);
 		lightSource.visualRepresentation = &lightBox_renderable;
 
 		// create the scene
-		Scene scene(camera, lightSource);
-
-		std::shared_ptr<Shader> phongShader_ptr = std::make_shared<Shader>();
-		phongShader_ptr->addShader("3DLighting_Tex.vert", ShaderType::VERTEX);
-		phongShader_ptr->addShader("PhongTEX.frag", ShaderType::FRAGMENT);
-		phongShader_ptr->createProgram();
+		Scene scene(camera, lightSource);		
 
 		// Load model		
-		Model testModel((MODELS_DIR / "low-poly-pinetree2/pineTree.obj").string());
-
+		Model testModel((MODELS_DIR / "low-poly-pinetree2/pineTree.obj").string()); // funkar 
+		// Model testModel((MODELS_DIR / "low-poly-pinetree/low-poly-pinetree.obj").string()); // funkar ej		
+		// Model testModel((MODELS_DIR /  "wooden-box-low-poly" / "source" / "box_low.fbx").string()); // funkar ej
 		scene.addRenderable(&testModel);
-
+		
 		FrameTimer frameTimer;
 
 		while (!glfwWindowShouldClose(g_window))
