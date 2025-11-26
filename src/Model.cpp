@@ -24,10 +24,10 @@ struct Vertex
     //     float m_Weights[MAX_BONE_INFLUENCE];
 };
 
-Model::Model(const std::string &path)
+Model::Model(const std::filesystem::path &path)
 {
     Assimp::Importer importer;
-    const aiScene *ai_scene = importer.ReadFile(path,
+    const aiScene *ai_scene = importer.ReadFile(path.string(),
                                                 aiProcess_Triangulate |
                                                     aiProcess_FlipUVs |
                                                     aiProcess_CalcTangentSpace);
@@ -40,18 +40,22 @@ Model::Model(const std::string &path)
 
 #ifdef DEBUG
     DEBUG_PRINT("Processing model at path: " << path << " with " << ai_scene->mNumMeshes << " meshes.");
-
 #endif
 
     // Process all meshes in the scene
     for (unsigned int i = 0; i < ai_scene->mNumMeshes; i++)
     {
-#ifdef DEBUG
-        std::cerr << "Processing mesh " << i << std::endl;
-#endif
         aiMesh *mesh = ai_scene->mMeshes[i];
+#ifdef DEBUG
+        std::cerr << "Processing mesh with " << mesh->mNumVertices << " vertices." << std::endl;
+#endif
 
         aiMaterial *material = ai_scene->mMaterials[mesh->mMaterialIndex];
+
+        // Extract material properties
+        aiColor3D ambientColor(0.0f, 0.0f, 0.0f);
+        material->Get(AI_MATKEY_COLOR_AMBIENT, ambientColor);
+        glm::vec3 ambient_glm(ambientColor.r, ambientColor.g, ambientColor.b);
 
         aiColor3D diffuseColor(0.0f, 0.0f, 0.0f);
         material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor);
@@ -66,6 +70,11 @@ Model::Model(const std::string &path)
         // OpenGL power function requires a positive exponent.
         if (shininess == 0.0f)
             shininess = 32.0f;
+
+        // Check for diffuse texture
+        aiString texPath;
+        if (material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS)
+            m_hasTextureDiffuse = true;
 
 #ifdef DEBUG
         assert(mesh != nullptr);
@@ -145,11 +154,6 @@ Model::Model(const std::string &path)
 
             for (unsigned int j = 0; j < face.mNumIndices; j++)
             {
-                // std::cout << "  Index " << j << ": " << face.mIndices[j] << std::endl;
-                // std::cout << "  Vertex Position: ("
-                //           << vertices[face.mIndices[j]].Position.x << ", "
-                //           << vertices[face.mIndices[j]].Position.y << ", "
-                //           << vertices[face.mIndices[j]].Position.z << ")" << std::endl;
                 indices.push_back(face.mIndices[j]);
             }
         }
@@ -162,22 +166,39 @@ Model::Model(const std::string &path)
         // create Shader
         auto shader_ptr = std::make_shared<Shader>();
         shader_ptr->addShader("3D_POS_NORM_TEX_TAN_BIT.vert", ShaderType::VERTEX);
-        // shader_ptr->addShader("PhongConstColor.frag", ShaderType::FRAGMENT);
-        // shader_ptr->createProgram();
-        // shader_ptr->bind();
-        // shader_ptr->setUniform("u_color", glm::vec3(0.02f, 0.4f, 0.1f));
+        if (m_hasTextureDiffuse)
+            shader_ptr->addShader("PhongMTL_TEX.frag", ShaderType::FRAGMENT);
+        else
+            shader_ptr->addShader("PhongMTL.frag", ShaderType::FRAGMENT);
 
-        shader_ptr->addShader("PhongMTL.frag", ShaderType::FRAGMENT);
         shader_ptr->createProgram();
         shader_ptr->bind();
+
+        /*
+        std::cout << "u_material_ambient " << ambient_glm.x << ", " << ambient_glm.y << ", " << ambient_glm.z << std::endl
+                  << "u_material_diffuse " << diffuse_glm.x << ", " << diffuse_glm.y << ", " << diffuse_glm.z << std::endl
+                  << "u_material_specular " << specular_glm.x << ", " << specular_glm.y << ", " << specular_glm.z << std::endl
+                  << "u_material_shininess " << shininess
+                  << std::endl;
+        */
+        // set material uniforms
+        shader_ptr->setUniform("u_material_ambient", ambient_glm);
         shader_ptr->setUniform("u_material_diffuse", diffuse_glm);
         shader_ptr->setUniform("u_material_specular", specular_glm);
         shader_ptr->setUniform("u_material_shininess", shininess);
 
         // create MeshRenderable and store it
-        MeshRenderable *meshRenderable = new MeshRenderable(mesh_ptr, shader_ptr);
+        MeshRenderable *mr = new MeshRenderable(mesh_ptr, shader_ptr);
+        mr->m_textureReferences = std::vector<Texture *>{};
 
-        m_meshRenderables.push_back(meshRenderable);
+        if (m_hasTextureDiffuse)
+        {
+            std::cout << "Loading diffuse texture: " << (path.parent_path() / texPath.C_Str()) << std::endl;
+            Texture *diffuseTex = new Texture((path.parent_path() / texPath.C_Str()).string(), 0);
+            diffuseTex->targetUniform = "u_texture_diffuse";
+            mr->m_textureReferences.push_back(diffuseTex);
+        }
+        m_meshRenderables.push_back(mr);
     }
 
 #ifdef DEBUG

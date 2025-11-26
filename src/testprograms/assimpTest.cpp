@@ -75,8 +75,8 @@ int main(int, char **)
 		Scene scene(camera, lightSource);		
 
 		// Load model		
-		Model testModel((MODELS_DIR / "low-poly-pinetree2/pineTree.obj").string()); // funkar 
-		// Model testModel((MODELS_DIR / "low-poly-pinetree/low-poly-pinetree.obj").string()); // funkar ej		
+		// Model testModel((MODELS_DIR / "low-poly-pinetree2/pineTree.obj").string()); // funkar 
+		Model testModel((MODELS_DIR / "gran" / "gran.obj")); // funkar		
 		// Model testModel((MODELS_DIR /  "wooden-box-low-poly" / "source" / "box_low.fbx").string()); // funkar ej
 		scene.addRenderable(&testModel);
 		

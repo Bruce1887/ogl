@@ -23,7 +23,6 @@ public:
 
 private:
     unsigned int m_ID = 0;
-
     GLuint m_VAO_ID = 0;
     // GLuint m_VBO_ID = 0;
     GLuint m_IBO_ID = 0;

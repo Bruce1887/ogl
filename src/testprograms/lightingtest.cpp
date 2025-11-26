@@ -56,13 +56,13 @@ int main(int, char **)
 
         auto lightBox_mesh_ptr = std::make_shared<Mesh>(std::move(lightBox_VA_ptr), std::move(lightBox_VB_ptr), std::move(lightBox_IBO_ptr));
         auto lightBox_shader_ptr = std::make_shared<Shader>();
-        
+
         lightBox_shader_ptr->addShader("3D.vert", ShaderType::VERTEX);
         lightBox_shader_ptr->addShader("constColor.frag", ShaderType::FRAGMENT);
         lightBox_shader_ptr->createProgram();
         lightBox_shader_ptr->bind();
         lightBox_shader_ptr->setUniform("u_color", lightSource.config.diffuseLight); // Set the box color to the light's diffuse color
-                
+
         MeshRenderable lightBox_renderable(lightBox_mesh_ptr, lightBox_shader_ptr);
         lightSource.visualRepresentation = &lightBox_renderable;
 
@@ -71,6 +71,7 @@ int main(int, char **)
 
         // Create the main object (a big box)
         auto box_va_ptr = std::make_unique<VertexArray>();
+        // std::unique_ptr<VertexArray> box_va_ptr = std::make_unique<VertexArray>();
         box_va_ptr->bind();
         auto box_VB_ptr = std::make_unique<VertexBuffer>(BOX_VERTICES_NORM_TEX, BOX_VERTICES_NORM_TEX_SIZE, box_va_ptr.get());
         VertexBufferLayout layout_normals;
@@ -79,10 +80,10 @@ int main(int, char **)
         layout_normals.push<float>(2); // texture coord
         box_va_ptr->addBuffer(box_VB_ptr.get(), layout_normals);
         auto box_mesh_ptr = std::make_shared<Mesh>(std::move(box_va_ptr), std::move(box_VB_ptr));
-        auto phongShader_ptr = std::make_shared<Shader>();        
+        auto phongShader_ptr = std::make_shared<Shader>();
         phongShader_ptr->addShader("3DLighting_TEX.vert", ShaderType::VERTEX);
         phongShader_ptr->addShader("PhongTEX.frag", ShaderType::FRAGMENT);
-        phongShader_ptr->createProgram();        
+        phongShader_ptr->createProgram();
 
         MeshRenderable box_renderable(box_mesh_ptr, phongShader_ptr);
 
@@ -95,8 +96,7 @@ int main(int, char **)
         scene.addRenderable(&box_renderable);
 
         FrameTimer frameTimer;
-        
-        
+
         while (!glfwWindowShouldClose(g_window))
         {
             scene.tick();

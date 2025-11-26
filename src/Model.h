@@ -1,16 +1,22 @@
 #pragma once
 #include "MeshRenderable.h"
 
+#include <filesystem>
 #include <assimp/Importer.hpp>	// C++ importer interface
 #include <assimp/scene.h>		// Output data structure
 #include <assimp/postprocess.h> // Post processing flags
 
 class Model : public WorldEntity
 {
+private:
     std::vector<MeshRenderable *> m_meshRenderables;
 
+    bool m_hasTextureDiffuse = false;
+    // bool m_hasTextureSpecular = false; // not implemented, not a priority either
+    // bool m_hasTextureNormal = false; // not implemented, not a priority either
+    // bool m_hasTextureHeight = false; // not implemented, not a priority either
 public:
-    Model(const std::string& path);
+    Model(const std::filesystem::path& path);
     ~Model();
     virtual glm::mat4 getTransform() const override
     {
