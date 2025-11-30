@@ -24,6 +24,13 @@ struct Vertex
     //     float m_Weights[MAX_BONE_INFLUENCE];
 };
 
+ModelData::~ModelData()
+{
+    #ifdef DEBUG
+    DEBUG_PRINT("Destroying ModelData with " << m_meshRenderables.size() << " mesh renderables.");
+    #endif
+}
+
 Model::Model(const std::filesystem::path &path)
 {
     Assimp::Importer importer;
@@ -41,6 +48,8 @@ Model::Model(const std::filesystem::path &path)
 #ifdef DEBUG
     DEBUG_PRINT("Processing model at path: " << path << " with " << ai_scene->mNumMeshes << " meshes.");
 #endif
+
+    m_modelData = std::make_shared<ModelData>();
 
     // Process all meshes in the scene
     for (unsigned int i = 0; i < ai_scene->mNumMeshes; i++)
@@ -73,8 +82,7 @@ Model::Model(const std::filesystem::path &path)
 
         // Check for diffuse texture
         aiString texPath;
-        if (material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS)
-            m_hasTextureDiffuse = true;
+        m_modelData->m_hasTextureDiffuse = material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS;
 
 #ifdef DEBUG
         assert(mesh != nullptr);
@@ -166,8 +174,9 @@ Model::Model(const std::filesystem::path &path)
         // create Shader
         auto shader_ptr = std::make_shared<Shader>();
         shader_ptr->addShader("3D_POS_NORM_TEX_TAN_BIT.vert", ShaderType::VERTEX);
-        if (m_hasTextureDiffuse)
-            shader_ptr->addShader("PhongMTL_TEX.frag", ShaderType::FRAGMENT);
+
+        if (m_modelData->m_hasTextureDiffuse)
+            shader_ptr->addShader("PhongMTL_diffTEX.frag", ShaderType::FRAGMENT);
         else
             shader_ptr->addShader("PhongMTL.frag", ShaderType::FRAGMENT);
 
@@ -189,17 +198,17 @@ Model::Model(const std::filesystem::path &path)
         shader_ptr->setUniform("u_material_shininess", shininess);
 
         // create MeshRenderable and store it
-        MeshRenderable *mr = new MeshRenderable(mesh_ptr, shader_ptr);
-        mr->m_textureReferences = std::vector<Texture *>{};
+        auto mr = std::make_shared<MeshRenderable>(mesh_ptr, shader_ptr);
+        mr->m_textureReferences = std::vector<std::shared_ptr<Texture>>{};
 
-        if (m_hasTextureDiffuse)
+        if (m_modelData->m_hasTextureDiffuse)
         {
             std::cout << "Loading diffuse texture: " << (path.parent_path() / texPath.C_Str()) << std::endl;
-            Texture *diffuseTex = new Texture((path.parent_path() / texPath.C_Str()).string(), 0);
+            auto diffuseTex = std::make_shared<Texture>((path.parent_path() / texPath.C_Str()).string(), 0);
             diffuseTex->targetUniform = "u_texture_diffuse";
             mr->m_textureReferences.push_back(diffuseTex);
         }
-        m_meshRenderables.push_back(mr);
+        m_modelData->addMeshRenderable(std::shared_ptr<MeshRenderable>(mr));
     }
 
 #ifdef DEBUG
@@ -207,22 +216,16 @@ Model::Model(const std::filesystem::path &path)
 #endif
 }
 
-void Model::render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight)
+Model::Model(std::shared_ptr<ModelData> modelData)
+    : m_modelData(modelData)
 {
-    for (auto &mr : m_meshRenderables)
-    {
-        mr->render(view, projection, phongLight);
-    }
 }
 
-Model::~Model()
+void Model::render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight)
 {
-#ifdef DEBUG
-    DEBUG_PRINT("Destroying Model and its MeshRenderables.");
-#endif
-    for (auto &mr : m_meshRenderables)
+    for (auto &mr : m_modelData->getMeshRenderables())
     {
-        delete mr;
+        mr->setTransform(this->getTransform());
+        mr->render(view, projection, phongLight);
     }
-    m_meshRenderables.clear();
 }

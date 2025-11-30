@@ -22,7 +22,7 @@
 #include <assimp/postprocess.h> // Post processing flags
 
 int main(int, char **)
-{
+{	
 	Assimp::Importer importer;
 
 	// Initialise GLAD and GLFW
@@ -73,15 +73,19 @@ int main(int, char **)
 
 		// create the scene
 		Scene scene(camera, lightSource);		
+		std::cout << "lightVisualRepresentation id: " << lightSource.visualRepresentation->getID() << std::endl;
 
 		// Load model		
 		// Model testModel((MODELS_DIR / "low-poly-pinetree2/pineTree.obj").string()); // funkar 
-		Model testModel((MODELS_DIR / "gran" / "gran.obj")); // funkar		
+		Model instance1((MODELS_DIR / "gran" / "gran.obj")); // funkar		
+		std::cout << "instance1 id: " << instance1.getID() << std::endl;
 		// Model testModel((MODELS_DIR /  "wooden-box-low-poly" / "source" / "box_low.fbx").string()); // funkar ej
-		scene.addRenderable(&testModel);
-		
-		std::cout << "model id: " << testModel.getID() << std::endl;
-		std::cout << "lightVisualRepresentation id: " << lightSource.visualRepresentation->getID() << std::endl;
+		scene.addRenderable(&instance1);
+
+		Model instance2 = Model(instance1.getModelData());
+		std::cout << "instance2 id: " << instance2.getID() << std::endl;
+		instance2.setPosition(glm::vec3(10.0f, 0.0f, 0.0f));
+		scene.addRenderable(&instance2);
 
 		FrameTimer frameTimer;
 
@@ -90,7 +94,8 @@ int main(int, char **)
 			scene.tick();
 
 			float slowedTime = frameTimer.getCurrentTime() * 0.5f;
-			scene.m_lightSource.config.lightPosition = glm::vec3(15.0f * sinf(slowedTime), 15.0f * sinf(slowedTime), 15.0f * cosf(slowedTime));
+			instance2.setPosition(glm::vec3(10.0f * sinf(slowedTime), 0.0f, 10.0f * cosf(slowedTime)));
+			scene.m_lightSource.config.lightPosition = glm::vec3(-15.0f * sinf(slowedTime), scene.m_lightSource.config.lightPosition.y, 15.0f * cosf(slowedTime));
 
 			// scene.m_activeCamera.flyControl(g_InputManager, frameTimer.getDeltaTime());
 			scene.m_activeCamera.orbitControl(g_InputManager, frameTimer.getDeltaTime());

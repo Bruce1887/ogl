@@ -49,7 +49,11 @@ add_library(glad STATIC src/glad/glad.c)
 target_include_directories(glad PUBLIC src)
 target_include_directories(glad SYSTEM PRIVATE src/glad)
 
-add_library(stb_image src/vendor/stb_image/stb_image.cpp)
+if(WIN32)
+    add_library(stb_image STATIC src/vendor/stb_image/stb_image.cpp)
+else()
+    add_library(stb_image STATIC src/vendor/stb_image/stb_image.cpp)
+    endif()
 target_include_directories(stb_image PUBLIC src)
 target_include_directories(stb_image SYSTEM PRIVATE src/vendor/stb_image)
 
@@ -77,6 +81,7 @@ set(ASSIMP_BUILD_GLTF_IMPORTER ON CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_COLLADA_IMPORTER OFF CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_3DS_IMPORTER OFF CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_STL_IMPORTER OFF CACHE BOOL "" FORCE)
+
 add_subdirectory(src/vendor/assimp)
 target_link_libraries(oogabooga_common PUBLIC assimp)
 
@@ -92,14 +97,17 @@ function(add_gl_executable TARGET_NAME SOURCE_FILE)
         target_compile_options(${TARGET_NAME} PRIVATE /W4 /permissive-)
     endif()
     
-    # On Windows, copy GLFW DLL to output directory
+    # Post-build: copy DLLs on Windows
     if(WIN32)
         add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${GLFW_DIR}/lib-vc2022/glfw3.dll"
             $<TARGET_FILE_DIR:${TARGET_NAME}>
-        )
+            $<TARGET_FILE:assimp>
+            $<TARGET_FILE_DIR:${TARGET_NAME}>
+        )    
     endif()
+
 endfunction()
 
 # --- Automatically add all test programs ---

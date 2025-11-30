@@ -14,7 +14,7 @@ void MeshRenderable::render(glm::mat4 view, glm::mat4 projection, PhongLightConf
     size_t numTextures = m_textureReferences.size();
     for (size_t i = 0; i < numTextures; i++)
     {
-        Texture *texture = m_textureReferences[i];
+        Texture *texture = m_textureReferences[i].get();
         GLuint slot = texture->getSlot();
         GLuint texID = texture->getID();
 

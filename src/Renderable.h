@@ -20,7 +20,7 @@ public:
     }
     // Potentially shared among multiple renderables.
     std::shared_ptr<Shader> m_shaderRef;
-    std::vector<Texture *> m_textureReferences;
+    std::vector<std::shared_ptr<Texture>> m_textureReferences;
 
     inline unsigned int getID() const { return m_ID; }
     inline unsigned int getRenderableTypeID() const { return m_RenderableTypeID; }
@@ -54,19 +54,19 @@ protected:
     glm::mat4 m_transform = glm::mat4(1.0f);
 
 public:
-    virtual glm::mat4 getTransform() const
+    inline glm::mat4 getTransform() const
     {
         return m_transform;
     }
-    virtual void setTransform(const glm::mat4 &transform)
+    inline void setTransform(const glm::mat4 &transform)
     {
         m_transform = transform;
     }
-    virtual glm::vec3 getPosition() const
+    inline glm::vec3 getPosition() const
     {
         return glm::vec3(m_transform[3]);
     }
-    virtual void setPosition(const glm::vec3 &pos)
+    inline void setPosition(const glm::vec3 &pos)
     {
         m_transform[3] = glm::vec4(pos, 1.0f);
     }

@@ -1,47 +1,53 @@
 #pragma once
 #include "MeshRenderable.h"
 
-#include <filesystem>
 #include <assimp/Importer.hpp>	// C++ importer interface
 #include <assimp/scene.h>		// Output data structure
 #include <assimp/postprocess.h> // Post processing flags
 
-class Model : public WorldEntity
+#include <filesystem>
+#include <memory>
+#include <vector>
+
+class ModelData
 {
 private:
-    std::vector<MeshRenderable *> m_meshRenderables;
+    std::vector<std::shared_ptr<MeshRenderable>> m_meshRenderables;    
+    
+public:
+    ModelData() = default;
+    ~ModelData();
+
+    void addMeshRenderable(std::shared_ptr<MeshRenderable> mr) {
+        m_meshRenderables.push_back(mr);
+    }
+    
+    const std::vector<std::shared_ptr<MeshRenderable>>& getMeshRenderables() const {
+        return m_meshRenderables;
+    }
 
     bool m_hasTextureDiffuse = false;
     // bool m_hasTextureSpecular = false; // not implemented, not a priority either
     // bool m_hasTextureNormal = false; // not implemented, not a priority either
     // bool m_hasTextureHeight = false; // not implemented, not a priority either
+};
+
+class Model : public WorldEntity
+{
+private:
+    std::shared_ptr<ModelData> m_modelData;    
+
 public:
+    // Constructor that loads from file (creates new ModelData)
     Model(const std::filesystem::path& path);
-    ~Model();
-    virtual glm::mat4 getTransform() const override
-    {
-        return m_transform;
-    }
-    virtual void setTransform(const glm::mat4 &transform) override
-    {
-        for (auto &mr : m_meshRenderables)
-        {
-            mr->setTransform(transform);
-        }
-        m_transform = transform;
-    }
-    virtual glm::vec3 getPosition() const override
-    {
-        return glm::vec3(m_transform[3]);
-    }
-    virtual void setPosition(const glm::vec3 &pos) override
-    {
-        for (auto &mr : m_meshRenderables)
-        {
-            mr->setPosition(pos);
-        }
-        m_transform[3] = glm::vec4(pos, 1.0f);
-    }
+    
+    // Constructor that shares existing ModelData
+    Model(std::shared_ptr<ModelData> modelData);
+    
+    ~Model() = default;
     
     void render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight) override;
+    
+    // Get the shared model data (useful for creating instances)
+    std::shared_ptr<ModelData> getModelData() const { return m_modelData; }
 };

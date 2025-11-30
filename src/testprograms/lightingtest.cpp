@@ -89,9 +89,9 @@ int main(int, char **)
 
         box_renderable.setTransform(glm::scale(glm::mat4(1.0f), glm::vec3(5.0f)));
 
-        Texture box_tex((TEXTURE_DIR / "container.jpg").string(), 0);
-        box_tex.targetUniform = "u_texture";
-        box_renderable.m_textureReferences = std::vector<Texture *>{&box_tex};
+        auto box_tex = std::make_shared<Texture>((TEXTURE_DIR / "container.jpg").string(), 0);
+        box_tex->targetUniform = "u_texture";
+        box_renderable.m_textureReferences = std::vector<std::shared_ptr<Texture>>{box_tex};
 
         scene.addRenderable(&box_renderable);
 

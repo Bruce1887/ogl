@@ -25,7 +25,7 @@ void VertexArray::addBuffer(const VertexBuffer *vb, const VertexBufferLayout &la
     const auto &elements = layout.getElements();
     unsigned int offset = 0;
 
-    for (size_t i = 0; i < elements.size(); i++)
+    for (GLuint i = 0; i < elements.size(); i++)
     {
         const auto &element = elements[i];
         GLCALL(glEnableVertexAttribArray(i));
