@@ -15,5 +15,16 @@ struct PhongLightConfig
 struct LightSource
 {
     PhongLightConfig config; // Light properties
-    MeshRenderable *visualRepresentation = nullptr; // Optional renderable to visualize the light source
+    std::unique_ptr<MeshRenderable> visualRepresentation = nullptr; // Optional renderable to visualize the light source
+
+    static LightSource createDefaultLightSource()
+{        
+    PhongLightConfig lightConfig{
+        .lightPosition = glm::vec3(15.0f, 10.0f, 10.0f),
+        .ambientLight = glm::vec3(0.2f, 0.2f, 0.2f),
+        .diffuseLight = glm::vec3(1.0f, 1.0f, 0.7f),
+        .specularLight = glm::vec3(1.0f, 1.0f, 1.0f)};
+    
+    return LightSource{.config = lightConfig, .visualRepresentation = nullptr};
+}
 };

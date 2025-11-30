@@ -1,8 +1,8 @@
 #include "Common.h"
 
 RenderingContext *rContext = nullptr;
-GLsizei window_X = 640;
-GLsizei window_Y = 480;
+GLsizei window_X = 1024;
+GLsizei window_Y = 768;
 GLFWwindow *g_window = nullptr;
 GLFWmonitor *g_monitor = nullptr;
 InputManager *g_InputManager = nullptr;
@@ -21,7 +21,7 @@ void setupDefaultGLFWCallbacks()
 
     // set key-callback (for movement input)
     glfwSetKeyCallback(g_window, [](GLFWwindow *wdw, int key, int /*scancode*/, int action, int mods)
-                       {
+                       {        
         if (key == GLFW_KEY_W && mods & GLFW_MOD_CONTROL)
             glfwSetWindowShouldClose(wdw, GLFW_TRUE);
 
@@ -35,8 +35,10 @@ void setupDefaultGLFWCallbacks()
 
     // set scroll callback (for mouse scroll input)
     glfwSetScrollCallback(g_window, [](GLFWwindow * /*window*/, double xoffset, double yoffset)
-                          {
-        g_InputManager->scrollInput.updateScroll(xoffset, yoffset); });
+                          { g_InputManager->scrollInput.updateScroll(xoffset, yoffset); });
+
+    // glfwSetMouseButtonCallback(g_window, [](GLFWwindow * /*window*/, int button, int action, int mods)
+    //                            { std::cout << "Mouse button event: button=" << button << " action=" << action << " mods=" << mods << std::endl; });
 }
 
 int checkTextureUnits()

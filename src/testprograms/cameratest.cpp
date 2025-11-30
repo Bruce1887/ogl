@@ -49,26 +49,10 @@ int main(int, char **)
         camera.m_Up = glm::vec3(0.0f, 1.0f, 0.0f);
 
         // ######## Light source ########
-        PhongLightConfig lightConfig{
-            .lightPosition = glm::vec3(15.0f, 10.0f, 10.0f),
-            .ambientLight = glm::vec3(0.2f, 0.2f, 0.2f),
-            .diffuseLight = glm::vec3(1.0f, 1.0f, 0.7f),
-            .specularLight = glm::vec3(1.0f, 1.0f, 1.0f)};
-        LightSource lightSource{
-            .config = lightConfig,
-            .visualRepresentation = nullptr};
+        LightSource lightSource = LightSource::createDefaultLightSource();
 
         // Create a small box to visualize the light source
-        auto lightBox_VA_ptr = std::make_unique<VertexArray>();
-
-        lightBox_VA_ptr->bind();
-        auto lightBox_VB_ptr = std::make_unique<VertexBuffer>(BOX_VERTICES, BOX_VERTICES_SIZE, lightBox_VA_ptr.get());
-        VertexBufferLayout lightBox_layout;
-        lightBox_layout.push<float>(3); // position
-        lightBox_VA_ptr->addBuffer(lightBox_VB_ptr.get(), lightBox_layout);
-        auto lightBox_IBO_ptr = std::make_unique<IndexBuffer>(BOX_INDICES, BOX_INDICES_COUNT);
-        
-        auto lightBox_mesh_ptr = std::make_shared<Mesh>(std::move(lightBox_VA_ptr), std::move(lightBox_VB_ptr), std::move(lightBox_IBO_ptr));
+        auto lightBox_mesh_ptr = Mesh::createBoxMesh();
         Shader lightBox_shader;
         lightBox_shader.addShader("3D.vert", ShaderType::VERTEX);
         lightBox_shader.addShader("constColor.frag", ShaderType::FRAGMENT);
@@ -77,11 +61,11 @@ int main(int, char **)
         lightBox_shader.setUniform("u_color", lightSource.config.diffuseLight); // Set the box color to the light's diffuse color
 
         auto lightBox_shader_ptr = std::make_shared<Shader>(lightBox_shader);
-        MeshRenderable lightBox_renderable(lightBox_mesh_ptr, lightBox_shader_ptr);
-        lightSource.visualRepresentation = &lightBox_renderable;
+        auto lightBox_renderable = std::make_unique<MeshRenderable>(lightBox_mesh_ptr, lightBox_shader_ptr);
+        lightSource.visualRepresentation = std::move(lightBox_renderable);
 
         // create the scene
-        Scene scene(camera, lightSource);
+        Scene scene(camera, std::move(lightSource));
 
         // Create the main object (a big box)
         auto box_va_ptr = std::make_unique<VertexArray>();

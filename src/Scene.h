@@ -14,7 +14,7 @@ class Scene
 {
 public:
 Scene(Camera defaultCamera, LightSource lightSource)
-: m_activeCamera(defaultCamera), m_lightSource(lightSource)
+: m_activeCamera(defaultCamera), m_lightSource(std::move(lightSource))
     {  
 
     }
