@@ -80,6 +80,9 @@ int main(int, char **)
 		// Model testModel((MODELS_DIR /  "wooden-box-low-poly" / "source" / "box_low.fbx").string()); // funkar ej
 		scene.addRenderable(&testModel);
 		
+		std::cout << "model id: " << testModel.getID() << std::endl;
+		std::cout << "lightVisualRepresentation id: " << lightSource.visualRepresentation->getID() << std::endl;
+
 		FrameTimer frameTimer;
 
 		while (!glfwWindowShouldClose(g_window))

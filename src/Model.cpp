@@ -181,6 +181,7 @@ Model::Model(const std::filesystem::path &path)
                   << "u_material_shininess " << shininess
                   << std::endl;
         */
+
         // set material uniforms
         shader_ptr->setUniform("u_material_ambient", ambient_glm);
         shader_ptr->setUniform("u_material_diffuse", diffuse_glm);

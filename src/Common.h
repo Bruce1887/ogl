@@ -26,7 +26,8 @@ inline const fs::path TEXTURE_DIR = fs::path("resources") / "textures";
 
 inline const fs::path MODELS_DIR = fs::path("resources") / "models";
 
-const int NUM_TEXTURE_UNITS = 32;
+// The amount of texture units we expect to have available
+const int REQUIRED_NUM_TEXTURE_UNITS = 32;
 
 // Global variables
 extern RenderingContext *rContext;

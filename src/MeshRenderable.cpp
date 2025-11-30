@@ -3,8 +3,9 @@
 void MeshRenderable::render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight)
 {
     RenderingContext *rContext = RenderingContext::Current();
+
     // Bind shader if not already bound
-    if (rContext->m_boundShader != m_shaderRef->getID())
+    if (m_shaderRef->getID() != rContext->m_boundShader)
     {        
         m_shaderRef->bind();
     }
@@ -21,7 +22,7 @@ void MeshRenderable::render(glm::mat4 view, glm::mat4 projection, PhongLightConf
         {
             // TODO: optimize slot finding algorithm maybe
             // We need to bind the texture to some slot, and then update the uniform
-            GLuint newslot = (slot + numTextures) % NUM_TEXTURE_UNITS;
+            GLuint newslot = (slot + numTextures) % REQUIRED_NUM_TEXTURE_UNITS;
             texture->bindNew(newslot);
         }
 

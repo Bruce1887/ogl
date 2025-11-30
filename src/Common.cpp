@@ -44,16 +44,16 @@ int checkTextureUnits()
     GLint maxTextureUnits;
 
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits); // Fragment shader
-    if (maxTextureUnits < NUM_TEXTURE_UNITS)
+    if (maxTextureUnits < REQUIRED_NUM_TEXTURE_UNITS)
     {
-        std::cout << "Warning: You have " << maxTextureUnits << " texture image units (fragment shader). You need " << NUM_TEXTURE_UNITS << std::endl;
+        std::cout << "Warning: You have " << maxTextureUnits << " texture image units (fragment shader). You need " << REQUIRED_NUM_TEXTURE_UNITS << std::endl;
         return -1;
     }
 
     glGetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &maxTextureUnits); // Vertex shader
-    if (maxTextureUnits < NUM_TEXTURE_UNITS)
+    if (maxTextureUnits < REQUIRED_NUM_TEXTURE_UNITS)
     {
-        std::cout << "Warning: You have " << maxTextureUnits << " texture image units (vertex shader). You need " << NUM_TEXTURE_UNITS << std::endl;
+        std::cout << "Warning: You have " << maxTextureUnits << " texture image units (vertex shader). You need " << REQUIRED_NUM_TEXTURE_UNITS << std::endl;
         return -1;
     }
     return 0;

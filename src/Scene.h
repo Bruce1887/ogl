@@ -25,6 +25,7 @@ Scene(Camera defaultCamera, LightSource lightSource)
     void removeRenderable(Renderable *renderable);
     void renderScene();
 
+    //TODO: implement these one day
     Camera m_activeCamera;
     int nextCamera();
     int addCamera(const Camera &camera);
@@ -51,7 +52,7 @@ private:
     // A list of all renderables in the scene
     std::vector<Renderable *> m_renderables;
     unsigned int m_nextVacantID = 0; // For assigning unique IDs to renderables
-    
+
     // A list of all cameras in the scene //TODO: implement this one day
     std::vector<Camera> m_cameras;
 };

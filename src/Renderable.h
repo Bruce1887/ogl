@@ -7,7 +7,6 @@
 #include "Texture.h"
 #include "Lighting.h"
 
-
 // Abstract base class for anything that can be rendered
 class Renderable
 {
@@ -15,14 +14,32 @@ public:
     virtual void render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight) = 0;
     virtual ~Renderable() = default;
 
+    Renderable()
+        : m_ID(s_instanceCounter++)
+    {
+    }
     // Potentially shared among multiple renderables.
-    std::shared_ptr<Shader> m_shaderRef;    
+    std::shared_ptr<Shader> m_shaderRef;
     std::vector<Texture *> m_textureReferences;
 
     inline unsigned int getID() const { return m_ID; }
+    inline unsigned int getRenderableTypeID() const { return m_RenderableTypeID; }
 
 private:
+    /**
+     * @brief Unique ID for this instance of Renderable (i.e. the ID for a single tree and not all trees)
+     * Used for tracking individual instances, e.g. moving enemies or whatever.
+     */
     unsigned int m_ID = 0;
+    static inline unsigned int s_instanceCounter = 1;
+
+    /**
+     * @brief Unique ID for this type of Renderable (i.e. the ID for all pine-tree and not a single pine-trees)
+     * Used for optimization purposes (rendering batches of the same type).
+     */
+    unsigned int m_RenderableTypeID = 0;
+    static inline unsigned int s_typeCounter = 1;
+
     GLuint m_VAO_ID = 0;
     // GLuint m_VBO_ID = 0;
     GLuint m_IBO_ID = 0;
@@ -34,7 +51,8 @@ private:
 class WorldEntity : public Renderable
 {
 protected:
-    glm::mat4 m_transform = glm::mat4(1.0f); // Initialize to identity
+    glm::mat4 m_transform = glm::mat4(1.0f);
+
 public:
     virtual glm::mat4 getTransform() const
     {
