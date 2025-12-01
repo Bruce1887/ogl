@@ -180,8 +180,7 @@ Model::Model(const std::filesystem::path &path)
         else
             shader_ptr->addShader("PhongMTL.frag", ShaderType::FRAGMENT);
 
-        shader_ptr->createProgram();
-        shader_ptr->bind();
+        shader_ptr->createProgram();        
 
         /*
         std::cout << "u_material_ambient " << ambient_glm.x << ", " << ambient_glm.y << ", " << ambient_glm.z << std::endl
@@ -191,15 +190,13 @@ Model::Model(const std::filesystem::path &path)
                   << std::endl;
         */
 
-        // set material uniforms
-        shader_ptr->setUniform("u_material_ambient", ambient_glm);
-        shader_ptr->setUniform("u_material_diffuse", diffuse_glm);
-        shader_ptr->setUniform("u_material_specular", specular_glm);
-        shader_ptr->setUniform("u_material_shininess", shininess);
 
         // create MeshRenderable and store it
         auto mr = std::make_shared<MeshRenderable>(mesh_ptr, shader_ptr);
-        mr->m_textureReferences = std::vector<std::shared_ptr<Texture>>{};
+        mr->setUniform("u_material_ambient", ambient_glm);
+        mr->setUniform("u_material_diffuse", diffuse_glm);
+        mr->setUniform("u_material_specular", specular_glm);
+        mr->setUniform("u_material_shininess", shininess);
 
         if (m_modelData->m_hasTextureDiffuse)
         {

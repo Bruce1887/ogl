@@ -6,7 +6,7 @@ void MeshRenderable::render(glm::mat4 view, glm::mat4 projection, PhongLightConf
 
     // Bind shader if not already bound
     if (m_shaderRef->getID() != rContext->m_boundShader)
-    {        
+    {
         m_shaderRef->bind();
     }
 
@@ -31,22 +31,28 @@ void MeshRenderable::render(glm::mat4 view, glm::mat4 projection, PhongLightConf
         uniforms are bound to.
         Another approach is to compile a separate shader program for each MeshRenderable instance.
         */
-        m_shaderRef->setUniform(texture->targetUniform, texture->getSlot());
+        applyUniform(texture->targetUniform, texture->getSlot());
     }
 
-    // Set other uniforms
-    m_shaderRef->setUniform("u_view", view);
-    m_shaderRef->setUniform("u_projection", projection);
-    m_shaderRef->setUniform("u_model", getTransform());
+    // set 3D transform uniforms
+    applyUniform("u_view", view);
+    applyUniform("u_projection", projection);
+    applyUniform("u_model", getTransform());
+
+    // Set other uniforms (e.g. material properties) specific to this renderable
+    for (const auto &[name, value] : m_Uniforms)
+    {
+        applyUniform(name, value);
+    }
 
     if (phongLight != nullptr)
     {
-        m_shaderRef->setUniform("u_light_position", phongLight->lightPosition);
-        m_shaderRef->setUniform("u_light_ambient", phongLight->ambientLight);
-        m_shaderRef->setUniform("u_light_diffuse", phongLight->diffuseLight);
-        m_shaderRef->setUniform("u_light_specular", phongLight->specularLight);
+        applyUniform("u_light_position", phongLight->lightPosition);
+        applyUniform("u_light_ambient", phongLight->ambientLight);
+        applyUniform("u_light_diffuse", phongLight->diffuseLight);
+        applyUniform("u_light_specular", phongLight->specularLight);
         glm::vec3 camPos = glm::vec3(glm::inverse(view)[3]);
-        m_shaderRef->setUniform("u_camPos", camPos);
+        applyUniform("u_camPos", camPos);
     }
 
     if (rContext->m_boundVAO != m_mesh->vertexArray->getID())
@@ -73,7 +79,7 @@ void MeshRenderable::render(glm::mat4 view, glm::mat4 projection, PhongLightConf
         // std::cout << "glDrawElements call completed." << std::endl;
     }
     else
-    {        
+    {
         GLCALL(glDrawArrays(GL_TRIANGLES, 0, m_mesh->vertexArray->getCount()));
     }
 }

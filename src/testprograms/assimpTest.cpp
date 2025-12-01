@@ -46,21 +46,24 @@ int main(int, char **)
 		LightSource lightSource = LightSource::createDefaultLightSource();
 		
 		// Create a small box to visualize the light source
-		auto lightBox_mesh_ptr = Mesh::createBoxMesh();
-		auto lightBox_shader_ptr = std::make_shared<Shader>();
-		lightBox_shader_ptr->addShader("3D.vert", ShaderType::VERTEX);
-		lightBox_shader_ptr->addShader("constColor.frag", ShaderType::FRAGMENT);
-		lightBox_shader_ptr->createProgram();
-		lightBox_shader_ptr->bind();
-		lightBox_shader_ptr->setUniform("u_color", lightSource.config.diffuseLight); // Set the box color to the light's diffuse color
+		std::shared_ptr<Mesh> box_mesh_ptr = Mesh::createBoxMesh();
+		std::shared_ptr<Shader> constcolor_3D = std::make_shared<Shader>();
+		constcolor_3D->addShader("3D.vert", ShaderType::VERTEX);
+		constcolor_3D->addShader("constColor.frag", ShaderType::FRAGMENT);
+		constcolor_3D->createProgram();		
 		
-		auto lightBox_renderable = std::make_unique<MeshRenderable>(lightBox_mesh_ptr, lightBox_shader_ptr);
+		std::unique_ptr<MeshRenderable> lightBox_renderable = std::make_unique<MeshRenderable>(box_mesh_ptr, constcolor_3D);
+		lightBox_renderable->setUniform("u_color", lightSource.config.diffuseLight); // Set the box color to the light's diffuse color
 		lightSource.visualRepresentation = std::move(lightBox_renderable);
-
+		
 		// create the scene
 		Scene scene(camera, std::move(lightSource));		
 		std::cout << "lightVisualRepresentation id: " << scene.m_lightSource.visualRepresentation->getID() << std::endl;
-
+		
+		std::unique_ptr<MeshRenderable> another_box = std::make_unique<MeshRenderable>(box_mesh_ptr, constcolor_3D);
+		another_box->setUniform("u_color", glm::vec3(1.0f, 0.0f, 0.0f));
+		another_box->setPosition(glm::vec3(-5.0f, 0.0f, 0.0f));
+		scene.addRenderable(another_box.get());
 
 		// Model instance1((MODELS_DIR / "low-poly-pinetree2/pineTree.obj").string()); // funkar 
 		// Model instance1((MODELS_DIR /  "wooden-box-low-poly" / "source" / "box_low.fbx").string()); // funkar ej
@@ -69,7 +72,7 @@ int main(int, char **)
 		std::cout << "instance1 id: " << instance1.getID() << std::endl;
 		scene.addRenderable(&instance1);
 
-		Model instance2 = Model(instance1.getModelData());
+		Model instance2 = Model::copyFrom(instance1);
 		std::cout << "instance2 id: " << instance2.getID() << std::endl;
 		instance2.setPosition(glm::vec3(10.0f, 0.0f, 0.0f));
 		scene.addRenderable(&instance2);
@@ -88,6 +91,8 @@ int main(int, char **)
 			scene.m_activeCamera.orbitControl(g_InputManager, frameTimer.getDeltaTime());
 
 			scene.renderScene();
+
+			
 		}
 	}
 

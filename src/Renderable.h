@@ -18,13 +18,44 @@ public:
         : m_ID(s_instanceCounter++)
     {
     }
-    // Potentially shared among multiple renderables.
-    std::shared_ptr<Shader> m_shaderRef;
+
+    // TODO: maybe change visibility
     std::vector<std::shared_ptr<Texture>> m_textureReferences;
 
     inline unsigned int getID() const { return m_ID; }
     inline unsigned int getRenderableTypeID() const { return m_RenderableTypeID; }
 
+    /**      
+     * @brief Set a uniform value specific to this renderable.
+     * The uniform isnt actually set until render time where applyUniform is called.
+     * 
+     * @param name Name of the uniform
+     * @param v Value to set the uniform to
+     */
+    void setUniform(const std::string &name, UniformValue v)
+    {
+        m_Uniforms[name] = v;
+    }
+
+protected:
+    // Target uniform values specific to this renderable
+    std::unordered_map<std::string, UniformValue> m_Uniforms;
+
+    // Potentially shared among multiple renderables.
+    std::shared_ptr<Shader> m_shaderRef;
+
+    /**      
+     * @brief Apply a uniform value to the shader associated with this renderable.
+     * This actually sets the uniform in the shader, in contrast to setUniform.
+     * 
+     * @param name Name of the uniform
+     * @param value Value to set the uniform to
+     * */ 
+    void applyUniform(const std::string &name, const UniformValue &value)
+    {
+        std::visit([this, &name](auto &&val)
+                   { m_shaderRef->setUniform(name, val); }, value);
+    }
 private:
     /**
      * @brief Unique ID for this instance of Renderable (i.e. the ID for a single tree and not all trees)

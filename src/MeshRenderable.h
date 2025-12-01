@@ -19,7 +19,4 @@ public:
 private:
     std::shared_ptr<Mesh> m_mesh; // Pointer to shared data    
     // bool m_lightAffected = false; // maybe implement later (probably not)
-
-
-
 };

@@ -34,20 +34,24 @@ public:
 
 class Model : public WorldEntity
 {
-private:
-    std::shared_ptr<ModelData> m_modelData;    
-
 public:
     // Constructor that loads from file (creates new ModelData)
     Model(const std::filesystem::path& path);
     
-    // Constructor that shares existing ModelData
-    Model(std::shared_ptr<ModelData> modelData);
-    
+    static Model copyFrom(const Model& other) {
+        return Model(other.m_modelData);
+    }
+        
     ~Model() = default;
     
     void render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight) override;
     
     // Get the shared model data (useful for creating instances)
     std::shared_ptr<ModelData> getModelData() const { return m_modelData; }
+
+private:
+    std::shared_ptr<ModelData> m_modelData;    
+
+    // Constructor that shares existing ModelData
+    Model(std::shared_ptr<ModelData> modelData);
 };
