@@ -54,6 +54,8 @@ Mesh* TerrainChunkManager::generateChunk(const ChunkCoord& coord)
     int worldOffsetZ = coord.z * m_chunkSize;
 
     // Generate vertices for this chunk using flat shading with vertex stepping
+    // Note: We iterate up to but NOT including m_chunkSize to avoid overlap with next chunk
+    // Each chunk goes from [0, chunkSize) in local coordinates
     for (int z = 0; z < m_chunkSize; z += m_vertexStep)
     {
         for (int x = 0; x < m_chunkSize; x += m_vertexStep)
@@ -67,10 +69,19 @@ Mesh* TerrainChunkManager::generateChunk(const ChunkCoord& coord)
             float h_bl = m_generator->getPerlinHeight((float)worldX, (float)(worldZ + m_vertexStep));
             float h_br = m_generator->getPerlinHeight((float)(worldX + m_vertexStep), (float)(worldZ + m_vertexStep));
 
+            // Get water masks
+            float w_tl = m_generator->getWaterMask((float)worldX, (float)worldZ);
+            float w_tr = m_generator->getWaterMask((float)(worldX + m_vertexStep), (float)worldZ);
+            float w_bl = m_generator->getWaterMask((float)worldX, (float)(worldZ + m_vertexStep));
+            float w_br = m_generator->getWaterMask((float)(worldX + m_vertexStep), (float)(worldZ + m_vertexStep));
+
             // Get height scale from config (must match terraintest!)
             float heightScale = 100.0f; // Match terraintest.cpp config
+            
+            // Sea level in world units
+            const float seaLevel = 0.12f * heightScale;
 
-            // Calculate positions with vertex step
+            // Calculate positions - always use terrain height for terrain mesh
             glm::vec3 pos_tl((float)worldX, h_tl * heightScale, (float)worldZ);
             glm::vec3 pos_tr((float)(worldX + m_vertexStep), h_tr * heightScale, (float)worldZ);
             glm::vec3 pos_bl((float)worldX, h_bl * heightScale, (float)(worldZ + m_vertexStep));
@@ -89,6 +100,7 @@ Mesh* TerrainChunkManager::generateChunk(const ChunkCoord& coord)
                 v1.normal = normal;
                 v1.texCoord = glm::vec2((float)worldX / 10.0f, (float)worldZ / 10.0f);
                 v1.height = h_tl;
+                v1.waterMask = 0.0f;
                 vertices.push_back(v1);
 
                 TerrainVertex v2;
@@ -96,6 +108,7 @@ Mesh* TerrainChunkManager::generateChunk(const ChunkCoord& coord)
                 v2.normal = normal;
                 v2.texCoord = glm::vec2((float)worldX / 10.0f, (float)(worldZ + 1) / 10.0f);
                 v2.height = h_bl;
+                v2.waterMask = 0.0f;
                 vertices.push_back(v2);
 
                 TerrainVertex v3;
@@ -103,6 +116,7 @@ Mesh* TerrainChunkManager::generateChunk(const ChunkCoord& coord)
                 v3.normal = normal;
                 v3.texCoord = glm::vec2((float)(worldX + 1) / 10.0f, (float)worldZ / 10.0f);
                 v3.height = h_tr;
+                v3.waterMask = 0.0f;
                 vertices.push_back(v3);
 
                 indices.push_back(baseIdx);
@@ -123,6 +137,7 @@ Mesh* TerrainChunkManager::generateChunk(const ChunkCoord& coord)
                 v1.normal = normal;
                 v1.texCoord = glm::vec2((float)(worldX + 1) / 10.0f, (float)worldZ / 10.0f);
                 v1.height = h_tr;
+                v1.waterMask = 0.0f;
                 vertices.push_back(v1);
 
                 TerrainVertex v2;
@@ -130,6 +145,7 @@ Mesh* TerrainChunkManager::generateChunk(const ChunkCoord& coord)
                 v2.normal = normal;
                 v2.texCoord = glm::vec2((float)worldX / 10.0f, (float)(worldZ + 1) / 10.0f);
                 v2.height = h_bl;
+                v2.waterMask = 0.0f;
                 vertices.push_back(v2);
 
                 TerrainVertex v3;
@@ -137,6 +153,7 @@ Mesh* TerrainChunkManager::generateChunk(const ChunkCoord& coord)
                 v3.normal = normal;
                 v3.texCoord = glm::vec2((float)(worldX + 1) / 10.0f, (float)(worldZ + 1) / 10.0f);
                 v3.height = h_br;
+                v3.waterMask = 0.0f;
                 vertices.push_back(v3);
 
                 indices.push_back(baseIdx);
@@ -144,6 +161,87 @@ Mesh* TerrainChunkManager::generateChunk(const ChunkCoord& coord)
                 indices.push_back(baseIdx + 2);
             }
         }
+    }
+    
+    // Generate single water plane for entire chunk at sea level (only 6 vertices!)
+    {
+        float heightScale = 100.0f;
+        const float seaLevel = 0.13f * heightScale + 0.1f;  // Slightly higher than terrain sea level
+        glm::vec3 normal(0.0f, 1.0f, 0.0f);
+        
+        // Calculate chunk corners in world space
+        float chunkMinX = (float)worldOffsetX;
+        float chunkMaxX = (float)(worldOffsetX + m_chunkSize);
+        float chunkMinZ = (float)worldOffsetZ;
+        float chunkMaxZ = (float)(worldOffsetZ + m_chunkSize);
+        
+        // Create two triangles covering the entire chunk
+        glm::vec3 pos_tl(chunkMinX, seaLevel, chunkMinZ);
+        glm::vec3 pos_tr(chunkMaxX, seaLevel, chunkMinZ);
+        glm::vec3 pos_bl(chunkMinX, seaLevel, chunkMaxZ);
+        glm::vec3 pos_br(chunkMaxX, seaLevel, chunkMaxZ);
+        
+        // First triangle
+        unsigned int baseIdx = vertices.size();
+        
+        TerrainVertex v1;
+        v1.position = pos_tl;
+        v1.normal = normal;
+        v1.texCoord = glm::vec2(chunkMinX / 10.0f, chunkMinZ / 10.0f);
+        v1.height = 0.13f;
+        v1.waterMask = 1.0f;
+        vertices.push_back(v1);
+        
+        TerrainVertex v2;
+        v2.position = pos_bl;
+        v2.normal = normal;
+        v2.texCoord = glm::vec2(chunkMinX / 10.0f, chunkMaxZ / 10.0f);
+        v2.height = 0.13f;
+        v2.waterMask = 1.0f;
+        vertices.push_back(v2);
+        
+        TerrainVertex v3;
+        v3.position = pos_tr;
+        v3.normal = normal;
+        v3.texCoord = glm::vec2(chunkMaxX / 10.0f, chunkMinZ / 10.0f);
+        v3.height = 0.13f;
+        v3.waterMask = 1.0f;
+        vertices.push_back(v3);
+        
+        indices.push_back(baseIdx);
+        indices.push_back(baseIdx + 1);
+        indices.push_back(baseIdx + 2);
+        
+        // Second triangle
+        baseIdx = vertices.size();
+        
+        TerrainVertex v4;
+        v4.position = pos_tr;
+        v4.normal = normal;
+        v4.texCoord = glm::vec2(chunkMaxX / 10.0f, chunkMinZ / 10.0f);
+        v4.height = 0.13f;
+        v4.waterMask = 1.0f;
+        vertices.push_back(v4);
+        
+        TerrainVertex v5;
+        v5.position = pos_bl;
+        v5.normal = normal;
+        v5.texCoord = glm::vec2(chunkMinX / 10.0f, chunkMaxZ / 10.0f);
+        v5.height = 0.13f;
+        v5.waterMask = 1.0f;
+        vertices.push_back(v5);
+        
+        TerrainVertex v6;
+        v6.position = pos_br;
+        v6.normal = normal;
+        v6.texCoord = glm::vec2(chunkMaxX / 10.0f, chunkMaxZ / 10.0f);
+        v6.height = 0.13f;
+        v6.waterMask = 1.0f;
+        vertices.push_back(v6);
+        
+        indices.push_back(baseIdx);
+        indices.push_back(baseIdx + 1);
+        indices.push_back(baseIdx + 2);
     }
 
     // Create OpenGL buffers
@@ -155,6 +253,7 @@ Mesh* TerrainChunkManager::generateChunk(const ChunkCoord& coord)
     layout.push<float>(3); // normal
     layout.push<float>(2); // texCoord
     layout.push<float>(1); // height
+    layout.push<float>(1); // waterMask
 
     va->addBuffer(*vb, layout);
 
