@@ -79,7 +79,15 @@ int main(int, char **)
         int vertexStep = 5;  // 5 divides 100 evenly -> 20x20 grid per chunk
         TerrainChunkManager chunkManager(&terrainGen, chunkSize, vertexStep, terrainTextures);
         chunkManager.setShader(terrainShader);
-        float renderDistance = 180.0f; // Optimized: slightly reduced from 200 for better performance
+        float renderDistance = 250.0f; // Extended render distance for more distant fog
+        
+        // Fog settings - light fog starting early, becoming dense at chunk limit
+        float fogStart = 150.0f;  // Subtle fog begins at 80 units
+        float fogEnd = renderDistance * 0.95f;  // Dense fog at 90% of render distance to hide chunk loading
+        glm::vec3 fogColor = glm::vec3(0.7f, 0.8f, 0.9f);  // Light blue-grey fog color (sky-like)
+        
+        // Set background color to fog color so the sky matches the fog
+        glClearColor(fogColor.r, fogColor.g, fogColor.b, 1.0f);
 
         std::cout << "[chunktest] Chunked terrain system ready!" << std::endl;
         std::cout << "[chunktest] Optimization settings:" << std::endl;
@@ -87,6 +95,8 @@ int main(int, char **)
         std::cout << "  - Vertex step: " << vertexStep << " (" << (chunkSize / vertexStep) << "x" << (chunkSize / vertexStep) << " grid per chunk)" << std::endl;
         std::cout << "  - Vertices per chunk: ~" << ((chunkSize / vertexStep) * (chunkSize / vertexStep) * 6) << std::endl;
         std::cout << "  - Render distance: " << renderDistance << " units" << std::endl;
+        std::cout << "  - Fog start: " << fogStart << " units" << std::endl;
+        std::cout << "  - Fog end: " << fogEnd << " units" << std::endl;
         std::cout << "[chunktest] Controls:" << std::endl;
         std::cout << "  WASD - Move camera" << std::endl;
         std::cout << "  Mouse - Look around" << std::endl;
@@ -106,10 +116,15 @@ int main(int, char **)
             scene.m_activeCamera.flyControl(g_InputManager, dt);
 
             // Update chunks based on UPDATED camera position
-            chunkManager.updateChunks(scene.m_activeCamera.m_Position, renderDistance);                        
+            chunkManager.updateChunks(scene.m_activeCamera.m_Position, renderDistance);
 
             for (const auto &chunkPtr : chunkManager.m_chunks)
-            {                
+            {
+                // Set fog uniforms for each chunk's terrain
+                chunkPtr->terrain_mr->setUniform("u_fogStart", fogStart);
+                chunkPtr->terrain_mr->setUniform("u_fogEnd", fogEnd);
+                chunkPtr->terrain_mr->setUniform("u_fogColor", fogColor);
+                
                 chunkPtr->render(scene.m_activeCamera.getViewMatrix(), scene.m_activeCamera.getProjectionMatrix(), &scene.m_lightSource.config);
             }
 

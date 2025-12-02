@@ -7,6 +7,7 @@ in vec3 fragPos;
 in vec2 texCoord;
 in float height;
 in float waterMask;
+in float fogDistance;
 
 uniform sampler2D u_texture0; // Low terrain (ground)
 uniform sampler2D u_texture1; // Mid terrain (grass)
@@ -21,6 +22,11 @@ uniform vec3 u_light_ambient;
 uniform vec3 u_light_position;
 uniform vec3 u_light_diffuse;
 uniform vec3 u_light_specular;
+
+// fog parameters
+uniform float u_fogStart;      // Distance where fog starts to become noticeable
+uniform float u_fogEnd;        // Distance where fog is fully opaque
+uniform vec3 u_fogColor;       // Color of the fog (typically sky color)
 
 void main()
 {
@@ -100,4 +106,19 @@ void main()
     } else {
         FragColor = vec4(terrainResult, 1.0);
     }
+    
+    // Apply cylindrical fog that extends from ground to sky
+    // Calculate fog factor using smoothstep for smooth transition
+    // The fog is based purely on horizontal distance, creating a cylinder effect
+    float fogFactor = smoothstep(u_fogStart, u_fogEnd, fogDistance);
+    
+    // Add height-based fog density modifier to create visible fog wall
+    // The higher you look, the more fog you see, creating a wall effect
+    float heightAboveCamera = fragPos.y - u_camPos.y;
+    float heightFactor = smoothstep(-50.0, 150.0, heightAboveCamera);
+    fogFactor = max(fogFactor, heightFactor * fogFactor * 0.8);
+    
+    // Mix the final color with fog color based on distance
+    vec3 finalColor = mix(FragColor.rgb, u_fogColor, fogFactor);
+    FragColor = vec4(finalColor, FragColor.a);
 }
