@@ -17,9 +17,7 @@ IndexBuffer::IndexBuffer(const unsigned int *data, unsigned int count, BufferUsa
 
 IndexBuffer::~IndexBuffer()
 {
-#ifdef DEBUG
-    DEBUG_PRINT("Deleting IndexBuffer with ID: " << m_RendererID);
-#endif
+//     DEBUG_PRINT("Deleting IndexBuffer with ID: " << m_RendererID);
     GLCALL(glDeleteBuffers(1, &m_RendererID));
 }
 

@@ -26,9 +26,7 @@ struct Vertex
 
 ModelData::~ModelData()
 {
-    #ifdef DEBUG
     DEBUG_PRINT("Destroying ModelData with " << m_meshRenderables.size() << " mesh renderables.");
-    #endif
 }
 
 Model::Model(const std::filesystem::path &path)
@@ -45,9 +43,7 @@ Model::Model(const std::filesystem::path &path)
         return;
     }
 
-#ifdef DEBUG
     DEBUG_PRINT("Processing model at path: " << path << " with " << ai_scene->mNumMeshes << " meshes.");
-#endif
 
     m_modelData = std::make_shared<ModelData>();
 
@@ -55,9 +51,7 @@ Model::Model(const std::filesystem::path &path)
     for (unsigned int i = 0; i < ai_scene->mNumMeshes; i++)
     {
         aiMesh *mesh = ai_scene->mMeshes[i];
-#ifdef DEBUG
-        std::cerr << "Processing mesh with " << mesh->mNumVertices << " vertices." << std::endl;
-#endif
+        DEBUG_PRINT("Processing mesh with " << mesh->mNumVertices << " vertices.");
 
         aiMaterial *material = ai_scene->mMaterials[mesh->mMaterialIndex];
 
@@ -157,7 +151,7 @@ Model::Model(const std::filesystem::path &path)
         std::vector<unsigned int> indices;
         for (unsigned int f = 0; f < mesh->mNumFaces; f++)
         {
-            aiFace face = mesh->mFaces[f];        
+            aiFace face = mesh->mFaces[f];
             for (unsigned int j = 0; j < face.mNumIndices; j++)
             {
                 indices.push_back(face.mIndices[j]);
@@ -178,7 +172,7 @@ Model::Model(const std::filesystem::path &path)
         else
             shader_ptr->addShader("PhongMTL.frag", ShaderType::FRAGMENT);
 
-        shader_ptr->createProgram();        
+        shader_ptr->createProgram();
 
         /*
         std::cout << "u_material_ambient " << ambient_glm.x << ", " << ambient_glm.y << ", " << ambient_glm.z << std::endl
@@ -187,7 +181,6 @@ Model::Model(const std::filesystem::path &path)
                   << "u_material_shininess " << shininess
                   << std::endl;
         */
-
 
         // create MeshRenderable and store it
         auto mr = std::make_shared<MeshRenderable>(mesh_ptr, shader_ptr);
@@ -206,9 +199,7 @@ Model::Model(const std::filesystem::path &path)
         m_modelData->addMeshRenderable(std::shared_ptr<MeshRenderable>(mr));
     }
 
-#ifdef DEBUG
     DEBUG_PRINT("Finished processing model.");
-#endif
 }
 
 Model::Model(std::shared_ptr<ModelData> modelData)

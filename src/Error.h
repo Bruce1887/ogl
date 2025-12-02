@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <filesystem>
 
 /**
  * Wrap OpenGL calls to clear errors before and check for errors after the call.
@@ -12,12 +13,18 @@
     function;            \
     GLLogCall(#function, __FILE__, __LINE__);
 
-// Print macro (prepends file and line number)
-#define DEBUG_PRINT(msg)                                                     \
-    do                                                                       \
-    {                                                                        \
-        std::cerr << __FILE__ << ":" << __LINE__ << " " << msg << std::endl; \
-    } while (0)
+
+#define __FILENAME__ (std::filesystem::path(__FILE__).filename().string())
+
+#ifdef DEBUG
+    #define DEBUG_PRINT(msg) \
+        do { \
+            std::cerr << "\r[" << __FILENAME__ << ":" << __LINE__ << "] " << msg << std::endl; \
+        } while (0)
+#else
+    #define DEBUG_PRINT(msg) do {} while (0)
+#endif
+
 
 void GLClearError();
 void GLLogCall(const char *function, const char *file, int line);

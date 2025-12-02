@@ -17,9 +17,7 @@ VertexBuffer::VertexBuffer(const void *cpu_buffer, unsigned int size, VertexArra
 
 VertexBuffer::~VertexBuffer()
 {
-#ifdef DEBUG
-    DEBUG_PRINT("Deleting VertexBuffer with ID: " << m_RendererID);
-#endif  
+    //     DEBUG_PRINT("Deleting VertexBuffer with ID: " << m_RendererID);
     GLCALL(glDeleteBuffers(1, &m_RendererID));
 }
 

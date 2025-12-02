@@ -4,31 +4,66 @@
 #include <cmath>
 #include <iostream>
 
-ChunkCoord TerrainChunkManager::worldToChunk(const glm::vec3 &worldPos) const
+void addTriangle(std::vector<TerrainVertex> &vertices,
+                 std::vector<unsigned int> &indices,
+                 const glm::vec3 &p1, const glm::vec3 &p2, const glm::vec3 &p3,
+                 float h1, float h2, float h3, float waterMask)
 {
-    ChunkCoord coord;
-    coord.x = static_cast<int>(std::floor(worldPos.x / m_chunkSize));
-    coord.z = static_cast<int>(std::floor(worldPos.z / m_chunkSize));
-    return coord;
+    glm::vec3 normal = glm::normalize(glm::cross(p2 - p1, p3 - p1));
+    unsigned int baseIdx = vertices.size();
+
+    auto addVertex = [&](const glm::vec3 &pos, float h)
+    {
+        vertices.push_back({pos, normal,
+                            glm::vec2(pos.x / 10.0f, pos.z / 10.0f),
+                            h, waterMask});
+    };
+
+    addVertex(p1, h1);
+    addVertex(p2, h2);
+    addVertex(p3, h3);
+
+    indices.insert(indices.end(), {baseIdx, baseIdx + 1, baseIdx + 2});
 }
 
-std::unique_ptr<Chunk> TerrainChunkManager::generateChunk(const ChunkCoord &coord)
+std::unique_ptr<Chunk> TerrainChunkManager::generateNewChunk(const ChunkCoord &coord)
 {
     std::vector<TerrainVertex> vertices;
     std::vector<unsigned int> indices;
 
-    // Optimization: Pre-allocate memory to avoid reallocations
+    // Pre-allocate memory
     int quadsPerChunk = (m_chunkSize / m_vertexStep) * (m_chunkSize / m_vertexStep);
-    vertices.reserve(quadsPerChunk * 6); // 6 vertices per quad (2 triangles, flat shading)
-    indices.reserve(quadsPerChunk * 6);  // 6 indices per quad
+    vertices.reserve(quadsPerChunk * 6 + 6); // terrain + water plane
+    indices.reserve(quadsPerChunk * 6 + 6);
 
-    // Calculate world offset for this chunk
-    int worldOffsetX = coord.x * m_chunkSize;
-    int worldOffsetZ = coord.z * m_chunkSize;
+    // Constants
+    constexpr float heightScale = 100.0f;
+    constexpr float seaLevel = 0.13f * heightScale + 0.1f;
+    const int worldOffsetX = coord.x * m_chunkSize;
+    const int worldOffsetZ = coord.z * m_chunkSize;
 
-    // Generate vertices for this chunk using flat shading with vertex stepping
-    // Note: We iterate up to but NOT including m_chunkSize to avoid overlap with next chunk
-    // Each chunk goes from [0, chunkSize) in local coordinates
+    // Helper to add a triangle with flat shading
+    auto addTriangle = [&](const glm::vec3 &p1, const glm::vec3 &p2, const glm::vec3 &p3,
+                           float h1, float h2, float h3, float waterMask)
+    {
+        glm::vec3 normal = glm::normalize(glm::cross(p2 - p1, p3 - p1));
+        unsigned int baseIdx = vertices.size();
+
+        auto addVertex = [&](const glm::vec3 &pos, float h)
+        {
+            vertices.push_back({pos, normal,
+                                glm::vec2(pos.x / 10.0f, pos.z / 10.0f),
+                                h, waterMask});
+        };
+
+        addVertex(p1, h1);
+        addVertex(p2, h2);
+        addVertex(p3, h3);
+
+        indices.insert(indices.end(), {baseIdx, baseIdx + 1, baseIdx + 2});
+    };
+
+    // Generate terrain vertices
     for (int z = 0; z < m_chunkSize; z += m_vertexStep)
     {
         for (int x = 0; x < m_chunkSize; x += m_vertexStep)
@@ -36,214 +71,81 @@ std::unique_ptr<Chunk> TerrainChunkManager::generateChunk(const ChunkCoord &coor
             int worldX = worldOffsetX + x;
             int worldZ = worldOffsetZ + z;
 
-            // Sample heights at the four corners of the quad
+            // Sample heights at quad corners
             float h_tl = m_generator->getPerlinHeight((float)worldX, (float)worldZ);
             float h_tr = m_generator->getPerlinHeight((float)(worldX + m_vertexStep), (float)worldZ);
             float h_bl = m_generator->getPerlinHeight((float)worldX, (float)(worldZ + m_vertexStep));
             float h_br = m_generator->getPerlinHeight((float)(worldX + m_vertexStep), (float)(worldZ + m_vertexStep));
 
-            // Get water masks
-            float w_tl = m_generator->getWaterMask((float)worldX, (float)worldZ);
-            float w_tr = m_generator->getWaterMask((float)(worldX + m_vertexStep), (float)worldZ);
-            float w_bl = m_generator->getWaterMask((float)worldX, (float)(worldZ + m_vertexStep));
-            float w_br = m_generator->getWaterMask((float)(worldX + m_vertexStep), (float)(worldZ + m_vertexStep));
-
-            // Get height scale from config (must match terraintest!)
-            float heightScale = 100.0f; // Match terraintest.cpp config
-
-            // Sea level in world units
-            const float seaLevel = 0.12f * heightScale;
-
-            // Calculate positions - always use terrain height for terrain mesh
+            // Calculate positions
             glm::vec3 pos_tl((float)worldX, h_tl * heightScale, (float)worldZ);
             glm::vec3 pos_tr((float)(worldX + m_vertexStep), h_tr * heightScale, (float)worldZ);
             glm::vec3 pos_bl((float)worldX, h_bl * heightScale, (float)(worldZ + m_vertexStep));
             glm::vec3 pos_br((float)(worldX + m_vertexStep), h_br * heightScale, (float)(worldZ + m_vertexStep));
 
-            // First triangle (flat shading)
-            {
-                glm::vec3 edge1 = pos_bl - pos_tl;
-                glm::vec3 edge2 = pos_tr - pos_tl;
-                glm::vec3 normal = glm::normalize(glm::cross(edge1, edge2));
-
-                unsigned int baseIdx = vertices.size();
-
-                TerrainVertex v1;
-                v1.position = pos_tl;
-                v1.normal = normal;
-                v1.texCoord = glm::vec2((float)worldX / 10.0f, (float)worldZ / 10.0f);
-                v1.height = h_tl;
-                v1.waterMask = 0.0f;
-                vertices.push_back(v1);
-
-                TerrainVertex v2;
-                v2.position = pos_bl;
-                v2.normal = normal;
-                v2.texCoord = glm::vec2((float)worldX / 10.0f, (float)(worldZ + 1) / 10.0f);
-                v2.height = h_bl;
-                v2.waterMask = 0.0f;
-                vertices.push_back(v2);
-
-                TerrainVertex v3;
-                v3.position = pos_tr;
-                v3.normal = normal;
-                v3.texCoord = glm::vec2((float)(worldX + 1) / 10.0f, (float)worldZ / 10.0f);
-                v3.height = h_tr;
-                v3.waterMask = 0.0f;
-                vertices.push_back(v3);
-
-                indices.push_back(baseIdx);
-                indices.push_back(baseIdx + 1);
-                indices.push_back(baseIdx + 2);
-            }
-
-            // Second triangle
-            {
-                glm::vec3 edge1 = pos_bl - pos_tr;
-                glm::vec3 edge2 = pos_br - pos_tr;
-                glm::vec3 normal = glm::normalize(glm::cross(edge1, edge2));
-
-                unsigned int baseIdx = vertices.size();
-
-                TerrainVertex v1;
-                v1.position = pos_tr;
-                v1.normal = normal;
-                v1.texCoord = glm::vec2((float)(worldX + 1) / 10.0f, (float)worldZ / 10.0f);
-                v1.height = h_tr;
-                v1.waterMask = 0.0f;
-                vertices.push_back(v1);
-
-                TerrainVertex v2;
-                v2.position = pos_bl;
-                v2.normal = normal;
-                v2.texCoord = glm::vec2((float)worldX / 10.0f, (float)(worldZ + 1) / 10.0f);
-                v2.height = h_bl;
-                v2.waterMask = 0.0f;
-                vertices.push_back(v2);
-
-                TerrainVertex v3;
-                v3.position = pos_br;
-                v3.normal = normal;
-                v3.texCoord = glm::vec2((float)(worldX + 1) / 10.0f, (float)(worldZ + 1) / 10.0f);
-                v3.height = h_br;
-                v3.waterMask = 0.0f;
-                vertices.push_back(v3);
-
-                indices.push_back(baseIdx);
-                indices.push_back(baseIdx + 1);
-                indices.push_back(baseIdx + 2);
-            }
+            // Add two triangles for the quad
+            addTriangle(pos_tl, pos_bl, pos_tr, h_tl, h_bl, h_tr, 0.0f);
+            addTriangle(pos_tr, pos_bl, pos_br, h_tr, h_bl, h_br, 0.0f);
         }
     }
 
-    // Generate single water plane for entire chunk at sea level (only 6 vertices!)
+    // Generate water plane covering entire chunk
     {
-        float heightScale = 100.0f;
-        const float seaLevel = 0.13f * heightScale + 0.1f; // Slightly higher than terrain sea level
-        glm::vec3 normal(0.0f, 1.0f, 0.0f);
+        float minX = (float)worldOffsetX, maxX = (float)(worldOffsetX + m_chunkSize);
+        float minZ = (float)worldOffsetZ, maxZ = (float)(worldOffsetZ + m_chunkSize);
 
-        // Calculate chunk corners in world space
-        float chunkMinX = (float)worldOffsetX;
-        float chunkMaxX = (float)(worldOffsetX + m_chunkSize);
-        float chunkMinZ = (float)worldOffsetZ;
-        float chunkMaxZ = (float)(worldOffsetZ + m_chunkSize);
+        glm::vec3 pos_tl(minX, seaLevel, minZ);
+        glm::vec3 pos_tr(maxX, seaLevel, minZ);
+        glm::vec3 pos_bl(minX, seaLevel, maxZ);
+        glm::vec3 pos_br(maxX, seaLevel, maxZ);
 
-        // Create two triangles covering the entire chunk
-        glm::vec3 pos_tl(chunkMinX, seaLevel, chunkMinZ);
-        glm::vec3 pos_tr(chunkMaxX, seaLevel, chunkMinZ);
-        glm::vec3 pos_bl(chunkMinX, seaLevel, chunkMaxZ);
-        glm::vec3 pos_br(chunkMaxX, seaLevel, chunkMaxZ);
-
-        // First triangle
-        unsigned int baseIdx = vertices.size();
-
-        TerrainVertex v1;
-        v1.position = pos_tl;
-        v1.normal = normal;
-        v1.texCoord = glm::vec2(chunkMinX / 10.0f, chunkMinZ / 10.0f);
-        v1.height = 0.13f;
-        v1.waterMask = 1.0f;
-        vertices.push_back(v1);
-
-        TerrainVertex v2;
-        v2.position = pos_bl;
-        v2.normal = normal;
-        v2.texCoord = glm::vec2(chunkMinX / 10.0f, chunkMaxZ / 10.0f);
-        v2.height = 0.13f;
-        v2.waterMask = 1.0f;
-        vertices.push_back(v2);
-
-        TerrainVertex v3;
-        v3.position = pos_tr;
-        v3.normal = normal;
-        v3.texCoord = glm::vec2(chunkMaxX / 10.0f, chunkMinZ / 10.0f);
-        v3.height = 0.13f;
-        v3.waterMask = 1.0f;
-        vertices.push_back(v3);
-
-        indices.push_back(baseIdx);
-        indices.push_back(baseIdx + 1);
-        indices.push_back(baseIdx + 2);
-
-        // Second triangle
-        baseIdx = vertices.size();
-
-        TerrainVertex v4;
-        v4.position = pos_tr;
-        v4.normal = normal;
-        v4.texCoord = glm::vec2(chunkMaxX / 10.0f, chunkMinZ / 10.0f);
-        v4.height = 0.13f;
-        v4.waterMask = 1.0f;
-        vertices.push_back(v4);
-
-        TerrainVertex v5;
-        v5.position = pos_bl;
-        v5.normal = normal;
-        v5.texCoord = glm::vec2(chunkMinX / 10.0f, chunkMaxZ / 10.0f);
-        v5.height = 0.13f;
-        v5.waterMask = 1.0f;
-        vertices.push_back(v5);
-
-        TerrainVertex v6;
-        v6.position = pos_br;
-        v6.normal = normal;
-        v6.texCoord = glm::vec2(chunkMaxX / 10.0f, chunkMaxZ / 10.0f);
-        v6.height = 0.13f;
-        v6.waterMask = 1.0f;
-        vertices.push_back(v6);
-
-        indices.push_back(baseIdx);
-        indices.push_back(baseIdx + 1);
-        indices.push_back(baseIdx + 2);
+        addTriangle(pos_tl, pos_bl, pos_tr, 0.13f, 0.13f, 0.13f, 1.0f);
+        addTriangle(pos_tr, pos_bl, pos_br, 0.13f, 0.13f, 0.13f, 1.0f);
     }
 
-#ifdef DEBUG
-    DEBUG_PRINT("Generated chunk at (" << coord.x << ", " << coord.z << ") with " << vertices.size() << " vertices and " << indices.size() << " indices.");
-#endif
-
-    // Create OpenGL buffers
+    // Create meshrenderable
     auto va_ptr = std::make_unique<VertexArray>();
     auto vb_ptr = std::make_unique<VertexBuffer>(vertices.data(), vertices.size() * sizeof(TerrainVertex), va_ptr.get());
-
     VertexBufferLayout layout;
     layout.push<float>(3); // position
     layout.push<float>(3); // normal
     layout.push<float>(2); // texCoord
     layout.push<float>(1); // height
     layout.push<float>(1); // waterMask
-
     va_ptr->addBuffer(vb_ptr.get(), layout);
     auto ibo_ptr = std::make_unique<IndexBuffer>(indices.data(), indices.size());
-
     auto mesh_ptr = std::make_shared<Mesh>(std::move(va_ptr), std::move(vb_ptr), std::move(ibo_ptr));
-
-    std::unique_ptr<MeshRenderable> chunkTerrain_mr = std::make_unique<MeshRenderable>(mesh_ptr, m_terrainShader);
+    auto chunkTerrain_mr = std::make_unique<MeshRenderable>(mesh_ptr, m_terrainShader);
     chunkTerrain_mr->m_textureReferences = m_terrainTextures;
-    
-    std::unique_ptr<Chunk> chunk_ptr = std::make_unique<Chunk>();
-    chunk_ptr->coord = coord;
-    chunk_ptr->terrain_mr = std::move(chunkTerrain_mr);
-    return chunk_ptr;
+
+    Model gran((MODELS_DIR / "gran" / "gran.obj")); // gran som trädet gran
+
+    // Create chunk
+    std::unique_ptr<Chunk> chunk = std::make_unique<Chunk>(coord, std::move(chunkTerrain_mr));
+
+    // Populate chunk with trees
+
+    for (int z = 0; z < m_chunkSize; z += m_vertexStep)
+    {
+        for (int x = 0; x < m_chunkSize; x += m_vertexStep)
+        {
+            float tree_perlin = m_generator->foo_treePerlin((float)(worldOffsetX + x), (float)(worldOffsetZ + z));
+
+            if (tree_perlin > 0.6f) // threshold for tree placement
+                continue;
+
+            float worldX = worldOffsetX + x;
+            float worldZ = worldOffsetZ + z;
+            float y = m_generator->getPerlinHeight((float)worldX, (float)worldZ);
+            y *= heightScale;
+            // std::cout << "Placing tree at (" << (worldOffsetX + x) << ", " << y << ", " << (worldOffsetZ + z) << ")\n";s
+            std::unique_ptr<Model> treeModel = std::make_unique<Model>(Model::copyFrom(gran));
+            treeModel->setPosition(glm::vec3((float)(worldOffsetX + x), y, (float)(worldOffsetZ + z)));
+            chunk->renderables_in_chunk.push_back(std::move(treeModel));
+        }
+    }
+
+    return chunk;
 }
 
 void TerrainChunkManager::loadChunk(const ChunkCoord &coord)
@@ -260,69 +162,34 @@ void TerrainChunkManager::loadChunk(const ChunkCoord &coord)
     }
 
     // Generate new chunk
-    std::unique_ptr<Chunk> chunk = generateChunk(coord);
+    std::unique_ptr<Chunk> chunk = generateNewChunk(coord);
 
     m_chunks.push_back(std::move(chunk));
-
-    /*
-    // Create renderable
-    if (m_terrainShader)
-    {
-        std::shared_ptr<MeshRenderable> renderable = std::make_shared<MeshRenderable>(mesh, m_terrainShader);
-        renderable->setTransform(glm::mat4(1.0f));
-        m_loadedChunks[coord] = renderable;
-
-        // Reduced debug output - only print occasionally to reduce spam
-        static int loadCount = 0;
-        if (++loadCount % 10 == 0)
-        {
-            std::cout << "[TerrainChunk] Loaded " << loadCount << " chunks total" << std::endl;
-        }
-    }
-    */
 }
-
-/*
-void TerrainChunkManager::unloadChunk(const ChunkCoord &coord)
-{
-    // Remove renderable
-    for (auto &c : m_chunks)
-    {
-        if (c->coord == coord)
-        {
-            c->deactivate();
-            return;
-        }
-    }
-}
-*/
 
 void TerrainChunkManager::garbageCollectChunks()
 {
+
 #ifdef DEBUG
-    DEBUG_PRINT("Garbage collecting chunks. Before: " << m_chunks.size() << " chunks.");
+    size_t before = m_chunks.size();
 #endif
     m_chunks.erase(std::remove_if(m_chunks.begin(), m_chunks.end(),
                                   [](const std::unique_ptr<Chunk> &chunk)
                                   { return !chunk->isActive(); }),
                    m_chunks.end());
-
 #ifdef DEBUG
-    DEBUG_PRINT("After: " << m_chunks.size() << " chunks.");
+    DEBUG_PRINT("Garbage collecting chunks. Before: " << before << " chunks. After: " << m_chunks.size() << " chunks.");
 #endif
 }
 
 void TerrainChunkManager::updateChunks(const glm::vec3 &cameraPosition, float renderDistance)
 {
-
     // Optimization: Only update chunks if camera moved significantly
-    /*
     float distanceMoved = glm::distance(cameraPosition, m_lastCameraPosition);
     if (distanceMoved < m_updateThreshold)
     {
         return; // Skip update, we havent moved far enough
     }
-    */
 
     m_lastCameraPosition = cameraPosition;
 
@@ -350,52 +217,8 @@ void TerrainChunkManager::updateChunks(const glm::vec3 &cameraPosition, float re
         chunkPtr->setActiveStatus(inBounds);
     }
 
-    if (m_chunks.size() > 50)
+    if (m_chunks.size() > m_gc_threshold)
     {
         garbageCollectChunks();
     }
-
-    /*
-    // Set to track which chunks should be loaded
-    std::unordered_map<ChunkCoord, bool> shouldBeLoaded;
-
-    // Mark chunks that should be loaded
-    for (int z = -chunkRadius; z <= chunkRadius; z++)
-    {
-        for (int x = -chunkRadius; x <= chunkRadius; x++)
-        {
-            ChunkCoord coord;
-            coord.x = cameraChunk.x + x;
-            coord.z = cameraChunk.z + z;
-
-            // Calculate distance to chunk center
-            float chunkCenterX = (coord.x + 0.5f) * m_chunkSize;
-            float chunkCenterZ = (coord.z + 0.5f) * m_chunkSize;
-            float distanceToChunk = glm::distance(
-                glm::vec2(cameraPosition.x, cameraPosition.z),
-                glm::vec2(chunkCenterX, chunkCenterZ));
-
-            if (distanceToChunk <= renderDistance)
-            {
-                shouldBeLoaded[coord] = true;
-                loadChunk(coord);
-            }
-        }
-    }
-
-    // Unload chunks that are too far
-    std::vector<ChunkCoord> chunksToUnload;
-    for (const auto &pair : m_loadedChunks)
-    {
-        if (shouldBeLoaded.find(pair.first) == shouldBeLoaded.end())
-        {
-            chunksToUnload.push_back(pair.first);
-        }
-    }
-
-    for (const auto &coord : chunksToUnload)
-    {
-        unloadChunk(coord);
-    }
-    */
 }

@@ -47,6 +47,7 @@ public:
     // Check if location should have water (based on height and area)
     float getWaterMask(float x, float z);
 
+    float foo_treePerlin(float x, float z);
 private:    
 
     TerrainConfig m_config;

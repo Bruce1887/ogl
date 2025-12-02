@@ -74,25 +74,21 @@ int main(int, char **)
             whiteWaterTexture};
 
         // Optimized chunk settings
-        std::cout << "[chunktest] Setting up chunked terrain system..." << std::endl;
+        DEBUG_PRINT("Setting up chunked terrain system...");
         int chunkSize = 100; // Clean 100x100 chunks
-        int vertexStep = 5;  // 5 divides 100 evenly -> 20x20 grid per chunk
-        TerrainChunkManager chunkManager(&terrainGen, chunkSize, vertexStep, terrainTextures);
+        //int vertexStep = 5;  // 5 divides 100 evenly -> 20x20 grid per chunk
+        int vertexStep = 20;  
+        int gc_threshold = 400;
+        TerrainChunkManager chunkManager(&terrainGen, chunkSize, vertexStep, terrainTextures, gc_threshold);
         chunkManager.setShader(terrainShader);
-        float renderDistance = 180.0f; // Optimized: slightly reduced from 200 for better performance
+        float renderDistance = 40; //  180.0f; // Optimized: slightly reduced from 200 for better performance
 
-        std::cout << "[chunktest] Chunked terrain system ready!" << std::endl;
-        std::cout << "[chunktest] Optimization settings:" << std::endl;
-        std::cout << "  - Chunk size: " << chunkSize << "x" << chunkSize << std::endl;
-        std::cout << "  - Vertex step: " << vertexStep << " (" << (chunkSize / vertexStep) << "x" << (chunkSize / vertexStep) << " grid per chunk)" << std::endl;
-        std::cout << "  - Vertices per chunk: ~" << ((chunkSize / vertexStep) * (chunkSize / vertexStep) * 6) << std::endl;
-        std::cout << "  - Render distance: " << renderDistance << " units" << std::endl;
-        std::cout << "[chunktest] Controls:" << std::endl;
-        std::cout << "  WASD - Move camera" << std::endl;
-        std::cout << "  Mouse - Look around" << std::endl;
-        std::cout << "  Shift - Move faster" << std::endl;
-        std::cout << "  ESC - Exit" << std::endl;
-        std::cout << "  Chunks will load/unload dynamically as you move!" << std::endl;
+        DEBUG_PRINT("Chunked terrain system ready!");
+        DEBUG_PRINT("Optimization settings:"
+                    << "  - Chunk size: " << chunkSize << "x" << chunkSize
+                    << "  - Vertex step: " << vertexStep << " (" << (chunkSize / vertexStep) << "x" << (chunkSize / vertexStep) << " grid per chunk)"
+                    << "  - Vertices per chunk: ~" << ((chunkSize / vertexStep) * (chunkSize / vertexStep) * 6)
+                    << "  - Render distance: " << renderDistance << " units");
 
         FrameTimer frameTimer;
         int frameCount = 0;
@@ -106,18 +102,18 @@ int main(int, char **)
             scene.m_activeCamera.flyControl(g_InputManager, dt);
 
             // Update chunks based on UPDATED camera position
-            chunkManager.updateChunks(scene.m_activeCamera.m_Position, renderDistance);                        
+            chunkManager.updateChunks(scene.m_activeCamera.m_Position, renderDistance);
 
             for (const auto &chunkPtr : chunkManager.m_chunks)
-            {                
+            {
                 chunkPtr->render(scene.m_activeCamera.getViewMatrix(), scene.m_activeCamera.getProjectionMatrix(), &scene.m_lightSource.config);
             }
 
             // Display chunk count every 60 frames
             if (frameCount % 120 == 0)
             {
-                std::cout << "\r[chunktest] Loaded chunks: " << chunkManager.m_chunks.size()
-                          << " | FPS: " << std::fixed << std::setprecision(1) << (1.0f / dt) << "     " << std::flush;
+                DEBUG_PRINT("Loaded chunks: " << chunkManager.m_chunks.size()
+                                              << " | FPS: " << std::fixed << std::setprecision(1) << (1.0f / dt) << "     ");
             }
             frameCount++;
 

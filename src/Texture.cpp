@@ -44,9 +44,7 @@ Texture::Texture(const std::string &path, unsigned int slot)
 
 Texture::~Texture()
 {
-#ifdef DEBUG
-    DEBUG_PRINT("Deleting texture ID " << m_rendererID << " from slot " << m_slot << " with path: " << m_filePath);
-#endif
+    // DEBUG_PRINT("Deleting texture ID " << m_rendererID << " from slot " << m_slot << " with path: " << m_filePath);
     GLCALL(glDeleteTextures(1, &m_rendererID));
 }
 
