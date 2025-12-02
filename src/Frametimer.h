@@ -2,6 +2,10 @@
 
 #include "Common.h"
 
+
+#define MAX_FPS 60
+
+
 class FrameTimer
 {
 private:

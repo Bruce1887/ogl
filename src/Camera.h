@@ -36,12 +36,12 @@ public:
 	Camera(const CameraConfiguration &config) : m_Config(config) {};
 	~Camera() = default;
 
-	glm::mat4 GetViewMatrix() const
+	glm::mat4 getViewMatrix() const
 	{
 		return glm::lookAt(m_Position, m_Target, m_Up);
 	}
 
-	glm::mat4 GetProjectionMatrix() const
+	glm::mat4 getProjectionMatrix() const
 	{
 		return glm::perspective(glm::radians(m_Config.fov), m_Config.aspect, m_Config.near, m_Config.far);
 	};

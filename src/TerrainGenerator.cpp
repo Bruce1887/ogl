@@ -182,7 +182,7 @@ glm::vec3 TerrainGenerator::calculateNormal(int x, int z)
     return glm::normalize(normal);
 }
 
-Mesh* TerrainGenerator::generateTerrain()
+std::shared_ptr<Mesh> TerrainGenerator::generateTerrainMesh()
 {
     // Generate height map first
     generateHeightMap();
@@ -388,8 +388,8 @@ Mesh* TerrainGenerator::generateTerrain()
     }
 
     // Create OpenGL buffers
-    VertexArray* va = new VertexArray();
-    VertexBuffer* vb = new VertexBuffer(vertices.data(), vertices.size() * sizeof(TerrainVertex), va);
+    std::unique_ptr<VertexArray> va_ptr = std::make_unique<VertexArray>();
+    std::unique_ptr<VertexBuffer> vb_ptr = std::make_unique<VertexBuffer>(vertices.data(), vertices.size() * sizeof(TerrainVertex), va_ptr.get());
     
     VertexBufferLayout layout;
     layout.push<float>(3); // position
@@ -398,11 +398,12 @@ Mesh* TerrainGenerator::generateTerrain()
     layout.push<float>(1); // height
     layout.push<float>(1); // waterMask
 
-    va->addBuffer(*vb, layout);
+    va_ptr->addBuffer(vb_ptr.get(), layout);
 
-    IndexBuffer* ib = new IndexBuffer(indices.data(), indices.size());
+    std::unique_ptr<IndexBuffer> ib_ptr = std::make_unique<IndexBuffer>(indices.data(), indices.size());
 
-    return new Mesh(va, ib);
+    auto mesh_ptr = std::make_shared<Mesh>(std::move(va_ptr), std::move(vb_ptr), std::move(ib_ptr));
+    return mesh_ptr;
 }
 
 float TerrainGenerator::getHeightAt(float x, float z) const

@@ -23,7 +23,7 @@ public:
     VertexArray();
     ~VertexArray();
 
-    void addBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout);
+    void addBuffer(const VertexBuffer *vb, const VertexBufferLayout& layout);
 
     unsigned int getID() const { return m_RendererID; }
     unsigned int getCount() const { return m_VertexCount; }

@@ -27,12 +27,12 @@ void Scene::clearRenderables()
 void Scene::renderScene()
 {
 	// Set up view and projection matrices from the active camera
-	glm::mat4 view = m_activeCamera.GetViewMatrix();
-	glm::mat4 projection = m_activeCamera.GetProjectionMatrix();	
+	glm::mat4 view = m_activeCamera.getViewMatrix();
+	glm::mat4 projection = m_activeCamera.getProjectionMatrix();	
 	
 	// Render each object in the scene
 	for (auto &r : m_renderables)
-	{
+	{		
 		r->render(view, projection, &m_lightSource.config);
 	}
 
@@ -45,4 +45,5 @@ void Scene::renderScene()
 
 	// Swap buffers
 	glfwSwapBuffers(g_window);
+	
 }

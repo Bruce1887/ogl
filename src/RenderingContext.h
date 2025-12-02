@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glad/glad.h>
+#include <iostream>
 
 /**
  * RenderingContext struct to keep track of currently bound OpenGL resources (among other things).

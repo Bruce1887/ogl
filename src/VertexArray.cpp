@@ -9,20 +9,23 @@ VertexArray::VertexArray()
 
 VertexArray::~VertexArray()
 {
+#ifdef DEBUG
+    DEBUG_PRINT("Deleting VertexArray with ID: " << m_RendererID);
+#endif
     GLCALL(glDeleteVertexArrays(1, &m_RendererID));
 }
 
-void VertexArray::addBuffer(const VertexBuffer &vb, const VertexBufferLayout &layout)
+void VertexArray::addBuffer(const VertexBuffer *vb, const VertexBufferLayout &layout)
 {
     m_VertexCount = m_VBO_size / layout.getStride();
     // std::cout << "[VertexArray] Setting vertex count to " << m_VertexCount << " based on VBO size " << m_VBO_size << " and layout stride " << layout.getStride() << std::endl;
 
     bind();
-    vb.bind();
+    vb->bind();
     const auto &elements = layout.getElements();
     unsigned int offset = 0;
 
-    for (size_t i = 0; i < elements.size(); i++)
+    for (GLuint i = 0; i < elements.size(); i++)
     {
         const auto &element = elements[i];
         GLCALL(glEnableVertexAttribArray(i));
@@ -35,12 +38,12 @@ void VertexArray::bind() const
 {
     GLCALL(glBindVertexArray(m_RendererID));
     RenderingContext *rContext = RenderingContext::Current();
-    rContext->m_boundVAO = m_RendererID;    
+    rContext->m_boundVAO = m_RendererID;
 }
 
 void VertexArray::unbind() const
 {
     GLCALL(glBindVertexArray(0));
     RenderingContext *rContext = RenderingContext::Current();
-    rContext->m_boundVAO = 0;    
+    rContext->m_boundVAO = 0;
 }

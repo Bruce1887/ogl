@@ -10,6 +10,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # --- Dependencies ---
 find_package(OpenGL REQUIRED)
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_definitions(DEBUG)
+endif()
+
 # Platform-specific dependency handling
 if(WIN32)
     # Manual GLFW setup for Windows
@@ -22,13 +26,13 @@ if(WIN32)
         IMPORTED_IMPLIB "${GLFW_DIR}/lib-vc2022/glfw3dll.lib"
         INTERFACE_INCLUDE_DIRECTORIES "${GLFW_DIR}/include"
     )
-else()
+    else()
     # Linux: use system packages
     find_package(glfw3 REQUIRED)
 endif()
 
 # GLM is header-only - include from vendor directory (works on all platforms)
-include_directories(vendor/glm)
+include_directories(vendor/ )
 
 # --- Global include directory ---
 include_directories(src)
@@ -41,11 +45,15 @@ list(FILTER COMMON_SOURCES EXCLUDE REGEX "src/testprograms/.*")
 list(FILTER COMMON_SOURCES EXCLUDE REGEX "src/main.cpp")
 
 # --- Vendor libraries ---
-add_library(glad src/glad/glad.c)
+add_library(glad STATIC src/glad/glad.c)
 target_include_directories(glad PUBLIC src)
 target_include_directories(glad SYSTEM PRIVATE src/glad)
 
-add_library(stb_image src/vendor/stb_image/stb_image.cpp)
+if(WIN32)
+    add_library(stb_image STATIC src/vendor/stb_image/stb_image.cpp)
+else()
+    add_library(stb_image STATIC src/vendor/stb_image/stb_image.cpp)
+    endif()
 target_include_directories(stb_image PUBLIC src)
 target_include_directories(stb_image SYSTEM PRIVATE src/vendor/stb_image)
 
@@ -53,6 +61,29 @@ target_include_directories(stb_image SYSTEM PRIVATE src/vendor/stb_image)
 add_library(oogabooga_common STATIC ${COMMON_SOURCES})
 target_include_directories(oogabooga_common PUBLIC src)
 target_link_libraries(oogabooga_common PUBLIC glad stb_image glfw OpenGL::GL)
+
+# --- Assimp ---
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_INSTALL OFF CACHE BOOL "" FORCE)
+set(ASSIMP_WARNINGS_AS_ERRORS OFF CACHE BOOL "" FORCE)
+set(ASSIMP_NO_EXPORT ON CACHE BOOL "" FORCE)
+if(WIN32)
+    set(ASSIMP_BUILD_ZLIB ON CACHE BOOL "" FORCE)
+else()
+    set(ASSIMP_BUILD_ZLIB OFF CACHE BOOL "" FORCE)
+endif()
+set(ASSIMP_BUILD_OBJ_IMPORTER ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_FBX_IMPORTER ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_GLTF_IMPORTER ON CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_COLLADA_IMPORTER OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_3DS_IMPORTER OFF CACHE BOOL "" FORCE)
+set(ASSIMP_BUILD_STL_IMPORTER OFF CACHE BOOL "" FORCE)
+
+add_subdirectory(src/vendor/assimp)
+target_link_libraries(oogabooga_common PUBLIC assimp)
 
 # --- Function for building executables ---
 function(add_gl_executable TARGET_NAME SOURCE_FILE)
@@ -66,14 +97,17 @@ function(add_gl_executable TARGET_NAME SOURCE_FILE)
         target_compile_options(${TARGET_NAME} PRIVATE /W4 /permissive-)
     endif()
     
-    # On Windows, copy GLFW DLL to output directory
+    # Post-build: copy DLLs on Windows
     if(WIN32)
         add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
             "${GLFW_DIR}/lib-vc2022/glfw3.dll"
             $<TARGET_FILE_DIR:${TARGET_NAME}>
-        )
+            $<TARGET_FILE:assimp>
+            $<TARGET_FILE_DIR:${TARGET_NAME}>
+        )    
     endif()
+
 endfunction()
 
 # --- Automatically add all test programs ---

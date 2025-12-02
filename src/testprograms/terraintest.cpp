@@ -9,7 +9,7 @@
 #include <iomanip>
 
 // Input callbacks
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+static void key_callback(GLFWwindow* window, int key, int /*scancode*/, int action, int mods)
 {
     InputManager* inputManager = (InputManager*)glfwGetWindowUserPointer(window);
     if (inputManager)
@@ -65,21 +65,26 @@ int main(int, char **)
         .diffuseLight = glm::vec3(0.9f, 0.9f, 0.8f),
         .specularLight = glm::vec3(0.5f, 0.5f, 0.5f)
     };
-    LightSource lightSource{ .config = lightCfg, .visualRepresentation = nullptr };
-    Scene scene(camera, lightSource);
+    LightSource lightSource = LightSource::fromConfig(lightCfg);
+    Scene scene(camera, std::move(lightSource));
 
     // Shader for terrain
-    Shader terrainShader;
-    terrainShader.addShader("Terrain.vert", ShaderType::VERTEX);
-    terrainShader.addShader("TerrainBlend.frag", ShaderType::FRAGMENT);
-    terrainShader.createProgram();
+    std::shared_ptr<Shader> terrainShader = std::make_shared<Shader>();
+    terrainShader->addShader("Terrain.vert", ShaderType::VERTEX);
+    terrainShader->addShader("TerrainBlend.frag", ShaderType::FRAGMENT);
+    terrainShader->createProgram();
 
-    // Load textures
+    // Load and setup textures
     Texture groundTexture((TEXTURE_DIR / "ground.jpg").string(), 0);
+    groundTexture.targetUniform = "u_texture0";
     Texture grassTexture((TEXTURE_DIR / "grass.jpg").string(), 1);
+    grassTexture.targetUniform = "u_texture1";
     Texture mountainTexture((TEXTURE_DIR / "mountain.jpg").string(), 2);
+    mountainTexture.targetUniform = "u_texture2";
     Texture blueWaterTexture((TEXTURE_DIR / "blueWater.jpg").string(), 3);
+    blueWaterTexture.targetUniform = "u_texture3";
     Texture whiteWaterTexture((TEXTURE_DIR / "whiteWater.jpg").string(), 4);
+    whiteWaterTexture.targetUniform = "u_texture4";
 
     // Generate terrain
     std::cout << "[terraintest] Generating terrain..." << std::endl;
@@ -95,26 +100,13 @@ int main(int, char **)
     };
     
     TerrainGenerator terrainGen(config);
-    Mesh* terrainMesh = terrainGen.generateTerrain();
+    std::shared_ptr<Mesh> terrainMesh = terrainGen.generateTerrainMesh();
     std::cout << "[terraintest] Terrain generated!" << std::endl;
 
     // Create terrain renderable
-    MeshRenderable* terrain = new MeshRenderable(terrainMesh, &terrainShader);
-    terrain->setTransform(glm::mat4(1.0f));
-    scene.addRenderable(terrain);
-
-    // Bind textures to shader
-    terrainShader.bind();
-    groundTexture.bind();
-    terrainShader.setUniform("u_texture0", 0);
-    grassTexture.bind();
-    terrainShader.setUniform("u_texture1", 1);
-    mountainTexture.bind();
-    terrainShader.setUniform("u_texture2", 2);
-    blueWaterTexture.bind();
-    terrainShader.setUniform("u_texture3", 3);
-    whiteWaterTexture.bind();
-    terrainShader.setUniform("u_texture4", 4);
+    std::shared_ptr<MeshRenderable> terrain_mr = std::make_shared<MeshRenderable>(terrainMesh, terrainShader);
+    terrain_mr->setTransform(glm::mat4(1.0f));
+    scene.addRenderable(terrain_mr.get());
 
     std::cout << "[terraintest] Controls:" << std::endl;
     std::cout << "  WASD - Move camera" << std::endl;
@@ -152,13 +144,7 @@ int main(int, char **)
             glfwSetWindowShouldClose(g_window, true);
     }
 
-    std::cout << std::endl; // Newline after FPS counter
-
-    // Cleanup
-    delete terrain;
-    delete terrainMesh->vertexArray;
-    delete terrainMesh->indexBuffer;
-    delete terrainMesh;
+    std::cout << std::endl; // Newline after FPS counter        
     
     oogaboogaExit();
     return 0;

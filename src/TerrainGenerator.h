@@ -17,7 +17,7 @@ struct TerrainConfig
     int octaves = 6;            // Number of noise layers
     float persistence = 0.5f;   // How much each octave contributes
     float lacunarity = 2.0f;    // Frequency increase per octave
-    int vertexStep = 1;         // Spacing between vertices (1 = every point, 2 = every other point, etc.)
+    int vertexStep = 3;         // Spacing between vertices (1 = every point, 2 = every other point, etc.)
 };
 
 struct TerrainVertex
@@ -36,7 +36,7 @@ public:
     ~TerrainGenerator();
 
     // Generate terrain mesh with Perlin noise
-    Mesh* generateTerrain();
+    std::shared_ptr<Mesh> generateTerrainMesh();
 
     // Get height at a specific x, z coordinate (useful for placing objects)
     float getHeightAt(float x, float z) const;
@@ -47,7 +47,8 @@ public:
     // Check if location should have water (based on height and area)
     float getWaterMask(float x, float z);
 
-private:
+private:    
+
     TerrainConfig m_config;
     std::vector<std::vector<float>> m_heightMap;
 

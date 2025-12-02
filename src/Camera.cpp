@@ -41,7 +41,7 @@ void Camera::flyControl(InputManager *inputManager, float deltaTime)
 
 	float speed = 5.0f * deltaTime;
 	if (shiftDown)
-		speed *= 5.0f;
+		speed *= 20.0f;
 
 	glm::vec3 forward = glm::normalize(this->m_Target - this->m_Position);
 	glm::vec3 right = glm::normalize(glm::cross(forward, this->m_Up));
@@ -96,13 +96,27 @@ void Camera::pointCameraWithMouse(InputManager *inputManager, glm::vec3 &offset)
 void Camera::pointCameraWithMouseFly(InputManager *inputManager)
 {
 	// #### handle mouse movement input for fly camera ####
-	double mouseDeltaX, mouseDeltaY;
+	double mouseDeltaX = 0.0, mouseDeltaY = 0.0;
+	
+
+	// Temporary: Use Q/E and R/F keys to simulate mouse movement for testing without mouse input (mouse works poorly with WSL)
+	float temp = 5.0;
+	if (glfwGetKey(g_window, GLFW_KEY_Q) == GLFW_PRESS) {
+		mouseDeltaX -= temp; 
+	}
+	if (glfwGetKey(g_window, GLFW_KEY_E) == GLFW_PRESS) {
+		mouseDeltaX += temp; 
+	}
+	if (glfwGetKey(g_window, GLFW_KEY_R) == GLFW_PRESS) {		
+		mouseDeltaY -= temp;
+	}
+	if (glfwGetKey(g_window, GLFW_KEY_F) == GLFW_PRESS) {
+		mouseDeltaY += temp; 
+	}
 
 	// Check if there is any new mouse movement input that hasnt been processed
-	if (inputManager->mouseMoveInput.fetchDeltas(mouseDeltaX, mouseDeltaY))
+	// if (inputManager->mouseMoveInput.fetchDeltas(mouseDeltaX, mouseDeltaY)) // UNCOMMENT THIS IF YOU WANT MOUSE SUPPORT
 	{
-		// std::cout << __func__ << " Mouse deltas: " << mouseDeltaX << ", " << mouseDeltaY << std::endl;
-
 		float sensitivity = 0.005f; // adjust as necessary
 		mouseDeltaX *= sensitivity;
 		mouseDeltaY *= sensitivity * -1.0f; // Invert Y for typical fly camera behavior
