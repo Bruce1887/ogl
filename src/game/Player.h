@@ -35,11 +35,11 @@ public:
     // Construct a player with optional name and client id; sets EntityType::PLAYER.
     Player(int clientId = -1, const std::string &name = "Player")
         : Entity(name, EntityType::PLAYER),
-          clientId(clientId),
-          moveSpeed(defaultMoveSpeed),
-          stamina(defaultStamina),
-          isSprinting(false),
-          equippedIndex(0)
+        clientId(clientId),
+        moveSpeed(defaultMoveSpeed),
+        stamina(defaultStamina),
+        isSprinting(false),
+        equippedIndex(0)
     {}
 
     virtual ~Player() = default;
@@ -125,7 +125,9 @@ private:
     int clientId;                                      // network client id for this player (server-side)
     std::vector<std::shared_ptr<Item>> inventory;      // player's carried items (pointers so header can forward-declare Item)
     float moveSpeed;                                   // base move speed (units/sec)
-    float stamina;                                     // current stamina resource
+    float stamina = 100.0f;                                     // current stamina resource
+    float health = 100.0f;                                      // current health points
+    float maxHealth = 100.0f;                                   // maximum health points
     bool isSprinting;                                  // whether player is currently sprinting
     size_t equippedIndex;                              // index into inventory for the equipped item
 

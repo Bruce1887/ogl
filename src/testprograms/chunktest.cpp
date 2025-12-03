@@ -8,6 +8,7 @@
 #include "Frametimer.h"
 #include <sstream>
 #include <iomanip>
+#include "Skybox.h"
 
 // Input callbacks
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -80,6 +81,32 @@ int main(int, char **)
     };
     LightSource lightSource{ .config = lightCfg, .visualRepresentation = nullptr };
     Scene scene(camera, lightSource);
+
+    std::vector<std::string> skyboxFaces = {
+        "resources/textures/skybox/right.jpg",  // +X
+        "resources/textures/skybox/left.jpg",   // -X
+        "resources/textures/skybox/top.jpg",    // +Y
+        "resources/textures/skybox/bottom.jpg", // -Y
+        "resources/textures/skybox/front.jpg",  // +Z
+        "resources/textures/skybox/back.jpg"    // -Z
+    };
+
+    // 2. Create the Skybox Shader
+    Shader* skyboxShader = new Shader();
+    // NOTE: Assume your shader loader paths are fixed to work now.
+    skyboxShader->addShader("Skybox.vert", ShaderType::VERTEX);
+    skyboxShader->addShader("Skybox.frag", ShaderType::FRAGMENT);
+    skyboxShader->createProgram();
+
+    // 3. Create the Skybox Object (loads textures and sets up VAO/VBO)
+    Skybox* gameSkybox = new Skybox(skyboxFaces);
+
+    // 4. Link the Skybox and Shader to the Scene
+    scene.m_skybox = gameSkybox;
+    scene.m_skyboxShader = skyboxShader;
+    skyboxShader->bind();
+    skyboxShader->setUniform("skybox", 0); // Assuming texture slot 0 is the cubemap slot
+
 
     // Shader for terrain
     Shader terrainShader;

@@ -30,6 +30,15 @@ void Scene::renderScene()
 	glm::mat4 view = m_activeCamera.GetViewMatrix();
 	glm::mat4 projection = m_activeCamera.GetProjectionMatrix();	
 	
+    if (m_skybox && m_skyboxShader) {
+        // Set uniforms needed by Skybox.vert
+        m_skyboxShader->setUniform("projection", projection);
+        m_skyboxShader->setUniform("view", view);
+        
+        // Render the skybox cube (it handles its own glDepthFunc switch)
+        m_skybox->render(*m_skyboxShader, view, projection);
+    }
+
 	// Render each object in the scene
 	for (auto &r : m_renderables)
 	{
@@ -42,6 +51,14 @@ void Scene::renderScene()
 		m_lightSource.visualRepresentation->setPosition(m_lightSource.config.lightPosition);
 		m_lightSource.visualRepresentation->render(view, projection, nullptr);
 	}
+
+	if (m_hud != nullptr) 
+    {
+        // The HUD::Draw() method must handle two critical steps internally:
+        // 1. Switch to an Orthographic Projection (2D space).
+        // 2. Render all UI elements (Health bars, clock, etc.) on top.
+        m_hud->Draw();
+    }
 
 	// Swap buffers
 	glfwSwapBuffers(g_window);

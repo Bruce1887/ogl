@@ -13,7 +13,6 @@ ShaderProgramSource Shader::parseShader(const std::string &filepath, ShaderType 
     if (!file)
     {
         std::cerr << "Error: Failed to open shader file: " << filepath << std::endl;
-        return {"", ShaderType::UNASSIGNED};
     }
 
     std::string source;
@@ -86,6 +85,21 @@ void Shader::createProgram()
     }
 
     GLCALL(glLinkProgram(program));
+    GLint success;
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
+    if (!success) {
+        GLint length = 0;
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
+
+        std::vector<char> log(length);
+        glGetProgramInfoLog(program, length, &length, log.data());
+
+        std::cerr << "FAILED TO LINK PROGRAM!\n" 
+                << log.data() << std::endl;
+
+        glDeleteProgram(program);
+        exit(-1);
+    }
     GLCALL(glValidateProgram(program));
 
     for (auto &&ref : shader_references)
@@ -111,6 +125,8 @@ void Shader::addShader(const std::string &filename_nopath, ShaderType type)
         std::cerr << "Error: Unsupported shader type for automatic directory selection." << std::endl;
         return;
     }
+    std::cout << "Loading shader: " << (directory / filename_nopath).string() << std::endl;
+
 
     m_programSources.push_back(parseShader((directory / filename_nopath).string(), type));
 }

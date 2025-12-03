@@ -9,6 +9,8 @@
 #include "Texture.h"
 #include "Camera.h"
 #include "Lighting.h"
+#include "ui/HUD.h"
+#include "Skybox.h"
 
 class Scene
 {
@@ -26,7 +28,10 @@ Scene(Camera defaultCamera, LightSource lightSource)
     void clearRenderables(); // Clear all renderables from scene
     void renderScene();
 
+    Skybox* m_skybox = nullptr; 
+    Shader* m_skyboxShader = nullptr; 
     Camera m_activeCamera;
+    HUD* m_hud = nullptr;
     int nextCamera();
     int addCamera(const Camera &camera);
     void removeCamera(const Camera &camera);
