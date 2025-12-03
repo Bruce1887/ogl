@@ -2,14 +2,17 @@
 #include "Camera.h"
 #include "Player.h"
 #include <GLFW/glfw3.h>
-extern GLFWwindow* g_window;  // you already use this in Camera code
+extern GLFWwindow* g_window;  
+
 
 void ThirdPersonCamera::update(Camera& cam, const Player& player)
 {
+    float yawRad = glm::radians(player.yaw);   // <-- IMPORTANT: NO MINUS HERE
+
     glm::vec3 forward(
-        sin(glm::radians(player.yaw)),
+        sin(yawRad),
         0,
-        -cos(glm::radians(player.yaw))
+        cos(yawRad)
     );
 
     glm::vec3 camPos = player.position
@@ -17,7 +20,7 @@ void ThirdPersonCamera::update(Camera& cam, const Player& player)
                      + glm::vec3(0, height, 0);
 
     cam.m_Position = camPos;
-    cam.m_Target = player.position + glm::vec3(0, 1.8f, 0);
+    cam.m_Target   = player.position + glm::vec3(0, 1.8f, 0);
 }
 
 
