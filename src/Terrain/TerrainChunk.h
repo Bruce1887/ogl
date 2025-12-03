@@ -47,6 +47,11 @@ public:
     std::vector<std::unique_ptr<Renderable>> renderables_in_chunk; // trees etc.
     std::unique_ptr<MeshRenderable> terrain_mr;   // terrain and water
 
+    std::vector<std::vector<float>> heightGrid; // stores unscaled perlin heights
+    int gridSize = 0; // (chunkSize / vertexStep) + 1
+
+
+
     void render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight) override
     {
         // Only render if active
@@ -68,6 +73,8 @@ public:
         return coord.x >= minCoord.x && coord.x <= maxCoord.x &&
                coord.z >= minCoord.z && coord.z <= maxCoord.z;
     }
+
+    float getPreciseHeightAt(float worldX, float worldZ, int chunkSize, int vertexStep) const;
 
 private:
     // Active status indicates whether the chunk is currently in use and should be rendered.
@@ -97,6 +104,9 @@ public:
 
     std::vector<std::unique_ptr<Chunk>> m_chunks;
     void setShader(std::shared_ptr<Shader> shader) { m_terrainShader = shader; }
+
+
+    float getPreciseHeightAt(float x, float z);
 
 private:
     TerrainGenerator *m_generator;
