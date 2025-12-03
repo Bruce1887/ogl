@@ -101,8 +101,8 @@ void main()
         vec3 waterDiffuse = u_light_diffuse * diff * vec3(waterColor) * 0.7;
         vec3 waterResult = waterAmbient + waterDiffuse + waterSpecular;
         
-        // Water transparency: 0.85 alpha (semi-transparent, more opaque)
-        FragColor = vec4(waterResult, 0.85);
+        // Water transparency: 0.99 alpha (semi-transparent, more opaque)
+        FragColor = vec4(waterResult, 0.99);
     } else {
         FragColor = vec4(terrainResult, 1.0);
     }
