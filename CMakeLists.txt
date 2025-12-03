@@ -10,7 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # --- Dependencies ---
 find_package(OpenGL REQUIRED)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "debug")
     add_compile_definitions(DEBUG)
 endif()
 
@@ -49,11 +49,10 @@ add_library(glad STATIC src/glad/glad.c)
 target_include_directories(glad PUBLIC src)
 target_include_directories(glad SYSTEM PRIVATE src/glad)
 
-if(WIN32)
-    add_library(stb_image STATIC src/vendor/stb_image/stb_image.cpp)
-else()
-    add_library(stb_image STATIC src/vendor/stb_image/stb_image.cpp)
-    endif()
+
+add_library(stb_image STATIC src/vendor/stb_image/stb_image.cpp)
+
+
 target_include_directories(stb_image PUBLIC src)
 target_include_directories(stb_image SYSTEM PRIVATE src/vendor/stb_image)
 

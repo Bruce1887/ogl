@@ -40,9 +40,9 @@ public:
     // Constructor that loads from file (creates new ModelData)
     Model(const std::filesystem::path &path);
 
-    static Model copyFrom(const Model &other)
+    static Model copyFrom(const Model *other)
     {
-        return Model(other.m_modelData);
+        return Model(other->m_modelData);
     }
 
     ~Model() = default;

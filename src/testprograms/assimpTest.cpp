@@ -72,7 +72,7 @@ int main(int, char **)
 		std::cout << "instance1 id: " << instance1.getID() << std::endl;
 		scene.addRenderable(&instance1);
 
-		Model instance2 = Model::copyFrom(instance1);
+		Model instance2 = Model::copyFrom(&instance1);
 		std::cout << "instance2 id: " << instance2.getID() << std::endl;
 		instance2.setPosition(glm::vec3(10.0f, 0.0f, 0.0f));
 		scene.addRenderable(&instance2);

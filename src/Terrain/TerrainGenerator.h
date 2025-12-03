@@ -6,8 +6,11 @@
 #include "IndexBuffer.h"
 #include "VertexBufferLayout.h"
 #include "MeshRenderable.h"
-#include <vector>
+#include "Model.h"
+#include "TerrainConfig.h"
 
+#include <vector>
+/*
 struct TerrainConfig
 {
     int width = 256;
@@ -19,6 +22,7 @@ struct TerrainConfig
     float lacunarity = 2.0f;    // Frequency increase per octave
     int vertexStep = 3;         // Spacing between vertices (1 = every point, 2 = every other point, etc.)
 };
+*/
 
 struct TerrainVertex
 {
@@ -29,10 +33,28 @@ struct TerrainVertex
     float waterMask; // 0.0 = no water, 1.0 = full water
 };
 
+/**
+ * @brief Struct holding various renderables to be used in the terrain
+ * The renderables defined here can be copied from and placed in the terrain, in order to not read from disk multiple times.
+ * The renderables have to defined at compile time, and intitialised in the constructor.
+ * 
+ */
+class TerrainRenderables
+{
+public:
+    TerrainRenderables()
+    {
+        gran = std::make_unique<Model>((MODELS_DIR / "gran" / "gran.obj")); // gran som trädet gran
+    }
+    ~TerrainRenderables() = default;
+
+    std::unique_ptr<Model> gran;    
+};
+
 class TerrainGenerator
 {
 public:
-    TerrainGenerator(const TerrainConfig& config);
+    TerrainGenerator(/*const TerrainConfig& config*/);
     ~TerrainGenerator();
 
     // Generate terrain mesh with Perlin noise
@@ -48,14 +70,16 @@ public:
     float getWaterMask(float x, float z);
 
     float foo_treePerlin(float x, float z);
+    
+    TerrainRenderables m_terrainRenderables;
 private:    
 
-    TerrainConfig m_config;
+    // TerrainConfig m_config;
     std::vector<std::vector<float>> m_heightMap;
 
     // Generate height map using Perlin noise
     void generateHeightMap();
-
+    
     // Calculate normal for a vertex based on surrounding heights
     glm::vec3 calculateNormal(int x, int z);
 };

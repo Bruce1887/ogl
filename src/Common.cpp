@@ -129,6 +129,11 @@ int oogaboogaInit(const std::string &windowname)
 
     if (checkTextureUnits() != 0)
         return -1;
+
+    // Enable face culling
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK); // Cull back faces
+
     return 0;
 }
 

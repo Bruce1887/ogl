@@ -100,18 +100,18 @@ void Camera::pointCameraWithMouseFly(InputManager *inputManager)
 	
 
 	// Temporary: Use Q/E and R/F keys to simulate mouse movement for testing without mouse input (mouse works poorly with WSL)
-	float temp = 5.0;
+	float QERF_sensitivity = 10.0;
 	if (glfwGetKey(g_window, GLFW_KEY_Q) == GLFW_PRESS) {
-		mouseDeltaX -= temp; 
+		mouseDeltaX -= QERF_sensitivity; 
 	}
 	if (glfwGetKey(g_window, GLFW_KEY_E) == GLFW_PRESS) {
-		mouseDeltaX += temp; 
+		mouseDeltaX += QERF_sensitivity; 
 	}
 	if (glfwGetKey(g_window, GLFW_KEY_R) == GLFW_PRESS) {		
-		mouseDeltaY -= temp;
+		mouseDeltaY -= QERF_sensitivity;
 	}
 	if (glfwGetKey(g_window, GLFW_KEY_F) == GLFW_PRESS) {
-		mouseDeltaY += temp; 
+		mouseDeltaY += QERF_sensitivity; 
 	}
 
 	// Check if there is any new mouse movement input that hasnt been processed

@@ -118,7 +118,8 @@ std::unique_ptr<Chunk> TerrainChunkManager::generateNewChunk(const ChunkCoord &c
     auto chunkTerrain_mr = std::make_unique<MeshRenderable>(mesh_ptr, m_terrainShader);
     chunkTerrain_mr->m_textureReferences = m_terrainTextures;
 
-    Model gran((MODELS_DIR / "gran" / "gran.obj")); // gran som trädet gran
+    
+    
 
     // Create chunk
     std::unique_ptr<Chunk> chunk = std::make_unique<Chunk>(coord, std::move(chunkTerrain_mr));
@@ -131,7 +132,7 @@ std::unique_ptr<Chunk> TerrainChunkManager::generateNewChunk(const ChunkCoord &c
         {
             float tree_perlin = m_generator->foo_treePerlin((float)(worldOffsetX + x), (float)(worldOffsetZ + z));
 
-            if (tree_perlin > 0.6f) // threshold for tree placement
+            if (tree_perlin > 0.3f) // threshold for tree placement
                 continue;
 
             float worldX = worldOffsetX + x;
@@ -139,7 +140,9 @@ std::unique_ptr<Chunk> TerrainChunkManager::generateNewChunk(const ChunkCoord &c
             float y = m_generator->getPerlinHeight((float)worldX, (float)worldZ);
             y *= heightScale;
             // std::cout << "Placing tree at (" << (worldOffsetX + x) << ", " << y << ", " << (worldOffsetZ + z) << ")\n";s
-            std::unique_ptr<Model> treeModel = std::make_unique<Model>(Model::copyFrom(gran));
+            
+            Model *granPtr = m_generator->m_terrainRenderables.gran.get();
+            std::unique_ptr<Model> treeModel = std::make_unique<Model>(Model::copyFrom(granPtr));
             treeModel->setPosition(glm::vec3((float)(worldOffsetX + x), y, (float)(worldOffsetZ + z)));
             chunk->renderables_in_chunk.push_back(std::move(treeModel));
         }

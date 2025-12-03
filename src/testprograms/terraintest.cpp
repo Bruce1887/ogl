@@ -4,7 +4,7 @@
 #include "Shader.h"
 #include "Texture.h"
 #include "MeshRenderable.h"
-#include "TerrainGenerator.h"
+#include "Terrain/TerrainGenerator.h"
 #include "Frametimer.h"
 #include <iomanip>
 
@@ -86,6 +86,7 @@ int main(int, char **)
     Texture whiteWaterTexture((TEXTURE_DIR / "whiteWater.jpg").string(), 4);
     whiteWaterTexture.targetUniform = "u_texture4";
 
+    /*
     // Generate terrain
     std::cout << "[terraintest] Generating terrain..." << std::endl;
     TerrainConfig config{
@@ -98,8 +99,10 @@ int main(int, char **)
         .lacunarity = 1.5f,     // Slightly higher for more detail
         .vertexStep = 4         // Generate vertices every 2 units (4x fewer vertices, same world size)
     };
+    */
+    // TerrainGenerator terrainGen(config);
+    TerrainGenerator terrainGen;
     
-    TerrainGenerator terrainGen(config);
     std::shared_ptr<Mesh> terrainMesh = terrainGen.generateTerrainMesh();
     std::cout << "[terraintest] Terrain generated!" << std::endl;
 

@@ -6,14 +6,15 @@
 #include <algorithm>
 #include <iostream>
 
-TerrainGenerator::TerrainGenerator(const TerrainConfig &config)
-    : m_config(config)
+TerrainGenerator::TerrainGenerator(/*const TerrainConfig &config*/)
+// : m_config(config)
 {
     // Initialize height map
-    m_heightMap.resize(m_config.width);
-    for (int i = 0; i < m_config.width; i++)
+    // m_heightMap.resize(m_config.width);
+    m_heightMap.resize(TC_WIDTH);
+    for (int i = 0; i < TC_WIDTH; i++)
     {
-        m_heightMap[i].resize(m_config.height);
+        m_heightMap[i].resize(TC_HEIGHT);
     }
 }
 
@@ -23,32 +24,33 @@ TerrainGenerator::~TerrainGenerator()
 
 float TerrainGenerator::getPerlinHeight(float x, float z)
 {
-    float sampleX = x * 0.01f;
-    float sampleZ = z * 0.01f;
+    float sampleX = x * TC_TERRAIN_SAMPLE_FACTOR_X;
+    float sampleZ = z * TC_TERRAIN_SAMPLE_FACTOR_Z;
 
     // Use ridge noise for sharp mountain features (primary)
-    float ridgeNoise = stb_perlin_ridge_noise3(sampleX, sampleZ, 0.0f,
-                                               1.0f, // lacunarity
-                                               0.5f, // gain
-                                               1.0f, // offset
-                                               5);   // octaves
+    float ridgeNoise = stb_perlin_ridge_noise3(sampleX, 0.0f, sampleZ,
+                                               TC_RIDGE_NOISE_LACUNARITY, // lacunarity
+                                               TC_RIDGE_NOISE_GAIN,       // gain
+                                               TC_RIDGE_NOISE_OFFSET,     // offset
+                                               TC_RIDGE_NOISE_OCTAVES);   // octaves
 
     // Use FBM for gentle hills/variation (secondary) - increased for more ondulation
-    float hillNoise = stb_perlin_fbm_noise3(sampleX * 0.8f, sampleZ * 0.8f, 0.0f,
-                                            3.0f,  // lacunarity
-                                            0.55f, // gain - increased for more variation
-                                            4);    // octaves - more for ondulation
+    float hillNoise = stb_perlin_fbm_noise3(sampleX * 0.8f, 0.0f, sampleZ * 0.8f,
+                                            TC_HILL_NOISE_LACUNARITY, // lacunarity
+                                            TC_HILL_NOISE_GAIN,       // gain - increased for more variation
+                                            TC_HILL_NOISE_OCTAVES);   // octaves - more for ondulation
 
     // Normalize ridge noise (it can be negative)
     ridgeNoise = (ridgeNoise + 1.0f) * 0.5f;
     hillNoise = (hillNoise + 1.0f) * 0.5f;
 
     // Lake depression noise - sparse, large areas
-    float lakeNoise = stb_perlin_fbm_noise3(x * 0.0008f, z * 0.0008f, 42.0f,
-                                            2.0f, // lacunarity
-                                            0.5f, // gain
-                                            3);   // octaves
-    lakeNoise = (lakeNoise + 1.0f) * 0.5f;
+    float lakeNoise = stb_perlin_fbm_noise3(x * TC_SEA_SAMPLE_FACTOR_X, 0.0f, z * TC_SEA_SAMPLE_FACTOR_Z,
+                                            TC_SEA_SAMPLE_LACUNARITY,
+                                            TC_SEA_SAMPLE_GAIN,
+                                            TC_SEA_SAMPLE_OCTAVES);
+
+    lakeNoise = (lakeNoise + 1.0f) * 0.5f; // normalise to 0-1
 
     // Create lake depressions (more common now)
     float lakeDepression = 0.0f;
@@ -58,17 +60,17 @@ float TerrainGenerator::getPerlinHeight(float x, float z)
         lakeDepression = (lakeNoise - 0.45f) * 0.5f; // Up to 0.275 units lower
     }
 
-    // Base terrain centered around sea level (0.13) with variation
+    // Base terrain centered around sea level (TC_SEA_LEVEL) with variation
     // Range: ~0.08 to 0.20 (some below, some above sea level)
-    float baseHeight = hillNoise * 0.12f + 0.05f;
+    float baseHeight = hillNoise * TC_SEA_LEVEL + TC_SEA_LEVEL_OFFSET;
 
     // Add ridge details for variety across the map
-    float ridgeDetail = ridgeNoise * 0.08f;
+    float ridgeDetail = ridgeNoise * TC_RIDGE_DETAIL_FACTOR;
     float total = baseHeight + ridgeDetail - lakeDepression;
 
     // Center in bottom-left quadrant but make it MUCH wider
-    float mountainCenterX = m_config.width * 0.15f;
-    float mountainCenterZ = m_config.height * 0.15f;
+    float mountainCenterX = TC_WIDTH * 0.05f; //0.15f;
+    float mountainCenterZ = TC_HEIGHT * 0.05f; //0.15f;
 
     // Use ridge noise to define the mountain "domain" - not circular!
     float domainX = x * 0.002f; // Very low frequency for large structures
@@ -157,9 +159,9 @@ float TerrainGenerator::getPerlinHeight(float x, float z)
 
 void TerrainGenerator::generateHeightMap()
 {
-    for (int z = 0; z < m_config.height; z++)
+    for (int z = 0; z < TC_HEIGHT; z++)
     {
-        for (int x = 0; x < m_config.width; x++)
+        for (int x = 0; x < TC_WIDTH; x++)
         {
             float height = getPerlinHeight((float)x, (float)z);
             m_heightMap[x][z] = height;
@@ -171,14 +173,14 @@ glm::vec3 TerrainGenerator::calculateNormal(int x, int z)
 {
     // Use central difference to calculate normal
     float heightL = (x > 0) ? m_heightMap[x - 1][z] : m_heightMap[x][z];
-    float heightR = (x < m_config.width - 1) ? m_heightMap[x + 1][z] : m_heightMap[x][z];
+    float heightR = (x < TC_WIDTH - 1) ? m_heightMap[x + 1][z] : m_heightMap[x][z];
     float heightD = (z > 0) ? m_heightMap[x][z - 1] : m_heightMap[x][z];
-    float heightU = (z < m_config.height - 1) ? m_heightMap[x][z + 1] : m_heightMap[x][z];
+    float heightU = (z < TC_HEIGHT - 1) ? m_heightMap[x][z + 1] : m_heightMap[x][z];
 
     glm::vec3 normal;
-    normal.x = (heightL - heightR) * m_config.heightScale;
+    normal.x = (heightL - heightR) * TC_HEIGHT_SCALE;
     normal.y = 2.0f; // Scale factor for smoothness
-    normal.z = (heightD - heightU) * m_config.heightScale;
+    normal.z = (heightD - heightU) * TC_HEIGHT_SCALE;
 
     return glm::normalize(normal);
 }
@@ -192,20 +194,20 @@ std::shared_ptr<Mesh> TerrainGenerator::generateTerrainMesh()
     std::vector<unsigned int> indices;
 
     // Center the terrain around origin
-    float offsetX = m_config.width * 0.5f;
-    float offsetZ = m_config.height * 0.5f;
+    float offsetX = TC_WIDTH * 0.5f;
+    float offsetZ = TC_HEIGHT * 0.5f;
 
-    int step = m_config.vertexStep;
+    int step = TC_VERTEX_STEP;
 
     // Sea level in world units
-    const float seaLevel = 0.13f * m_config.heightScale;
+    const float seaLevel = 0.13f * TC_HEIGHT_SCALE;
 
     // For flat shading, we need to generate separate vertices for each triangle
     // rather than sharing vertices between triangles
     // Use vertexStep to skip vertices and reduce polygon count
-    for (int z = 0; z < m_config.height - step; z += step)
+    for (int z = 0; z < TC_HEIGHT - step; z += step)
     {
-        for (int x = 0; x < m_config.width - step; x += step)
+        for (int x = 0; x < TC_WIDTH - step; x += step)
         {
             // Get the four corner heights
             float h_tl = m_heightMap[x][z];
@@ -220,10 +222,10 @@ std::shared_ptr<Mesh> TerrainGenerator::generateTerrainMesh()
             float w_br = getWaterMask((float)(x + step), (float)(z + step));
 
             // Calculate positions - always use terrain height for terrain mesh
-            glm::vec3 pos_tl((float)x - offsetX, h_tl * m_config.heightScale, (float)z - offsetZ);
-            glm::vec3 pos_tr((float)(x + step) - offsetX, h_tr * m_config.heightScale, (float)z - offsetZ);
-            glm::vec3 pos_bl((float)x - offsetX, h_bl * m_config.heightScale, (float)(z + step) - offsetZ);
-            glm::vec3 pos_br((float)(x + step) - offsetX, h_br * m_config.heightScale, (float)(z + step) - offsetZ);
+            glm::vec3 pos_tl((float)x - offsetX, h_tl * TC_HEIGHT_SCALE, (float)z - offsetZ);
+            glm::vec3 pos_tr((float)(x + step) - offsetX, h_tr * TC_HEIGHT_SCALE, (float)z - offsetZ);
+            glm::vec3 pos_bl((float)x - offsetX, h_bl * TC_HEIGHT_SCALE, (float)(z + step) - offsetZ);
+            glm::vec3 pos_br((float)(x + step) - offsetX, h_br * TC_HEIGHT_SCALE, (float)(z + step) - offsetZ);
 
             // First triangle (top-left, bottom-left, top-right)
             {
@@ -308,9 +310,9 @@ std::shared_ptr<Mesh> TerrainGenerator::generateTerrainMesh()
     }
 
     // Generate continuous water layer across entire map at sea level
-    for (int z = 0; z < m_config.height - step; z += step)
+    for (int z = 0; z < TC_HEIGHT - step; z += step)
     {
-        for (int x = 0; x < m_config.width - step; x += step)
+        for (int x = 0; x < TC_WIDTH - step; x += step)
         {
             // Create flat water quad at sea level (always, for entire map)
             glm::vec3 pos_tl((float)x - offsetX, seaLevel, (float)z - offsetZ);
@@ -410,16 +412,16 @@ std::shared_ptr<Mesh> TerrainGenerator::generateTerrainMesh()
 float TerrainGenerator::getHeightAt(float x, float z) const
 {
     // Convert world coordinates to grid coordinates
-    float offsetX = m_config.width * 0.5f;
-    float offsetZ = m_config.height * 0.5f;
+    float offsetX = TC_WIDTH * 0.5f;
+    float offsetZ = TC_HEIGHT * 0.5f;
 
     int gridX = (int)(x + offsetX);
     int gridZ = (int)(z + offsetZ);
 
-    if (gridX < 0 || gridX >= m_config.width || gridZ < 0 || gridZ >= m_config.height)
+    if (gridX < 0 || gridX >= TC_WIDTH || gridZ < 0 || gridZ >= TC_HEIGHT)
         return 0.0f;
 
-    return m_heightMap[gridX][gridZ] * m_config.heightScale;
+    return m_heightMap[gridX][gridZ] * TC_HEIGHT_SCALE;
 }
 
 float TerrainGenerator::getWaterMask(float x, float z)
