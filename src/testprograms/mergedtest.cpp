@@ -127,7 +127,7 @@ int main(int, char **)
 
 
         ThirdPersonCamera camController;    
-        Player player(glm::vec3(100, 0, 100), (MODELS_DIR /  "gran" / "gran.obj").string());
+        Player player(glm::vec3(100, 0, 100), (MODELS_DIR /  "cow" / "cow.obj").string());
 
         while (!glfwWindowShouldClose(g_window))
         {
