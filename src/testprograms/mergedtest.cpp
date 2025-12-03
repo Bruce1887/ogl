@@ -137,7 +137,7 @@ int main(int, char **)
 
             player.update(dt, g_InputManager, &chunkManager);
 
-            camController.handlePanning(dt);     // uses GLFW directly
+            camController.handlePanning(dt); // uses GLFW directly
             camController.update(scene.m_activeCamera, player);
 
             player.render(scene.m_activeCamera.getViewMatrix(),
