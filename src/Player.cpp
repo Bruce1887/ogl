@@ -43,7 +43,7 @@ void Player::update(float dt, InputManager* input, TerrainChunkManager* terrain)
     glm::vec3 forward(
         sin(glm::radians(yaw)),
         0,
-        -cos(glm::radians(yaw))
+        cos(glm::radians(yaw))
     );
 
     glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0,1,0)));
