@@ -8,6 +8,38 @@
 #include "MeshRenderable.h"
 #include <vector>
 
+// Terrain constants - centralized configuration for all terrain-related magic numbers
+struct TerrainConstants
+{
+    // Sea level configuration
+    static constexpr float SEA_LEVEL_NORMALIZED = 0.13f;  // Normalized sea level (0-1 range)
+    static constexpr float SEA_LEVEL_OFFSET = 0.12f;      // Sea level for terrain height comparison
+    static constexpr float WATER_PLANE_OFFSET = 0.1f;     // How much to raise water plane above terrain sea level
+    
+    // Texture scaling
+    static constexpr float TEXTURE_SCALE = 10.0f;         // Divisor for texture coordinates
+    
+    // Noise sampling scales
+    static constexpr float NOISE_SAMPLE_SCALE = 0.01f;    // Base scale for perlin sampling
+    
+    // Mountain generation
+    static constexpr float MOUNTAIN_CENTER_X_FACTOR = 0.15f;  // X position factor for mountain center
+    static constexpr float MOUNTAIN_CENTER_Z_FACTOR = 0.15f;  // Z position factor for mountain center
+    static constexpr float MOUNTAIN_DOMAIN_SCALE = 0.002f;    // Scale for mountain domain noise
+    static constexpr float MOUNTAIN_INFLUENCE_RADIUS = 140.0f; // Radius of mountain influence
+    static constexpr float MOUNTAIN_THRESHOLD = 0.32f;        // Threshold for mountain area
+    
+    // Lake generation
+    static constexpr float LAKE_NOISE_SCALE = 0.0008f;    // Scale for lake noise
+    static constexpr float LAKE_THRESHOLD = 0.45f;         // Threshold for lake formation
+    static constexpr float LAKE_DEPRESSION_FACTOR = 0.5f;  // How much lakes depress terrain
+    
+    // Water mask generation
+    static constexpr float WATER_NOISE_SCALE = 0.0015f;   // Scale for water area noise
+    static constexpr float WATER_AREA_THRESHOLD = 0.55f;  // Threshold for water areas
+    static constexpr float WATER_MIN_DEPTH = 0.02f;       // Minimum depth for water to appear
+};
+
 struct TerrainConfig
 {
     int width = 256;

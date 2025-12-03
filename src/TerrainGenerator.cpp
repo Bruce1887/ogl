@@ -23,8 +23,8 @@ TerrainGenerator::~TerrainGenerator()
 
 float TerrainGenerator::getPerlinHeight(float x, float z)
 {
-    float sampleX = x * 0.01f;
-    float sampleZ = z * 0.01f;
+    float sampleX = x * TerrainConstants::NOISE_SAMPLE_SCALE;
+    float sampleZ = z * TerrainConstants::NOISE_SAMPLE_SCALE;
     
     // Use ridge noise for sharp mountain features (primary)
     float ridgeNoise = stb_perlin_ridge_noise3(sampleX, sampleZ, 0.0f,
@@ -44,7 +44,8 @@ float TerrainGenerator::getPerlinHeight(float x, float z)
     hillNoise = (hillNoise + 1.0f) * 0.5f;
     
     // Lake depression noise - sparse, large areas
-    float lakeNoise = stb_perlin_fbm_noise3(x * 0.0008f, z * 0.0008f, 42.0f,
+    float lakeNoise = stb_perlin_fbm_noise3(x * TerrainConstants::LAKE_NOISE_SCALE, 
+                                            z * TerrainConstants::LAKE_NOISE_SCALE, 42.0f,
                                             2.0f,   // lacunarity
                                             0.5f,   // gain
                                             3);     // octaves
@@ -52,9 +53,9 @@ float TerrainGenerator::getPerlinHeight(float x, float z)
     
     // Create lake depressions (more common now)
     float lakeDepression = 0.0f;
-    if (lakeNoise > 0.45f) {  // More common threshold - ~55% of terrain
+    if (lakeNoise > TerrainConstants::LAKE_THRESHOLD) {  // More common threshold - ~55% of terrain
         // Stronger depression for larger lakes
-        lakeDepression = (lakeNoise - 0.45f) * 0.5f;  // Up to 0.275 units lower
+        lakeDepression = (lakeNoise - TerrainConstants::LAKE_THRESHOLD) * TerrainConstants::LAKE_DEPRESSION_FACTOR;
     }
     
     // Base terrain centered around sea level (0.13) with variation
@@ -66,12 +67,12 @@ float TerrainGenerator::getPerlinHeight(float x, float z)
     float total = baseHeight + ridgeDetail - lakeDepression;
 
     // Center in bottom-left quadrant but make it MUCH wider
-    float mountainCenterX = m_config.width * 0.15f;
-    float mountainCenterZ = m_config.height * 0.15f;
+    float mountainCenterX = m_config.width * TerrainConstants::MOUNTAIN_CENTER_X_FACTOR;
+    float mountainCenterZ = m_config.height * TerrainConstants::MOUNTAIN_CENTER_Z_FACTOR;
     
     // Use ridge noise to define the mountain "domain" - not circular!
-    float domainX = x * 0.002f;  // Very low frequency for large structures
-    float domainZ = z * 0.002f;
+    float domainX = x * TerrainConstants::MOUNTAIN_DOMAIN_SCALE;  // Very low frequency for large structures
+    float domainZ = z * TerrainConstants::MOUNTAIN_DOMAIN_SCALE;
     
     // Create an irregular mountain domain using ridge noise
     float mountainDomain = stb_perlin_ridge_noise3(domainX, domainZ, 100.0f,
@@ -84,12 +85,12 @@ float TerrainGenerator::getPerlinHeight(float x, float z)
     float distFromCenter = sqrt(distX * distX + distZ * distZ);
     
     // Very wide influence area
-    float mountainInfluence = 1.0f - std::min(distFromCenter / 140.0f, 1.0f); // 250 unit radius!
+    float mountainInfluence = 1.0f - std::min(distFromCenter / TerrainConstants::MOUNTAIN_INFLUENCE_RADIUS, 1.0f);
     
     // Combine domain noise with position bias for irregular boundary
     float inMountainArea = mountainDomain * 0.4f + mountainInfluence * 0.6f;
     
-    if (inMountainArea > 0.32f) // Raised threshold to prevent ground mimicking mountain shape
+    if (inMountainArea > TerrainConstants::MOUNTAIN_THRESHOLD) // Raised threshold to prevent ground mimicking mountain shape
     {
         // Sample ridge noise at multiple scales for natural variation
         float detailX = x * 0.015f;
@@ -236,7 +237,7 @@ std::shared_ptr<Mesh> TerrainGenerator::generateTerrainMesh()
                 TerrainVertex v1;
                 v1.position = pos_tl;
                 v1.normal = normal;
-                v1.texCoord = glm::vec2((float)x / 10.0f, (float)z / 10.0f);
+                v1.texCoord = glm::vec2((float)x / TerrainConstants::TEXTURE_SCALE, (float)z / TerrainConstants::TEXTURE_SCALE);
                 v1.height = h_tl;
                 v1.waterMask = 0.0f;
                 vertices.push_back(v1);
@@ -245,7 +246,7 @@ std::shared_ptr<Mesh> TerrainGenerator::generateTerrainMesh()
                 TerrainVertex v2;
                 v2.position = pos_bl;
                 v2.normal = normal;
-                v2.texCoord = glm::vec2((float)x / 10.0f, (float)(z + 1) / 10.0f);
+                v2.texCoord = glm::vec2((float)x / TerrainConstants::TEXTURE_SCALE, (float)(z + 1) / TerrainConstants::TEXTURE_SCALE);
                 v2.height = h_bl;
                 v2.waterMask = 0.0f;
                 vertices.push_back(v2);
@@ -254,7 +255,7 @@ std::shared_ptr<Mesh> TerrainGenerator::generateTerrainMesh()
                 TerrainVertex v3;
                 v3.position = pos_tr;
                 v3.normal = normal;
-                v3.texCoord = glm::vec2((float)(x + 1) / 10.0f, (float)z / 10.0f);
+                v3.texCoord = glm::vec2((float)(x + 1) / TerrainConstants::TEXTURE_SCALE, (float)z / TerrainConstants::TEXTURE_SCALE);
                 v3.height = h_tr;
                 v3.waterMask = 0.0f;
                 vertices.push_back(v3);
@@ -276,7 +277,7 @@ std::shared_ptr<Mesh> TerrainGenerator::generateTerrainMesh()
                 TerrainVertex v1;
                 v1.position = pos_tr;
                 v1.normal = normal;
-                v1.texCoord = glm::vec2((float)(x + 1) / 10.0f, (float)z / 10.0f);
+                v1.texCoord = glm::vec2((float)(x + 1) / TerrainConstants::TEXTURE_SCALE, (float)z / TerrainConstants::TEXTURE_SCALE);
                 v1.height = h_tr;
                 v1.waterMask = 0.0f;
                 vertices.push_back(v1);
@@ -285,7 +286,7 @@ std::shared_ptr<Mesh> TerrainGenerator::generateTerrainMesh()
                 TerrainVertex v2;
                 v2.position = pos_bl;
                 v2.normal = normal;
-                v2.texCoord = glm::vec2((float)x / 10.0f, (float)(z + 1) / 10.0f);
+                v2.texCoord = glm::vec2((float)x / TerrainConstants::TEXTURE_SCALE, (float)(z + 1) / TerrainConstants::TEXTURE_SCALE);
                 v2.height = h_bl;
                 v2.waterMask = 0.0f;
                 vertices.push_back(v2);
@@ -294,7 +295,7 @@ std::shared_ptr<Mesh> TerrainGenerator::generateTerrainMesh()
                 TerrainVertex v3;
                 v3.position = pos_br;
                 v3.normal = normal;
-                v3.texCoord = glm::vec2((float)(x + 1) / 10.0f, (float)(z + 1) / 10.0f);
+                v3.texCoord = glm::vec2((float)(x + 1) / TerrainConstants::TEXTURE_SCALE, (float)(z + 1) / TerrainConstants::TEXTURE_SCALE);
                 v3.height = h_br;
                 v3.waterMask = 0.0f;
                 vertices.push_back(v3);
@@ -326,24 +327,24 @@ std::shared_ptr<Mesh> TerrainGenerator::generateTerrainMesh()
                 TerrainVertex v1;
                 v1.position = pos_tl;
                 v1.normal = normal;
-                v1.texCoord = glm::vec2((float)x / 10.0f, (float)z / 10.0f);
-                v1.height = 0.13f;
+                v1.texCoord = glm::vec2((float)x / TerrainConstants::TEXTURE_SCALE, (float)z / TerrainConstants::TEXTURE_SCALE);
+                v1.height = TerrainConstants::SEA_LEVEL_NORMALIZED;
                 v1.waterMask = 1.0f;
                 vertices.push_back(v1);
                 
                 TerrainVertex v2;
                 v2.position = pos_bl;
                 v2.normal = normal;
-                v2.texCoord = glm::vec2((float)x / 10.0f, (float)(z + step) / 10.0f);
-                v2.height = 0.13f;
+                v2.texCoord = glm::vec2((float)x / TerrainConstants::TEXTURE_SCALE, (float)(z + step) / TerrainConstants::TEXTURE_SCALE);
+                v2.height = TerrainConstants::SEA_LEVEL_NORMALIZED;
                 v2.waterMask = 1.0f;
                 vertices.push_back(v2);
                 
                 TerrainVertex v3;
                 v3.position = pos_tr;
                 v3.normal = normal;
-                v3.texCoord = glm::vec2((float)(x + step) / 10.0f, (float)z / 10.0f);
-                v3.height = 0.13f;
+                v3.texCoord = glm::vec2((float)(x + step) / TerrainConstants::TEXTURE_SCALE, (float)z / TerrainConstants::TEXTURE_SCALE);
+                v3.height = TerrainConstants::SEA_LEVEL_NORMALIZED;
                 v3.waterMask = 1.0f;
                 vertices.push_back(v3);
                 
@@ -359,24 +360,24 @@ std::shared_ptr<Mesh> TerrainGenerator::generateTerrainMesh()
                 TerrainVertex v1;
                 v1.position = pos_tr;
                 v1.normal = normal;
-                v1.texCoord = glm::vec2((float)(x + step) / 10.0f, (float)z / 10.0f);
-                v1.height = 0.13f;
+                v1.texCoord = glm::vec2((float)(x + step) / TerrainConstants::TEXTURE_SCALE, (float)z / TerrainConstants::TEXTURE_SCALE);
+                v1.height = TerrainConstants::SEA_LEVEL_NORMALIZED;
                 v1.waterMask = 1.0f;
                 vertices.push_back(v1);
                 
                 TerrainVertex v2;
                 v2.position = pos_bl;
                 v2.normal = normal;
-                v2.texCoord = glm::vec2((float)x / 10.0f, (float)(z + step) / 10.0f);
-                v2.height = 0.13f;
+                v2.texCoord = glm::vec2((float)x / TerrainConstants::TEXTURE_SCALE, (float)(z + step) / TerrainConstants::TEXTURE_SCALE);
+                v2.height = TerrainConstants::SEA_LEVEL_NORMALIZED;
                 v2.waterMask = 1.0f;
                 vertices.push_back(v2);
                 
                 TerrainVertex v3;
                 v3.position = pos_br;
                 v3.normal = normal;
-                v3.texCoord = glm::vec2((float)(x + step) / 10.0f, (float)(z + step) / 10.0f);
-                v3.height = 0.13f;
+                v3.texCoord = glm::vec2((float)(x + step) / TerrainConstants::TEXTURE_SCALE, (float)(z + step) / TerrainConstants::TEXTURE_SCALE);
+                v3.height = TerrainConstants::SEA_LEVEL_NORMALIZED;
                 v3.waterMask = 1.0f;
                 vertices.push_back(v3);
                 
@@ -427,15 +428,15 @@ float TerrainGenerator::getWaterMask(float x, float z)
     float height = getPerlinHeight(x, z);
     
     // Sea level - if terrain is below this, it's underwater
-    const float seaLevel = 0.13f;
+    const float seaLevel = TerrainConstants::SEA_LEVEL_NORMALIZED;
     
     // If terrain is above sea level, no water
     if (height >= seaLevel)
         return 0.0f;
     
     // Use noise to create large bodies of water only (no small puddles)
-    float sampleX = x * 0.0015f; // Even lower frequency for larger bodies
-    float sampleZ = z * 0.0015f;
+    float sampleX = x * TerrainConstants::WATER_NOISE_SCALE; // Even lower frequency for larger bodies
+    float sampleZ = z * TerrainConstants::WATER_NOISE_SCALE;
     
     float waterNoise = stb_perlin_fbm_noise3(sampleX, sampleZ, 50.0f, 
                                              2.0f,   // lacunarity
@@ -444,14 +445,13 @@ float TerrainGenerator::getWaterMask(float x, float z)
     waterNoise = (waterNoise + 1.0f) * 0.5f; // Normalize to 0-1
     
     // Much higher threshold - only large continuous areas get water
-    const float waterAreaThreshold = 0.55f;
-    if (waterNoise < waterAreaThreshold)
+    if (waterNoise < TerrainConstants::WATER_AREA_THRESHOLD)
         return 0.0f;
     
     // Additionally check if terrain is significantly below sea level
     // This prevents tiny dips from becoming puddles
     float depth = seaLevel - height;
-    if (depth < 0.02f) // Must be at least 0.02 below sea level
+    if (depth < TerrainConstants::WATER_MIN_DEPTH) // Must be at least this deep below sea level
         return 0.0f;
     
     // Water exists here - return full strength for water plane

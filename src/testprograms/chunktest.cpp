@@ -14,6 +14,13 @@ int main(int, char **)
     if (oogaboogaInit("Chunked Terrain Test"))
         return -1;
     {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        // Also make sure depth testing is enabled
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+
         CameraConfiguration camConfig{
             .fov = 45.0f,
             .aspect = (float)window_X / (float)window_Y,
@@ -76,18 +83,22 @@ int main(int, char **)
         // Optimized chunk settings
         std::cout << "[chunktest] Setting up chunked terrain system..." << std::endl;
         int chunkSize = 100; // Clean 100x100 chunks
-        int vertexStep = 5;  // 5 divides 100 evenly -> 20x20 grid per chunk
+        int vertexStep = 10;  // 5 divides 100 evenly -> 20x20 grid per chunk
         TerrainChunkManager chunkManager(&terrainGen, chunkSize, vertexStep, terrainTextures);
         chunkManager.setShader(terrainShader);
         float renderDistance = 250.0f; // Extended render distance for more distant fog
         
         // Fog settings - light fog starting early, becoming dense at chunk limit
-        float fogStart = 150.0f;  // Subtle fog begins at 80 units
-        float fogEnd = renderDistance * 0.95f;  // Dense fog at 90% of render distance to hide chunk loading
+        float fogStart = renderDistance * 0.9f;  // Subtle fog begins at 80 units
+        float fogEnd = renderDistance * 1.1f;  // Dense fog at 110% of render distance to hide chunk loading
         glm::vec3 fogColor = glm::vec3(0.7f, 0.8f, 0.9f);  // Light blue-grey fog color (sky-like)
         
-        // Set background color to fog color so the sky matches the fog
-        glClearColor(fogColor.r, fogColor.g, fogColor.b, 1.0f);
+        
+        // glClearColor(fogColor.r, fogColor.g, fogColor.b, 1.0f);
+        // Render skybox (or set clear color to sky color)
+        glClearColor(0.5f, 0.7f, 1.0f, 1.0f); // Light blue sky
+
+        
 
         std::cout << "[chunktest] Chunked terrain system ready!" << std::endl;
         std::cout << "[chunktest] Optimization settings:" << std::endl;
@@ -120,12 +131,13 @@ int main(int, char **)
 
             for (const auto &chunkPtr : chunkManager.m_chunks)
             {
-                // Set fog uniforms for each chunk's terrain
                 chunkPtr->terrain_mr->setUniform("u_fogStart", fogStart);
                 chunkPtr->terrain_mr->setUniform("u_fogEnd", fogEnd);
-                chunkPtr->terrain_mr->setUniform("u_fogColor", fogColor);
+                chunkPtr->terrain_mr->setUniform("u_fogColor", glm::vec3(0.6f, 0.65f, 0.7f)); // Grey fog
                 
-                chunkPtr->render(scene.m_activeCamera.getViewMatrix(), scene.m_activeCamera.getProjectionMatrix(), &scene.m_lightSource.config);
+                chunkPtr->render(scene.m_activeCamera.getViewMatrix(), 
+                                scene.m_activeCamera.getProjectionMatrix(), 
+                                &scene.m_lightSource.config);
             }
 
             // Display chunk count every 60 frames

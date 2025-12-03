@@ -108,17 +108,17 @@ void main()
     }
     
     // Apply cylindrical fog that extends from ground to sky
-    // Calculate fog factor using smoothstep for smooth transition
-    // The fog is based purely on horizontal distance, creating a cylinder effect
-    float fogFactor = smoothstep(u_fogStart, u_fogEnd, fogDistance);
-    
-    // Add height-based fog density modifier to create visible fog wall
-    // The higher you look, the more fog you see, creating a wall effect
+    // Use LINEAR interpolation for gradual fog buildup
+    float fogFactor = clamp((fogDistance - u_fogStart) / (u_fogEnd - u_fogStart), 0.0, 1.0);
+
+    // Height-based fog density modifier
     float heightAboveCamera = fragPos.y - u_camPos.y;
-    float heightFactor = smoothstep(-50.0, 150.0, heightAboveCamera);
-    fogFactor = max(fogFactor, heightFactor * fogFactor * 0.8);
-    
-    // Mix the final color with fog color based on distance
-    vec3 finalColor = mix(FragColor.rgb, u_fogColor, fogFactor);
-    FragColor = vec4(finalColor, FragColor.a);
+    float heightFactor = clamp((heightAboveCamera + 50.0) / 200.0, 0.0, 1.0); // Linear instead of smoothstep
+    fogFactor = max(fogFactor, heightFactor * fogFactor * 0.9);
+
+    // MUCH STRONGER FOG - nearly opaque wall at render distance
+    vec3 atmosphericColor = mix(FragColor.rgb, u_fogColor, fogFactor);
+    float atmosphericFade = 1.0 - (fogFactor * 0.98);
+
+    FragColor = vec4(atmosphericColor, FragColor.a * atmosphericFade);
 }
