@@ -51,14 +51,6 @@ private:
      */
     bool checkAndUpdateUVCache(const std::string &name, const UniformValue &value);
 
-    void setUniform(const std::string &name, int v);
-    void setUniform(const std::string &name, unsigned int v);
-    void setUniform(const std::string &name, float v);
-    void setUniform(const std::string &name, const glm::vec2 &v);
-    void setUniform(const std::string &name, const glm::vec3 &v);
-    void setUniform(const std::string &name, const glm::vec4 &v);
-    void setUniform(const std::string &name, const glm::mat4 &v);
-
 public:
     Shader();
     ~Shader();
@@ -71,6 +63,15 @@ public:
 
     void bind() const;
     void unbind() const;
+
+    // Uniform setters (public for skybox and other direct shader usage)
+    void setUniform(const std::string &name, int v);
+    void setUniform(const std::string &name, unsigned int v);
+    void setUniform(const std::string &name, float v);
+    void setUniform(const std::string &name, const glm::vec2 &v);
+    void setUniform(const std::string &name, const glm::vec3 &v);
+    void setUniform(const std::string &name, const glm::vec4 &v);
+    void setUniform(const std::string &name, const glm::mat4 &v);
 
 private:
     /**

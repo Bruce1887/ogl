@@ -81,6 +81,24 @@ void Shader::createProgram()
     }
 
     GLCALL(glLinkProgram(program));
+    
+    // Check if program linked successfully
+    GLint success;
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
+    if (!success) {
+        GLint length = 0;
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
+
+        std::vector<char> log(length);
+        glGetProgramInfoLog(program, length, &length, log.data());
+
+        std::cerr << "FAILED TO LINK PROGRAM!\n" 
+                << log.data() << std::endl;
+
+        glDeleteProgram(program);
+        exit(-1);
+    }
+    
     GLCALL(glValidateProgram(program));
 
     for (auto &&ref : shader_references)

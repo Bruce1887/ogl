@@ -6,6 +6,7 @@
 #include "Terrain/TerrainGenerator.h"
 #include "Terrain/TerrainChunk.h"
 #include "Frametimer.h"
+#include "Skybox.h"
 #include <sstream>
 #include <iomanip>
 
@@ -52,6 +53,31 @@ int main(int, char **)
 
         LightSource lightSource = LightSource::fromConfig(lightCfg);
         Scene scene(camera, std::move(lightSource));
+
+        // Setup skybox
+        std::vector<std::string> skyboxFaces = {
+            "resources/textures/skybox/right.jpg",  // +X
+            "resources/textures/skybox/left.jpg",   // -X
+            "resources/textures/skybox/top.jpg",    // +Y
+            "resources/textures/skybox/bottom.jpg", // -Y
+            "resources/textures/skybox/front.jpg",  // +Z
+            "resources/textures/skybox/back.jpg"    // -Z
+        };
+
+        // Create the Skybox Shader
+        Shader* skyboxShader = new Shader();
+        skyboxShader->addShader("Skybox.vert", ShaderType::VERTEX);
+        skyboxShader->addShader("Skybox.frag", ShaderType::FRAGMENT);
+        skyboxShader->createProgram();
+
+        // Create the Skybox Object (loads textures and sets up VAO/VBO)
+        Skybox* gameSkybox = new Skybox(skyboxFaces);
+
+        // Link the Skybox and Shader to the Scene
+        scene.m_skybox = gameSkybox;
+        scene.m_skyboxShader = skyboxShader;
+        skyboxShader->bind();
+        skyboxShader->setUniform("skybox", 0); // Texture slot 0 for cubemap
 
         // Shader for terrain
         std::shared_ptr<Shader> terrainShader = std::make_shared<Shader>();
@@ -128,6 +154,10 @@ int main(int, char **)
         }
 
         std::cout << std::endl;
+
+        // Cleanup skybox resources
+        delete gameSkybox;
+        delete skyboxShader;
     }
     oogaboogaExit();
     return 0;
