@@ -124,6 +124,27 @@ std::unique_ptr<Chunk> TerrainChunkManager::generateNewChunk(const ChunkCoord &c
     // Create chunk
     std::unique_ptr<Chunk> chunk = std::make_unique<Chunk>(coord, std::move(chunkTerrain_mr));
 
+
+    int gridCount = m_chunkSize / m_vertexStep;  
+    int gridSize  = gridCount + 1;               
+
+    chunk->gridSize = gridSize;
+    chunk->heightGrid.assign(gridSize, std::vector<float>(gridSize));
+
+
+
+    for (int gz = 0; gz < gridSize; gz++)
+    {
+        for (int gx = 0; gx < gridSize; gx++)
+        {
+            float worldX = worldOffsetX + gx * m_vertexStep;
+            float worldZ = worldOffsetZ + gz * m_vertexStep;
+
+            // EXACT match to mesh vertex samples
+            chunk->heightGrid[gz][gx] = m_generator->getPerlinHeight(worldX, worldZ);
+        }
+    }
+
     // Populate chunk with trees
 
     for (int z = 0; z < m_chunkSize; z += m_vertexStep)
@@ -224,4 +245,106 @@ void TerrainChunkManager::updateChunks(const glm::vec3 &cameraPosition, float re
     {
         garbageCollectChunks();
     }
+}
+
+
+float Chunk::getPreciseHeightAt(float worldX, float worldZ, int chunkSize, int vertexStep) const
+{
+    // Convert world → local chunk coordinates
+    float localX = worldX - coord.x * chunkSize;
+    float localZ = worldZ - coord.z * chunkSize;
+
+    // If completely out of range, bail out
+    if (localX < 0 || localZ < 0 ||
+        localX > chunkSize || localZ > chunkSize)
+        return 0.0f;
+
+    // Compute raw grid indices
+    int raw_i = floor(localX / vertexStep);
+    int raw_j = floor(localZ / vertexStep);
+
+    // --- FIX 1: Clamp so that (i+1) and (j+1) are valid ---------------------
+    int maxIndex = (chunkSize / vertexStep) - 1; // valid quads are 0..maxIndex
+
+    int i = std::clamp(raw_i, 0, maxIndex);
+    int j = std::clamp(raw_j, 0, maxIndex);
+
+    // Fractions inside the quad
+    float fx = (localX - i * vertexStep) / vertexStep;
+    float fz = (localZ - j * vertexStep) / vertexStep;
+
+    // --- FIX 2: If clamping caused us to be exactly on border,
+    //            shift inside 1mm to avoid reading missing border vertices ----
+    if (raw_i != i) fx = 0.999f;
+    if (raw_j != j) fz = 0.999f;
+
+    // --- Fetch quad heights (these are guaranteed valid now) ---------------
+    float h00 = heightGrid[j][i];
+    float h10 = heightGrid[j][i + 1];
+    float h01 = heightGrid[j + 1][i];
+    float h11 = heightGrid[j + 1][i + 1];
+
+    // --- FIX 3: Detect "border zeros" and re-sample from neighbor chunk ----
+    bool zeroRow = (h00 == 0 && h01 == 0);
+    bool zeroCol = (h00 == 0 && h10 == 0);
+
+        // Border is invalid — push sampling slightly inward
+    if (zeroRow || zeroCol)
+    {
+        // Adjust fx / fz inward so we never hit missing vertices
+        fx = std::min(fx, 0.99f);
+        fz = std::min(fz, 0.99f);
+
+        // (Optional) clamp heights to avoid 0s
+        h00 = std::max(h00, 0.0001f);
+        h10 = std::max(h10, 0.0001f);
+        h01 = std::max(h01, 0.0001f);
+        h11 = std::max(h11, 0.0001f);
+    }
+
+
+    // --- Standard interpolation using correct diagonal ---------------------
+    float h;
+    if (fx + fz < 1.0f)
+    {
+        // TL–BL–TR
+        h = h00 * (1 - fx - fz)
+          + h01 * fz
+          + h10 * fx;
+    }
+    else
+    {
+        // TR–BL–BR
+        h = h10 * (1 - fz)
+          + h11 * (fx + fz - 1)
+          + h01 * (1 - fx);
+    }
+
+    return h * 100.0f; // your terrain heightScale
+}
+
+float TerrainChunkManager::getPreciseHeightAt(float x, float z)
+{
+    ChunkCoord cc = worldToChunk(glm::vec3(x,0,z));
+
+    for (auto &chunk : m_chunks)
+    {
+        if (chunk->coord.x == cc.x && chunk->coord.z == cc.z)
+        {
+            return chunk->getPreciseHeightAt(x, z, m_chunkSize, m_vertexStep);
+        }
+    }
+
+    loadChunk(cc);
+
+    // Now find it again
+    for (auto &chunk : m_chunks)
+    {
+        if (chunk->coord.x == cc.x && chunk->coord.z == cc.z)
+        {
+            return chunk->getPreciseHeightAt(x, z, m_chunkSize, m_vertexStep);
+        }
+    }
+
+    return 0.0f;
 }
