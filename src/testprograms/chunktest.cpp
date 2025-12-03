@@ -3,8 +3,8 @@
 #include "Scene.h"
 #include "Shader.h"
 #include "Texture.h"
-#include "TerrainGenerator.h"
-#include "TerrainChunk.h"
+#include "Terrain/TerrainGenerator.h"
+#include "Terrain/TerrainChunk.h"
 #include "Frametimer.h"
 #include <sstream>
 #include <iomanip>
@@ -20,6 +20,7 @@ int main(int, char **)
             .near = 0.1f,
             .far = 2000.0f};
 
+        /*
         // Create terrain generator (optimized config for best visuals)
         TerrainConfig config{
             .width = 256,
@@ -31,7 +32,10 @@ int main(int, char **)
             .lacunarity = 3.0f,    // Standard value for natural terrain
             .vertexStep = 1        // Not used by chunks
         };
-        TerrainGenerator terrainGen(config);
+        */
+
+        // TerrainGenerator terrainGen(config);
+        TerrainGenerator terrainGen;
 
         // Camera setup - EXACT same as terraintest
         Camera camera(camConfig);
@@ -77,11 +81,11 @@ int main(int, char **)
         DEBUG_PRINT("Setting up chunked terrain system...");
         int chunkSize = 100; // Clean 100x100 chunks
         //int vertexStep = 5;  // 5 divides 100 evenly -> 20x20 grid per chunk
-        int vertexStep = 20;  
-        int gc_threshold = 400;
+        int vertexStep = 5;  
+        int gc_threshold = 50;
         TerrainChunkManager chunkManager(&terrainGen, chunkSize, vertexStep, terrainTextures, gc_threshold);
         chunkManager.setShader(terrainShader);
-        float renderDistance = 40; //  180.0f; // Optimized: slightly reduced from 200 for better performance
+        float renderDistance = 100.0f;
 
         DEBUG_PRINT("Chunked terrain system ready!");
         DEBUG_PRINT("Optimization settings:"
