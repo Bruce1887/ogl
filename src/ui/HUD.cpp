@@ -158,5 +158,5 @@ void HUD::SetupQuadRendering() {
     
     // 4. Link VBO to VAO (This step is often redundant if the VBO constructor handles it, 
     // but you need it here to ensure the layout is set.)
-    m_quadVAO->addBuffer(*m_quadVBO, layout);
+    m_quadVAO->addBuffer(m_quadVBO, layout);
 }

@@ -93,7 +93,7 @@ private:
     // Generates a monotonically increasing unique ID for each Entity instance
     static inline EntityID nextId()
     {
-        static inline EntityID s_next = 1; // start IDs at 1
+        static EntityID s_next = 1; // start IDs at 1
         return s_next++;
     }
 };

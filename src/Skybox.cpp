@@ -5,7 +5,6 @@
 #include <iostream>
 #include <glm/gtc/type_ptr.hpp>
 
-
 void Skybox::loadCubemap(const std::vector<std::string>& faces)
 {
     glGenTextures(1, &m_textureID);
