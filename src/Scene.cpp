@@ -30,6 +30,16 @@ void Scene::renderScene()
 	glm::mat4 view = m_activeCamera.getViewMatrix();
 	glm::mat4 projection = m_activeCamera.getProjectionMatrix();	
 	
+	// Render skybox first (if available)
+	if (m_skybox && m_skyboxShader) {
+		// Set uniforms needed by Skybox.vert
+		m_skyboxShader->setUniform("projection", projection);
+		m_skyboxShader->setUniform("view", view);
+		
+		// Render the skybox cube (it handles its own glDepthFunc switch)
+		m_skybox->render(*m_skyboxShader, view, projection);
+	}
+
 	// Render each object in the scene
 	for (auto &r : m_renderables)
 	{		
