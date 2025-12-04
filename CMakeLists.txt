@@ -51,15 +51,18 @@ target_include_directories(glad SYSTEM PRIVATE src/glad)
 
 
 add_library(stb_image STATIC src/vendor/stb_image/stb_image.cpp)
+add_library(stb_truetype STATIC src/vendor/stb_image/stb_truetype.cpp)
 
 
 target_include_directories(stb_image PUBLIC src)
 target_include_directories(stb_image SYSTEM PRIVATE src/vendor/stb_image)
+target_include_directories(stb_truetype PUBLIC src)
+target_include_directories(stb_truetype SYSTEM PRIVATE src/vendor/stb_image)
 
 # --- Common static library (compiled once) ---
 add_library(oogabooga_common STATIC ${COMMON_SOURCES})
 target_include_directories(oogabooga_common PUBLIC src)
-target_link_libraries(oogabooga_common PUBLIC glad stb_image glfw OpenGL::GL)
+target_link_libraries(oogabooga_common PUBLIC glad stb_image stb_truetype glfw OpenGL::GL)
 
 # --- Assimp ---
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
