@@ -163,18 +163,40 @@ bool Shader::checkAndUpdateUVCache(const std::string &name, const UniformValue &
     }
 }
 
+bool Shader::validateUniformSet(const std::string &name, int location)
+{
+    if (location == -1)
+        return false; // Uniform doesn't exist
+    
+    // Ensure this shader is currently bound
+    RenderingContext *rContext = RenderingContext::Current();
+    if (rContext->m_boundShader != m_RendererID)
+    {
+        // Silently skip - this is expected behavior when uniforms are set before binding
+        return false;
+    }
+    
+    return true;
+}
+
 void Shader::setUniform(const std::string &name, int v)
 {
     if (checkAndUpdateUVCache(name, v))
         return;
-    GLCALL(glUniform1i(getUniformLocation(name), v));
+    int location = getUniformLocation(name);
+    if (!validateUniformSet(name, location))
+        return;
+    GLCALL(glUniform1i(location, v));
 }
 
 void Shader::setUniform(const std::string &name, unsigned int v)
 {
     if (checkAndUpdateUVCache(name, v))
         return;
-    GLCALL(glUniform1i(getUniformLocation(name), v));
+    int location = getUniformLocation(name);
+    if (!validateUniformSet(name, location))
+        return;
+    GLCALL(glUniform1i(location, v));
 }
 
 // Float/double uniforms
@@ -182,7 +204,10 @@ void Shader::setUniform(const std::string &name, float v)
 {
     if (checkAndUpdateUVCache(name, v))
         return;
-    GLCALL(glUniform1f(getUniformLocation(name), v));
+    int location = getUniformLocation(name);
+    if (!validateUniformSet(name, location))
+        return;
+    GLCALL(glUniform1f(location, v));
 }
 
 // Float vector uniforms
@@ -190,19 +215,28 @@ void Shader::setUniform(const std::string &name, const glm::vec2 &v)
 {
     if (checkAndUpdateUVCache(name, v))
         return;
-    GLCALL(glUniform2fv(getUniformLocation(name), 1, &v[0]));
+    int location = getUniformLocation(name);
+    if (!validateUniformSet(name, location))
+        return;
+    GLCALL(glUniform2fv(location, 1, &v[0]));
 }
 void Shader::setUniform(const std::string &name, const glm::vec3 &v)
 {
     if (checkAndUpdateUVCache(name, v))
         return;
-    GLCALL(glUniform3fv(getUniformLocation(name), 1, &v[0]));
+    int location = getUniformLocation(name);
+    if (!validateUniformSet(name, location))
+        return;
+    GLCALL(glUniform3fv(location, 1, &v[0]));
 }
 void Shader::setUniform(const std::string &name, const glm::vec4 &v)
 {
     if (checkAndUpdateUVCache(name, v))
         return;
-    GLCALL(glUniform4fv(getUniformLocation(name), 1, &v[0]));
+    int location = getUniformLocation(name);
+    if (!validateUniformSet(name, location))
+        return;
+    GLCALL(glUniform4fv(location, 1, &v[0]));
 }
 
 // Matrix uniforms
@@ -210,7 +244,10 @@ void Shader::setUniform(const std::string &name, const glm::mat4 &v)
 {
     if (checkAndUpdateUVCache(name, v))
         return;
-    GLCALL(glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, glm::value_ptr(v)));
+    int location = getUniformLocation(name);
+    if (!validateUniformSet(name, location))
+        return;
+    GLCALL(glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(v)));
 }
 
 int Shader::getUniformLocation(const std::string &name)

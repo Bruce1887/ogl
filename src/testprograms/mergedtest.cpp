@@ -94,9 +94,9 @@ int main(int, char **)
         // Optimized chunk settings
         DEBUG_PRINT("Setting up chunked terrain system...");
         int chunkSize = 100; // Clean 100x100 chunks
-        //int vertexStep = 5;  // 5 divides 100 evenly -> 20x20 grid per chunk
-        int vertexStep = 5;  
-        int gc_threshold = 50;
+        int vertexStep = 5;  // 5 divides 100 evenly -> 20x20 grid per chunk
+        // int vertexStep = 10;  // 10 divides 100 evenly -> 10x10 grid per chunk (4x fewer vertices)
+        int gc_threshold = 35;
         TerrainChunkManager chunkManager(&terrainGen, chunkSize, vertexStep, terrainTextures, gc_threshold);
         chunkManager.setShader(terrainShader);
         float renderDistance = 100.0f;

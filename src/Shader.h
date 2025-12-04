@@ -50,6 +50,14 @@ private:
      * @return true if the uniform value has not changed, false otherwise
      */
     bool checkAndUpdateUVCache(const std::string &name, const UniformValue &value);
+    
+    /**
+     * @brief Validates that a uniform can be set (exists and shader is bound)
+     * @param name Name of the uniform (for error messages)
+     * @param location Uniform location to validate
+     * @return true if the uniform can be set, false otherwise
+     */
+    bool validateUniformSet(const std::string &name, int location);
 
 public:
     Shader();
