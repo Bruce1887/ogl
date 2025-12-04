@@ -3,6 +3,8 @@
 #include "../game/GameClock.h"  
 
 #include "HUD.h"
+#include "TextRenderer.h"
+
 // OpenGL libraries
 #include "../glad/glad.h" 
 #include "../Common.h"
@@ -17,7 +19,7 @@
 // Constructor Implementation
 HUD::HUD(game::Player* player, game::GameClock* clock, int screenWidth, int screenHeight)
     : m_player(player), m_clock(clock), m_screenWidth(screenWidth), m_screenHeight(screenHeight), 
-      m_hudShader(nullptr), m_quadVAO(nullptr), m_quadVBO(nullptr)
+      m_hudShader(nullptr), m_quadVAO(nullptr), m_quadVBO(nullptr), m_textRenderer(nullptr)
 {
     // 1. Initialize Rendering Resources (Shaders and buffers)
     // Load your basic 2D color shader (uniformColor.frag/vert from resources/shaders)
@@ -33,9 +35,19 @@ HUD::HUD(game::Player* player, game::GameClock* clock, int screenWidth, int scre
 
 HUD::~HUD() {
     // Clean up allocated resources
-    // delete m_hudShader;
-    // delete m_quadVAO;
-    // delete m_quadVBO;
+    delete m_hudShader;
+    delete m_quadVAO;
+    delete m_quadVBO;
+    delete m_textRenderer;
+}
+
+bool HUD::initTextRenderer(const std::string& fontPath, unsigned int fontSize)
+{
+    if (m_textRenderer) {
+        delete m_textRenderer;
+    }
+    m_textRenderer = new TextRenderer();
+    return m_textRenderer->init(fontPath, fontSize, m_screenWidth, m_screenHeight);
 }
 
 
@@ -78,12 +90,24 @@ void HUD::DrawVitalsBars() {
     DrawRect(x_start, y_start, bar_width, bar_height, {0.3f, 0.0f, 0.0f, 1.0f});
     float healthFill = bar_width * (health / maxHealth);
     DrawRect(x_start, y_start, healthFill, bar_height, {0.8f, 0.1f, 0.1f, 1.0f});
+    
+    // Draw health label and value if text renderer is available
+    if (m_textRenderer && m_textRenderer->isInitialized()) {
+        std::string healthStr = std::to_string(static_cast<int>(health)) + "/" + std::to_string(static_cast<int>(maxHealth));
+        DrawText(healthStr, x_start + bar_width + 10.0f, y_start + 2.0f, {1.0f, 1.0f, 1.0f, 1.0f}, 0.5f);
+    }
 
     // 2. Draw Stamina Bar
     y_start += bar_height + 10.0f;
     DrawRect(x_start, y_start, bar_width, bar_height, {0.0f, 0.3f, 0.0f, 1.0f});
     float staminaFill = bar_width * (stamina / maxStamina);
     DrawRect(x_start, y_start, staminaFill, bar_height, {0.1f, 0.8f, 0.1f, 1.0f});
+    
+    // Draw stamina label and value if text renderer is available
+    if (m_textRenderer && m_textRenderer->isInitialized()) {
+        std::string staminaStr = std::to_string(static_cast<int>(stamina)) + "/" + std::to_string(static_cast<int>(maxStamina));
+        DrawText(staminaStr, x_start + bar_width + 10.0f, y_start + 2.0f, {1.0f, 1.0f, 1.0f, 1.0f}, 0.5f);
+    }
 }
 
 void HUD::DrawClockDisplay() {
@@ -100,8 +124,20 @@ void HUD::DrawClockDisplay() {
                            glm::vec4(1.0f, 1.0f, 0.5f, 1.0f) : // Day (Yellowish)
                            glm::vec4(0.5f, 0.5f, 1.0f, 1.0f);  // Night (Bluish)
 
-    // TODO: Draw the timeStr text in the top right corner
-    // DrawText(timeStr, m_screenWidth - 150.0f, m_screenHeight - 50.0f, clockColor);
+    // Draw the timeStr text in the top right corner
+    DrawText(timeStr, static_cast<float>(m_screenWidth) - 150.0f, static_cast<float>(m_screenHeight) - 50.0f, clockColor);
+}
+
+void HUD::DrawText(const std::string& text, float x, float y, const glm::vec4& color, float scale)
+{
+    if (m_textRenderer && m_textRenderer->isInitialized()) {
+        m_textRenderer->RenderText(text, x, y, scale, color);
+        
+        // Re-bind HUD shader after text rendering
+        m_hudShader->bind();
+        glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(m_screenWidth), 0.0f, static_cast<float>(m_screenHeight));
+        m_hudShader->setUniform("u_Projection", projection);
+    }
 }
 
 // --- BASIC RECTANGLE DRAWING IMPLEMENTATION ---

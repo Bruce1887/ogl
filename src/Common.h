@@ -26,6 +26,8 @@ inline const fs::path TEXTURE_DIR = fs::path("resources") / "textures";
 
 inline const fs::path MODELS_DIR = fs::path("resources") / "models";
 
+inline const fs::path FONTS_DIR = fs::path("resources") / "fonts";
+
 // The amount of texture units we expect to have available
 const int REQUIRED_NUM_TEXTURE_UNITS = 32;
 
