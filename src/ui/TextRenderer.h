@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 // Forward declarations
 class Shader;
@@ -63,7 +63,7 @@ public:
     bool isInitialized() const { return m_initialized; }
 
 private:
-    std::map<char, Character> m_Characters;
+    std::unordered_map<char, Character> m_Characters;
     Shader* m_textShader;
     VertexArray* m_VAO;
     VertexBuffer* m_VBO;

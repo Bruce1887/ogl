@@ -10,6 +10,12 @@
 #include <fstream>
 #include <vector>
 
+// Constants for text quad vertex data
+// Each character quad has 6 vertices (2 triangles), each with 4 floats (x, y, tex_s, tex_t)
+static constexpr int VERTICES_PER_QUAD = 6;
+static constexpr int FLOATS_PER_VERTEX = 4;
+static constexpr size_t QUAD_BUFFER_SIZE = sizeof(float) * VERTICES_PER_QUAD * FLOATS_PER_VERTEX;
+
 TextRenderer::TextRenderer()
     : m_textShader(nullptr)
     , m_VAO(nullptr)
@@ -50,12 +56,11 @@ bool TextRenderer::init(const std::string& fontPath, unsigned int fontSize, int 
     // Setup VAO/VBO for text quads
     m_VAO = new VertexArray();
     
-    // Reserve space for 6 vertices * 4 floats (x, y, s, t) per character
-    // We'll update this dynamically when rendering
-    m_VBO = new VertexBuffer(nullptr, sizeof(float) * 6 * 4, m_VAO, BufferUsage::DYNAMIC_DRAW);
+    // Reserve space for one character quad - we'll update this dynamically when rendering
+    m_VBO = new VertexBuffer(nullptr, static_cast<unsigned int>(QUAD_BUFFER_SIZE), m_VAO, BufferUsage::DYNAMIC_DRAW);
     
     VertexBufferLayout layout;
-    layout.push<float>(4); // vec4 (pos.x, pos.y, tex.x, tex.y)
+    layout.push<float>(FLOATS_PER_VERTEX); // vec4 (pos.x, pos.y, tex.x, tex.y)
     m_VAO->addBuffer(m_VBO, layout);
 
     m_initialized = true;
@@ -180,7 +185,7 @@ void TextRenderer::RenderText(const std::string& text, float x, float y, float s
         float h = static_cast<float>(ch.Size.y) * scale;
 
         // Update VBO for each character
-        float vertices[6][4] = {
+        float vertices[VERTICES_PER_QUAD][FLOATS_PER_VERTEX] = {
             { xpos,     ypos + h,   0.0f, 0.0f },
             { xpos,     ypos,       0.0f, 1.0f },
             { xpos + w, ypos,       1.0f, 1.0f },
@@ -198,7 +203,7 @@ void TextRenderer::RenderText(const std::string& text, float x, float y, float s
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
 
         // Render quad
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawArrays(GL_TRIANGLES, 0, VERTICES_PER_QUAD);
 
         // Advance cursor for next glyph
         x += static_cast<float>(ch.Advance) * scale;
