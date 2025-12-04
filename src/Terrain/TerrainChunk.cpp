@@ -165,6 +165,10 @@ std::unique_ptr<Chunk> TerrainChunkManager::generateNewChunk(const ChunkCoord &c
             Model *granPtr = m_generator->m_terrainRenderables.gran.get();
             std::unique_ptr<Model> treeModel = std::make_unique<Model>(Model::copyFrom(granPtr));
             treeModel->setPosition(glm::vec3((float)(worldOffsetX + x), y, (float)(worldOffsetZ + z)));
+            
+            // Apply fog uniforms to the tree model
+            treeModel->setFogUniforms(m_fogColor, m_fogStart, m_fogEnd);
+            
             chunk->renderables_in_chunk.push_back(std::move(treeModel));
         }
     }

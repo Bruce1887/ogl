@@ -4,6 +4,7 @@ out vec4 FragColor;
 in vec3 normal;
 in vec3 fragPos;
 in vec2 texCoord;
+in float fogDistance;
 
 uniform vec3 u_camPos;
 
@@ -18,6 +19,11 @@ uniform vec3 u_light_ambient;
 uniform vec3 u_light_position;
 uniform vec3 u_light_diffuse;
 uniform vec3 u_light_specular;
+
+// fog parameters
+uniform vec3 u_fogColor;
+uniform float u_fogStart;
+uniform float u_fogEnd;
 
 uniform sampler2D u_texture_diffuse;
 
@@ -44,4 +50,8 @@ void main()
     // The final color is the sum of the components
     vec3 result = ambient + diffuse + specular;
     FragColor = vec4(result, 1.0);
+    
+    // Apply fog effect
+    float fogFactor = clamp((fogDistance - u_fogStart) / (u_fogEnd - u_fogStart), 0.0, 1.0);
+    FragColor.rgb = mix(FragColor.rgb, u_fogColor, fogFactor);
 }

@@ -11,10 +11,12 @@ out vec3 normal;
 out vec2 texCoord;
 out vec3 tangent;
 out vec3 bitangent;
+out float fogDistance;
 
 uniform mat4 u_model;
 uniform mat4 u_view;
 uniform mat4 u_projection;
+uniform vec3 u_camPos;
 
 void main()
 {
@@ -23,5 +25,9 @@ void main()
     texCoord = aTexCoord;
     tangent = mat3(u_model) * aTangent;
     bitangent = mat3(u_model) * aBitangent;
+    
+    // Calculate distance from camera for fog
+    fogDistance = length(u_camPos - fragPos);
+    
     gl_Position = u_projection * u_view * u_model * vec4(aPos, 1.0);
 }

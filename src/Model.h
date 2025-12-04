@@ -48,6 +48,16 @@ public:
     ~Model() = default;
 
     void render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight) override;
+    
+    void setFogUniforms(const glm::vec3& fogColor, float fogStart, float fogEnd)
+    {
+        for (auto &mr : m_modelData->getMeshRenderables())
+        {
+            mr->setUniform("u_fogColor", fogColor);
+            mr->setUniform("u_fogStart", fogStart);
+            mr->setUniform("u_fogEnd", fogEnd);
+        }
+    }
 
 private:
     // Get the shared model data (useful for creating instances)

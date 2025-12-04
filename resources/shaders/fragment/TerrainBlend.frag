@@ -7,6 +7,7 @@ in vec3 fragPos;
 in vec2 texCoord;
 in float height;
 in float waterMask;
+in float fogDistance;
 
 uniform sampler2D u_texture0; // Low terrain (ground)
 uniform sampler2D u_texture1; // Mid terrain (grass)
@@ -21,6 +22,11 @@ uniform vec3 u_light_ambient;
 uniform vec3 u_light_position;
 uniform vec3 u_light_diffuse;
 uniform vec3 u_light_specular;
+
+// fog parameters
+uniform vec3 u_fogColor;
+uniform float u_fogStart;
+uniform float u_fogEnd;
 
 void main()
 {
@@ -100,4 +106,8 @@ void main()
     } else {
         FragColor = vec4(terrainResult, 1.0);
     }
+    
+    // Apply fog effect
+    float fogFactor = clamp((fogDistance - u_fogStart) / (u_fogEnd - u_fogStart), 0.0, 1.0);
+    FragColor.rgb = mix(FragColor.rgb, u_fogColor, fogFactor);
 }

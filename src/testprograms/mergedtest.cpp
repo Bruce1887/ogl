@@ -23,24 +23,10 @@ int main(int, char **)
             .near = 0.1f,
             .far = 2000.0f};
 
-        /*
-        // Create terrain generator (optimized config for best visuals)
-        TerrainConfig config{
-            .width = 256,
-            .height = 256,
-            .scale = 25.0f,        // Scale for terrain features
-            .heightScale = 100.0f, // Mountain height
-            .octaves = 2,          // Increased from 3 for more detail
-            .persistence = 0.4f,   // Better balanced (was 0.9f)
-            .lacunarity = 3.0f,    // Standard value for natural terrain
-            .vertexStep = 1        // Not used by chunks
-        };
-        */
-
         // TerrainGenerator terrainGen(config);
         TerrainGenerator terrainGen;
 
-        // Camera setup - EXACT same as terraintest
+        // Camera setup
         Camera camera(camConfig);
         camera.m_Position = glm::vec3(100.0f, 80.0f, 100.0f); // Same as terraintest
         camera.m_Target = glm::vec3(-50.0f, 60.0f, -50.0f);   // Same as terraintest
@@ -58,12 +44,12 @@ int main(int, char **)
 
         // Setup skybox
         std::vector<std::string> skyboxFaces = {
-            "resources/textures/skybox/right.jpg",  // +X
-            "resources/textures/skybox/left.jpg",   // -X
-            "resources/textures/skybox/top.jpg",    // +Y
-            "resources/textures/skybox/bottom.jpg", // -Y
-            "resources/textures/skybox/front.jpg",  // +Z
-            "resources/textures/skybox/back.jpg"    // -Z
+            "resources/textures/skybox/right.jpg",  
+            "resources/textures/skybox/left.jpg",   
+            "resources/textures/skybox/top.jpg",    
+            "resources/textures/skybox/bottom.jpg", 
+            "resources/textures/skybox/front.jpg",  
+            "resources/textures/skybox/back.jpg"    
         };
 
         // Create the Skybox Shader
@@ -114,6 +100,20 @@ int main(int, char **)
         TerrainChunkManager chunkManager(&terrainGen, chunkSize, vertexStep, terrainTextures, gc_threshold);
         chunkManager.setShader(terrainShader);
         float renderDistance = 100.0f;
+        
+        // Fog settings (0.51f, 0.90f, 0.95f)
+        glm::vec3 fogColor = glm::vec3(0.51f, 0.90f, 0.95f); // Light turquoise fog same color as skybox
+        float fogStart = renderDistance * 0.90f; // Fog starts at 90% of render distance
+        float fogEnd = renderDistance * 0.98f;   // Fully opaque at 98% of render distance
+        
+        // Set fog uniforms
+        terrainShader->bind();
+        terrainShader->setUniform("u_fogColor", fogColor);
+        terrainShader->setUniform("u_fogStart", fogStart);
+        terrainShader->setUniform("u_fogEnd", fogEnd);
+        
+        // Set fog uniforms on chunk manager so trees get fog too
+        chunkManager.setFogUniforms(fogColor, fogStart, fogEnd);
 
         DEBUG_PRINT("Chunked terrain system ready!");
         DEBUG_PRINT("Optimization settings:"
@@ -128,6 +128,9 @@ int main(int, char **)
 
         ThirdPersonCamera camController;    
         Player player(glm::vec3(100, 0, 100), (MODELS_DIR /  "cow" / "cow.obj").string());
+        
+        // Set fog uniforms for the player model
+        player.playerModel.setFogUniforms(fogColor, fogStart, fogEnd);
 
         while (!glfwWindowShouldClose(g_window))
         {

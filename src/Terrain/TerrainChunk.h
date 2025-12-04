@@ -104,6 +104,13 @@ public:
 
     std::vector<std::unique_ptr<Chunk>> m_chunks;
     void setShader(std::shared_ptr<Shader> shader) { m_terrainShader = shader; }
+    
+    void setFogUniforms(const glm::vec3& fogColor, float fogStart, float fogEnd)
+    {
+        m_fogColor = fogColor;
+        m_fogStart = fogStart;
+        m_fogEnd = fogEnd;
+    }
 
 
     float getPreciseHeightAt(float x, float z);
@@ -120,6 +127,11 @@ private:
 
     std::shared_ptr<Shader> m_terrainShader;                 // Reference to shader (not owned)
     std::vector<std::shared_ptr<Texture>> m_terrainTextures; // Textures for terrain rendering
+    
+    // Fog parameters
+    glm::vec3 m_fogColor = glm::vec3(0.0f);
+    float m_fogStart = 0.0f;
+    float m_fogEnd = 0.0f;
 
     // Optimization: track last camera position to avoid redundant updates
 
