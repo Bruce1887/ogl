@@ -19,10 +19,11 @@ void MeshRenderable::render(glm::mat4 view, glm::mat4 projection, PhongLightConf
         GLuint slot = texture->getSlot();
         GLuint texID = texture->getID();
 
+        // Check if the texture is already bound in the expected slot
         if (rContext->m_boundTextures[slot] != texID)
         {
-            // TODO: optimize slot finding algorithm maybe
-            // We need to bind the texture to some slot, and then update the uniform
+            // TODO: optimize slot finding algorithm
+            // We need to bind the texture to a new slot, and then update the uniform
             GLuint newslot = (slot + numTextures) % REQUIRED_NUM_TEXTURE_UNITS;
             texture->bindNew(newslot);
         }

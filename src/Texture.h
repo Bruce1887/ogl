@@ -1,6 +1,12 @@
-#pragma once
+    #pragma once
 
 #include "Common.h"
+
+enum TextureBindTarget
+{
+    TEXTURE_2D = GL_TEXTURE_2D,
+    CUBEMAP = GL_TEXTURE_CUBE_MAP
+};
 
 class Texture
 {
@@ -11,6 +17,7 @@ private:
 
     std::string m_filePath;
     unsigned char *m_localBuffer;
+    TextureBindTarget m_target;
     int m_width, m_height, m_BPP;
 
 public:
@@ -30,7 +37,7 @@ public:
     void bind() const;
     void unbind() const;
 
-    std::string targetUniform = "[NO TARGET UNIFORM SET]";
+    std::string targetUniform = "[[[[[[[[[[[[[[NO TARGET UNIFORM SET]]]]]]]]]]]]]]";
 
     inline int getWidth() const { return m_width; }
     inline int getHeight() const { return m_height; }

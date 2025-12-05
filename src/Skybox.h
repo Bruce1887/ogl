@@ -4,16 +4,24 @@
 #include <string>
 #include <glm/glm.hpp>
 
-class Shader; 
+#include "MeshRenderable.h"
+#include "Renderable.h"
+#include "Shader.h"
 
-class Skybox {
+class Skybox : public Renderable
+{
 public:
-    Skybox(const std::vector<std::string>& faces);
+    Skybox(const std::vector<std::string> &faces);
     ~Skybox();
-    void render(Shader& shader, const glm::mat4& view, const glm::mat4& projection);
+    void render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight) override;
+    
+    private:
+    std::shared_ptr<Shader> m_shader;
+    unsigned int m_cubemapTextureID;
+    unsigned int m_vao, m_vbo;
+    
     void setupSkybox();
-private:
-    unsigned int m_textureID; 
-    unsigned int m_vao, m_vbo; 
-    void loadCubemap(const std::vector<std::string>& faces);
+    void loadCubemap(const std::vector<std::string> &faces);
+    void setUpShader();
+
 };

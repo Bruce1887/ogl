@@ -9,7 +9,7 @@ VertexArray::VertexArray()
 
 VertexArray::~VertexArray()
 {
-    //     DEBUG_PRINT("Deleting VertexArray with ID: " << m_RendererID);
+    // DEBUG_PRINT("Deleting VertexArray with ID: " << m_RendererID);
     GLCALL(glDeleteVertexArrays(1, &m_RendererID));
 }
 

@@ -2,10 +2,6 @@
 
 #include "Common.h"
 
-
-#define MAX_FPS 60
-
-
 class FrameTimer
 {
 private:
@@ -18,11 +14,10 @@ public:
      */
     float getDeltaTime()
     {
-        float currentFrameTime = static_cast<float>(glfwGetTime());
+        float currentFrameTime = getCurrentTime();
         float deltaTime = currentFrameTime - m_lastFrameTime;
         m_lastFrameTime = currentFrameTime;
 
-        // std::cout << "FPS: " << 1.0f / deltaTime << std::endl;
         return deltaTime;
     }
 

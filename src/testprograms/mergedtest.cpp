@@ -44,28 +44,18 @@ int main(int, char **)
 
         // Setup skybox
         std::vector<std::string> skyboxFaces = {
-            "resources/textures/skybox/right.jpg",  
-            "resources/textures/skybox/left.jpg",   
-            "resources/textures/skybox/top.jpg",    
-            "resources/textures/skybox/bottom.jpg", 
-            "resources/textures/skybox/front.jpg",  
-            "resources/textures/skybox/back.jpg"    
-        };
-
-        // Create the Skybox Shader
-        Shader* skyboxShader = new Shader();
-        skyboxShader->addShader("Skybox.vert", ShaderType::VERTEX);
-        skyboxShader->addShader("Skybox.frag", ShaderType::FRAGMENT);
-        skyboxShader->createProgram();
+            "resources/textures/skybox/right.jpg",
+            "resources/textures/skybox/left.jpg",
+            "resources/textures/skybox/top.jpg",
+            "resources/textures/skybox/bottom.jpg",
+            "resources/textures/skybox/front.jpg",
+            "resources/textures/skybox/back.jpg"};
 
         // Create the Skybox Object (loads textures and sets up VAO/VBO)
-        Skybox* gameSkybox = new Skybox(skyboxFaces);
+        std::unique_ptr<Skybox> gameSkybox = std::make_unique<Skybox>(skyboxFaces);
 
-        // Link the Skybox and Shader to the Scene
-        scene.m_skybox = gameSkybox;
-        scene.m_skyboxShader = skyboxShader;
-        skyboxShader->bind();
-        skyboxShader->setUniform("skybox", 0); // Texture slot 0 for cubemap
+        // Move the Skybox to the Scene
+        scene.m_skybox = std::move(gameSkybox);        
 
         // Shader for terrain
         std::shared_ptr<Shader> terrainShader = std::make_shared<Shader>();
@@ -100,18 +90,18 @@ int main(int, char **)
         TerrainChunkManager chunkManager(&terrainGen, chunkSize, vertexStep, terrainTextures, gc_threshold);
         chunkManager.setShader(terrainShader);
         float renderDistance = 100.0f;
-        
+
         // Fog settings (0.51f, 0.90f, 0.95f)
         glm::vec3 fogColor = glm::vec3(0.51f, 0.90f, 0.95f); // Light turquoise fog same color as skybox
-        float fogStart = renderDistance * 0.90f; // Fog starts at 90% of render distance
-        float fogEnd = renderDistance * 0.98f;   // Fully opaque at 98% of render distance
-        
+        float fogStart = renderDistance * 0.90f;             // Fog starts at 90% of render distance
+        float fogEnd = renderDistance * 0.98f;               // Fully opaque at 98% of render distance
+
         // Set fog uniforms
         terrainShader->bind();
         terrainShader->setUniform("u_fogColor", fogColor);
         terrainShader->setUniform("u_fogStart", fogStart);
         terrainShader->setUniform("u_fogEnd", fogEnd);
-        
+
         // Set fog uniforms on chunk manager so trees get fog too
         chunkManager.setFogUniforms(fogColor, fogStart, fogEnd);
 
@@ -125,10 +115,9 @@ int main(int, char **)
         FrameTimer frameTimer;
         int frameCount = 0;
 
+        ThirdPersonCamera camController;
+        Player player(glm::vec3(100, 0, 100), (MODELS_DIR / "cow" / "cow.obj").string());
 
-        ThirdPersonCamera camController;    
-        Player player(glm::vec3(100, 0, 100), (MODELS_DIR /  "cow" / "cow.obj").string());
-        
         // Set fog uniforms for the player model
         player.playerModel.setFogUniforms(fogColor, fogStart, fogEnd);
 
@@ -137,17 +126,15 @@ int main(int, char **)
             scene.tick();
             float dt = frameTimer.getDeltaTime();
 
-
             player.update(dt, g_InputManager, &chunkManager);
 
             camController.handlePanning(dt); // uses GLFW directly
             camController.update(scene.m_activeCamera, player);
 
             player.render(scene.m_activeCamera.getViewMatrix(),
-              scene.m_activeCamera.getProjectionMatrix(),
-              &scene.m_lightSource.config);
+                          scene.m_activeCamera.getProjectionMatrix(),
+                          &scene.m_lightSource.config);
 
-            
             chunkManager.updateChunks(scene.m_activeCamera.m_Position, renderDistance);
 
             for (const auto &chunkPtr : chunkManager.m_chunks)
@@ -170,10 +157,6 @@ int main(int, char **)
         }
 
         std::cout << std::endl;
-
-        // Cleanup skybox resources
-        delete gameSkybox;
-        delete skyboxShader;
     }
     oogaboogaExit();
     return 0;
