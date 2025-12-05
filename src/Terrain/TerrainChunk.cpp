@@ -118,20 +118,14 @@ std::unique_ptr<Chunk> TerrainChunkManager::generateNewChunk(const ChunkCoord &c
     auto chunkTerrain_mr = std::make_unique<MeshRenderable>(mesh_ptr, m_terrainShader);
     chunkTerrain_mr->m_textureReferences = m_terrainTextures;
 
-    
-    
-
     // Create chunk
     std::unique_ptr<Chunk> chunk = std::make_unique<Chunk>(coord, std::move(chunkTerrain_mr));
-
 
     int gridCount = m_chunkSize / m_vertexStep;  
     int gridSize  = gridCount + 1;               
 
     chunk->gridSize = gridSize;
     chunk->heightGrid.assign(gridSize, std::vector<float>(gridSize));
-
-
 
     for (int gz = 0; gz < gridSize; gz++)
     {

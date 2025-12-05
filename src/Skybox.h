@@ -11,16 +11,15 @@
 class Skybox : public Renderable
 {
 public:
-    Skybox(const std::vector<std::string> &faces);
-    ~Skybox();
+    Skybox(const std::vector<std::filesystem::path> &faces);
     void render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight) override;
     
     private:
     std::shared_ptr<Shader> m_shader;
-    unsigned int m_cubemapTextureID;
-    unsigned int m_vao, m_vbo;
+    std::shared_ptr<MeshRenderable> m_skybox_mr;
+    std::shared_ptr<Texture> m_cubemapTexture;
     
-    void setupSkybox();
+    void setUpMR();
     void loadCubemap(const std::vector<std::string> &faces);
     void setUpShader();
 

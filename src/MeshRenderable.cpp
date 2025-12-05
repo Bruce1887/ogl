@@ -22,9 +22,8 @@ void MeshRenderable::render(glm::mat4 view, glm::mat4 projection, PhongLightConf
         // Check if the texture is already bound in the expected slot
         if (rContext->m_boundTextures[slot] != texID)
         {
-            // TODO: optimize slot finding algorithm
-            // We need to bind the texture to a new slot, and then update the uniform
-            GLuint newslot = (slot + numTextures) % REQUIRED_NUM_TEXTURE_UNITS;
+            //Idea: assume textures for a meshrenderable are created consequtively and just bind to their ID % REQUIRED_NUM_TEXTURE_UNITS
+            GLuint newslot = texID % REQUIRED_NUM_TEXTURE_UNITS;
             texture->bindNew(newslot);
         }
 
@@ -33,7 +32,7 @@ void MeshRenderable::render(glm::mat4 view, glm::mat4 projection, PhongLightConf
         uniforms are bound to.
         Another approach is to compile a separate shader program for each MeshRenderable instance.
         */
-        applyUniform(texture->targetUniform, texture->getSlot());
+        applyUniform(texture->m_targetUniform, texture->getSlot());
     }
 
     // set 3D transform uniforms

@@ -30,9 +30,7 @@ void Scene::renderScene()
 	glm::mat4 view = m_activeCamera.getViewMatrix();
 	glm::mat4 projection = m_activeCamera.getProjectionMatrix();
 
-	// Render the skybox cube (it handles its own glDepthFunc switch)
-	if (m_skybox)
-		m_skybox->render(view, projection, nullptr);
+	
 
 	// Render each object in the scene
 	for (auto &r : m_renderables)
@@ -47,6 +45,10 @@ void Scene::renderScene()
 		m_lightSource.visualRepresentation->render(view, projection, nullptr);
 	}
 
+	// Render the skybox cube (it handles its own glDepthFunc switch)
+	if (m_skybox)
+		m_skybox->render(view, projection, nullptr);
+		
 	// Swap buffers
 	glfwSwapBuffers(g_window);
 }

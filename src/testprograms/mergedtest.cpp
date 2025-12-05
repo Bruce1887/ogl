@@ -43,19 +43,19 @@ int main(int, char **)
         Scene scene(camera, std::move(lightSource));
 
         // Setup skybox
-        std::vector<std::string> skyboxFaces = {
-            "resources/textures/skybox/right.jpg",
-            "resources/textures/skybox/left.jpg",
-            "resources/textures/skybox/top.jpg",
-            "resources/textures/skybox/bottom.jpg",
-            "resources/textures/skybox/front.jpg",
-            "resources/textures/skybox/back.jpg"};
+        std::vector<std::filesystem::path> skyboxFaces = {
+            TEXTURE_DIR / "skybox" / "right.jpg",
+            TEXTURE_DIR / "skybox" / "left.jpg",
+            TEXTURE_DIR / "skybox" / "top.jpg",
+            TEXTURE_DIR / "skybox" / "bottom.jpg",
+            TEXTURE_DIR / "skybox" / "front.jpg",
+            TEXTURE_DIR / "skybox" / "back.jpg"};
 
         // Create the Skybox Object (loads textures and sets up VAO/VBO)
         std::unique_ptr<Skybox> gameSkybox = std::make_unique<Skybox>(skyboxFaces);
 
         // Move the Skybox to the Scene
-        scene.m_skybox = std::move(gameSkybox);        
+        scene.m_skybox = std::move(gameSkybox);
 
         // Shader for terrain
         std::shared_ptr<Shader> terrainShader = std::make_shared<Shader>();
@@ -64,30 +64,17 @@ int main(int, char **)
         terrainShader->createProgram();
 
         // Load and setup textures
-        std::shared_ptr<Texture> groundTexture = std::make_shared<Texture>((TEXTURE_DIR / "ground.jpg").string(), 0);
-        groundTexture->targetUniform = "u_texture0";
-        std::shared_ptr<Texture> grassTexture = std::make_shared<Texture>((TEXTURE_DIR / "grass.jpg").string(), 1);
-        grassTexture->targetUniform = "u_texture1";
-        std::shared_ptr<Texture> mountainTexture = std::make_shared<Texture>((TEXTURE_DIR / "mountain.jpg").string(), 2);
-        mountainTexture->targetUniform = "u_texture2";
-        std::shared_ptr<Texture> blueWaterTexture = std::make_shared<Texture>((TEXTURE_DIR / "blueWater.jpg").string(), 3);
-        blueWaterTexture->targetUniform = "u_texture3";
-        std::shared_ptr<Texture> whiteWaterTexture = std::make_shared<Texture>((TEXTURE_DIR / "whiteWater.jpg").string(), 4);
-        whiteWaterTexture->targetUniform = "u_texture4";
-        std::vector<std::shared_ptr<Texture>> terrainTextures = {
-            groundTexture,
-            grassTexture,
-            mountainTexture,
-            blueWaterTexture,
-            whiteWaterTexture};
+        std::shared_ptr<Texture> groundTexture = Texture::CreateTexture2D((TEXTURE_DIR / "ground.jpg"), "u_texture0");
+        std::shared_ptr<Texture> grassTexture = Texture::CreateTexture2D((TEXTURE_DIR / "grass.jpg"), "u_texture1");
+        std::shared_ptr<Texture> mountainTexture = Texture::CreateTexture2D((TEXTURE_DIR / "mountain.jpg"), "u_texture2");
+        std::shared_ptr<Texture> blueWaterTexture = Texture::CreateTexture2D((TEXTURE_DIR / "blueWater.jpg"), "u_texture3");
+        std::shared_ptr<Texture> whiteWaterTexture = Texture::CreateTexture2D((TEXTURE_DIR / "whiteWater.jpg"), "u_texture4");
 
         // Optimized chunk settings
-        DEBUG_PRINT("Setting up chunked terrain system...");
         int chunkSize = 100; // Clean 100x100 chunks
-        int vertexStep = 5;  // 5 divides 100 evenly -> 20x20 grid per chunk
-        // int vertexStep = 10;  // 10 divides 100 evenly -> 10x10 grid per chunk (4x fewer vertices)
+        int vertexStep = 5;  // 5 divides 100 evenly -> 20x20 grid per chunk        
         int gc_threshold = 35;
-        TerrainChunkManager chunkManager(&terrainGen, chunkSize, vertexStep, terrainTextures, gc_threshold);
+        TerrainChunkManager chunkManager(&terrainGen, chunkSize, vertexStep, {groundTexture, grassTexture, mountainTexture, blueWaterTexture, whiteWaterTexture}, gc_threshold);
         chunkManager.setShader(terrainShader);
         float renderDistance = 100.0f;
 
@@ -104,13 +91,6 @@ int main(int, char **)
 
         // Set fog uniforms on chunk manager so trees get fog too
         chunkManager.setFogUniforms(fogColor, fogStart, fogEnd);
-
-        DEBUG_PRINT("Chunked terrain system ready!");
-        DEBUG_PRINT("Optimization settings:"
-                    << "  - Chunk size: " << chunkSize << "x" << chunkSize
-                    << "  - Vertex step: " << vertexStep << " (" << (chunkSize / vertexStep) << "x" << (chunkSize / vertexStep) << " grid per chunk)"
-                    << "  - Vertices per chunk: ~" << ((chunkSize / vertexStep) * (chunkSize / vertexStep) * 6)
-                    << "  - Render distance: " << renderDistance << " units");
 
         FrameTimer frameTimer;
         int frameCount = 0;
@@ -140,7 +120,7 @@ int main(int, char **)
             for (const auto &chunkPtr : chunkManager.m_chunks)
             {
                 chunkPtr->render(scene.m_activeCamera.getViewMatrix(), scene.m_activeCamera.getProjectionMatrix(), &scene.m_lightSource.config);
-            }
+            }            
 
             // Display chunk count every 60 frames
             if (frameCount % 120 == 0)
@@ -153,7 +133,7 @@ int main(int, char **)
             scene.renderScene();
 
             if (glfwGetKey(g_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-                glfwSetWindowShouldClose(g_window, true);
+                glfwSetWindowShouldClose(g_window, true);            
         }
 
         std::cout << std::endl;

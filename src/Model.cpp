@@ -51,7 +51,7 @@ Model::Model(const std::filesystem::path &path)
     for (unsigned int i = 0; i < ai_scene->mNumMeshes; i++)
     {
         aiMesh *mesh = ai_scene->mMeshes[i];
-        DEBUG_PRINT("Processing mesh with " << mesh->mNumVertices << " vertices.");
+        // DEBUG_PRINT("Processing mesh with " << mesh->mNumVertices << " vertices.");
 
         aiMaterial *material = ai_scene->mMaterials[mesh->mMaterialIndex];
 
@@ -192,8 +192,8 @@ Model::Model(const std::filesystem::path &path)
         if (m_modelData->m_hasTextureDiffuse)
         {
             std::cout << "Loading diffuse texture: " << (path.parent_path() / texPath.C_Str()) << std::endl;
-            auto diffuseTex = std::make_shared<Texture>((path.parent_path() / texPath.C_Str()).string(), 0);
-            diffuseTex->targetUniform = "u_texture_diffuse";
+            std::shared_ptr<Texture> diffuseTex = Texture::CreateTexture2D((path.parent_path() / texPath.C_Str()).string(), "u_texture_diffuse");    
+            diffuseTex->m_targetUniform = "u_texture_diffuse";
             mr->m_textureReferences.push_back(diffuseTex);
         }
         m_modelData->addMeshRenderable(std::shared_ptr<MeshRenderable>(mr));

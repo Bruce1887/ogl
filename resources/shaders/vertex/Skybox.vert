@@ -9,6 +9,7 @@ uniform mat4 u_projection;
 void main()
 {
     TexCoords = aPos;
-    vec4 pos = u_projection * u_view * vec4(aPos, 1.0);
+    mat4 view = mat4(mat3(u_view)); // Remove translation from view matrix - keep only rotation (disabling this makes the skybox black)
+    vec4 pos = u_projection * view * vec4(aPos, 1.0);
     gl_Position = pos.xyww;   // CORRECT for skybox
 }
