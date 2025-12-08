@@ -6,11 +6,13 @@
 #include "Terrain/TerrainGenerator.h"
 #include "Terrain/TerrainChunk.h"
 #include "Player.h"
+#include "game/Enemy.h"
 #include "ThirdPersonCamera.h"
 #include "Frametimer.h"
 #include "Skybox.h"
 #include <sstream>
 #include <iomanip>
+#include <random>
 
 int main(int, char **)
 {
@@ -97,12 +99,32 @@ int main(int, char **)
         // Set fog uniforms for the player model
         player.playerModel.setFogUniforms(fogColor, fogStart, fogEnd);
 
+        // Spawn enemy at random position near player (sharing model data for performance)
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<float> angleDist(0.0f, 360.0f);
+        std::uniform_real_distribution<float> distanceDist(20.0f, 40.0f); // Enemies spawn 20-40 units away from player
+        
+        float spawnAngle = glm::radians(angleDist(gen));
+        float spawnDistance = distanceDist(gen);
+        
+        glm::vec3 enemySpawnPos = player.position + glm::vec3(
+            cos(spawnAngle) * spawnDistance,   // X offset
+            0.0f,                              // Y offset (ground level)
+            sin(spawnAngle) * spawnDistance    // Z offset
+        );
+        
+        // Use shared model data from player for better performance
+        Enemy enemy(enemySpawnPos, &player.playerModel);
+        enemy.enemyModel.setFogUniforms(fogColor, fogStart, fogEnd);
+
         while (!glfwWindowShouldClose(g_window))
         {
             scene.tick();
             float dt = frameTimer.getDeltaTime();
 
             player.update(dt, g_InputManager, &chunkManager);
+            enemy.update(dt, &player, &chunkManager);
 
             camController.handlePanning(dt); // uses GLFW directly
             camController.update(scene.m_activeCamera, player);
@@ -110,6 +132,10 @@ int main(int, char **)
             player.render(scene.m_activeCamera.getViewMatrix(),
                           scene.m_activeCamera.getProjectionMatrix(),
                           &scene.m_lightSource.config);
+            
+            enemy.render(scene.m_activeCamera.getViewMatrix(),
+                        scene.m_activeCamera.getProjectionMatrix(),
+                        &scene.m_lightSource.config);
 
             chunkManager.updateChunks(scene.m_activeCamera.m_Position, renderDistance);
 

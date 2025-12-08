@@ -154,6 +154,11 @@ std::unique_ptr<Chunk> TerrainChunkManager::generateNewChunk(const ChunkCoord &c
             float worldZ = worldOffsetZ + z;
             float y = m_generator->getPerlinHeight((float)worldX, (float)worldZ);
             y *= heightScale;
+            
+            // Don't place trees below or at sea level (in water)
+            if (y <= seaLevel)
+                continue;
+            
             // std::cout << "Placing tree at (" << (worldOffsetX + x) << ", " << y << ", " << (worldOffsetZ + z) << ")\n";s
             
             Model *granPtr = m_generator->m_terrainRenderables.gran.get();
