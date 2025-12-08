@@ -7,6 +7,7 @@
 #include "VertexBufferLayout.h"
 #include "MeshRenderable.h"
 #include "TerrainGenerator.h"
+#include "InstancedTreeRenderer.h"
 #include "Model.h"
 
 #include <unordered_map>
@@ -44,7 +45,7 @@ public:
         : coord(c), terrain_mr(std::move(tmr)) {
           };
     ChunkCoord coord;
-    std::vector<std::unique_ptr<Renderable>> renderables_in_chunk; // trees etc.
+    std::vector<glm::vec3> treePositions;  // Store just positions, rendered via instancing
     std::unique_ptr<MeshRenderable> terrain_mr;                    // terrain and water
 
     std::vector<std::vector<float>> heightGrid; // stores unscaled perlin heights
@@ -56,10 +57,7 @@ public:
         if (!m_active)
             return;
 
-        for (auto &r : renderables_in_chunk)
-        {
-            r->render(view, projection, phongLight);
-        }
+        // Trees are now rendered via instanced rendering in TerrainChunkManager
         terrain_mr->render(view, projection, phongLight);
     }
 
@@ -85,6 +83,10 @@ public:
     TerrainChunkManager(TerrainGenerator *generator, int chunkSize, int vertexStep, std::vector<std::shared_ptr<Texture>> terrainTextures, int gc_threshold)
         : m_generator(generator), m_chunkSize(chunkSize), m_vertexStep(vertexStep), m_updateThreshold(8.0f), m_gc_threshold(gc_threshold), m_terrainTextures(terrainTextures) {
             std::cout << "Initialized TerrainChunkManager with chunk size " << chunkSize << " and vertex step " << vertexStep << std::endl;
+            
+            // Initialize instanced tree renderer
+            m_treeRenderer = std::make_unique<InstancedTreeRenderer>();
+            m_treeRenderer->init(m_generator->m_terrainRenderables.gran.get());
           };
 
     ~TerrainChunkManager() = default;
@@ -109,9 +111,19 @@ public:
         m_fogColor = fogColor;
         m_fogStart = fogStart;
         m_fogEnd = fogEnd;
+        
+        // Also set on tree renderer
+        if (m_treeRenderer)
+            m_treeRenderer->setFogUniforms(fogColor, fogStart, fogEnd);
     }
 
     float getPreciseHeightAt(float x, float z);
+    
+    // Render all trees using instanced rendering (call after rendering chunks)
+    void renderTrees(const glm::mat4& view, const glm::mat4& projection, PhongLightConfig* light);
+
+    // Render global water plane (call after terrain, before trees for proper transparency)
+    void renderWater(const glm::mat4& view, const glm::mat4& projection, PhongLightConfig* light, const glm::vec3& cameraPosition, float renderDistance);
 
 private:
     TerrainGenerator *m_generator;
@@ -130,6 +142,13 @@ private:
     glm::vec3 m_fogColor = glm::vec3(0.0f);
     float m_fogStart = 0.0f;
     float m_fogEnd = 0.0f;
+
+    // Instanced tree renderer
+    std::unique_ptr<InstancedTreeRenderer> m_treeRenderer;
+    bool m_treesNeedUpdate = true;
+
+    // Global water plane (single mesh to avoid seams between chunks)
+    std::unique_ptr<MeshRenderable> m_waterMesh;
 
     // Optimization: track last camera position to avoid redundant updates
 

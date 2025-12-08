@@ -115,7 +115,10 @@ int main(int, char **)
         );
         
         // Use shared model data from player for better performance
-        Enemy enemy(enemySpawnPos, &player.playerModel);
+        // Enemy enemy(enemySpawnPos, &player.playerModel);
+        Enemy enemy(enemySpawnPos, (MODELS_DIR / "warrior" / "Cyber_Ninja_Warrior.obj").string());
+        enemy.modelYOffset = 1.0f;   // Raise model so feet touch ground
+        enemy.modelScale = 1.0f;    // Scale down - model is very large
         enemy.enemyModel.setFogUniforms(fogColor, fogStart, fogEnd);
 
         while (!glfwWindowShouldClose(g_window))
@@ -142,9 +145,21 @@ int main(int, char **)
             for (const auto &chunkPtr : chunkManager.m_chunks)
             {
                 chunkPtr->render(scene.m_activeCamera.getViewMatrix(), scene.m_activeCamera.getProjectionMatrix(), &scene.m_lightSource.config);
-            }            
+            }
+            
+            // Render global water plane (single mesh, no seams between chunks)
+            chunkManager.renderWater(scene.m_activeCamera.getViewMatrix(),
+                                     scene.m_activeCamera.getProjectionMatrix(),
+                                     &scene.m_lightSource.config,
+                                     scene.m_activeCamera.m_Position,
+                                     renderDistance);
+            
+            // Render all trees with instanced rendering (single draw call!)
+            chunkManager.renderTrees(scene.m_activeCamera.getViewMatrix(), 
+                                     scene.m_activeCamera.getProjectionMatrix(), 
+                                     &scene.m_lightSource.config);
 
-            // Display chunk count every 60 frames
+            // Display chunk count every 120 frames
             if (frameCount % 120 == 0)
             {
                 DEBUG_PRINT("Loaded chunks: " << chunkManager.m_chunks.size()

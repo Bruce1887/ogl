@@ -52,17 +52,17 @@ float TerrainGenerator::getPerlinHeight(float x, float z)
 
     lakeNoise = (lakeNoise + 1.0f) * 0.5f; // normalise to 0-1
 
-    // Create lake depressions (more common now)
+    // Create lake depressions (only in specific areas - higher threshold = fewer, larger lakes)
     float lakeDepression = 0.0f;
-    if (lakeNoise > 0.45f)
-    { // More common threshold - ~55% of terrain
+    if (lakeNoise > 0.65f)
+    { // Higher threshold - only ~35% of terrain can have lakes
         // Stronger depression for larger lakes
-        lakeDepression = (lakeNoise - 0.45f) * 0.5f; // Up to 0.275 units lower
+        lakeDepression = (lakeNoise - 0.65f) * 0.7f; // Up to 0.245 units lower
     }
 
-    // Base terrain centered around sea level (TC_SEA_LEVEL) with variation
-    // Range: ~0.08 to 0.20 (some below, some above sea level)
-    float baseHeight = hillNoise * TC_SEA_LEVEL + TC_SEA_LEVEL_OFFSET;
+    // Base terrain centered above sea level to prevent random puddles
+    // Only intentional lake depressions should go below sea level
+    float baseHeight = hillNoise * TC_SEA_LEVEL + TC_SEA_LEVEL_OFFSET + 0.02f;
 
     // Add ridge details for variety across the map
     float ridgeDetail = ridgeNoise * TC_RIDGE_DETAIL_FACTOR;

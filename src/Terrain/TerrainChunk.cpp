@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <glm/gtc/matrix_transform.hpp>
 
 void addTriangle(std::vector<TerrainVertex> &vertices,
                  std::vector<unsigned int> &indices,
@@ -89,19 +90,7 @@ std::unique_ptr<Chunk> TerrainChunkManager::generateNewChunk(const ChunkCoord &c
         }
     }
 
-    // Generate water plane covering entire chunk
-    {
-        float minX = (float)worldOffsetX, maxX = (float)(worldOffsetX + m_chunkSize);
-        float minZ = (float)worldOffsetZ, maxZ = (float)(worldOffsetZ + m_chunkSize);
-
-        glm::vec3 pos_tl(minX, seaLevel, minZ);
-        glm::vec3 pos_tr(maxX, seaLevel, minZ);
-        glm::vec3 pos_bl(minX, seaLevel, maxZ);
-        glm::vec3 pos_br(maxX, seaLevel, maxZ);
-
-        addTriangle(pos_tl, pos_bl, pos_tr, 0.13f, 0.13f, 0.13f, 1.0f);
-        addTriangle(pos_tr, pos_bl, pos_br, 0.13f, 0.13f, 0.13f, 1.0f);
-    }
+    // Water is now rendered globally by TerrainChunkManager to avoid seams
 
     // Create meshrenderable
     auto va_ptr = std::make_unique<VertexArray>();
@@ -139,7 +128,7 @@ std::unique_ptr<Chunk> TerrainChunkManager::generateNewChunk(const ChunkCoord &c
         }
     }
 
-    // Populate chunk with trees
+    // Populate chunk with tree positions (for instanced rendering)
 
     for (int z = 0; z < m_chunkSize; z += m_vertexStep)
     {
@@ -159,18 +148,13 @@ std::unique_ptr<Chunk> TerrainChunkManager::generateNewChunk(const ChunkCoord &c
             if (y <= seaLevel)
                 continue;
             
-            // std::cout << "Placing tree at (" << (worldOffsetX + x) << ", " << y << ", " << (worldOffsetZ + z) << ")\n";s
-            
-            Model *granPtr = m_generator->m_terrainRenderables.gran.get();
-            std::unique_ptr<Model> treeModel = std::make_unique<Model>(Model::copyFrom(granPtr));
-            treeModel->setPosition(glm::vec3((float)(worldOffsetX + x), y, (float)(worldOffsetZ + z)));
-            
-            // Apply fog uniforms to the tree model
-            treeModel->setFogUniforms(m_fogColor, m_fogStart, m_fogEnd);
-            
-            chunk->renderables_in_chunk.push_back(std::move(treeModel));
+            // Just store the position - trees will be rendered via instancing
+            chunk->treePositions.push_back(glm::vec3((float)worldX, y, (float)worldZ));
         }
     }
+    
+    // Mark trees as needing update
+    m_treesNeedUpdate = true;
 
     return chunk;
 }
@@ -238,15 +222,27 @@ void TerrainChunkManager::updateChunks(const glm::vec3 &cameraPosition, float re
     }
 
     // deactivate unloaded chunks (and activate loaded ones, but that has no effect as they should already be active)
+    bool anyStateChanged = false;
     for (auto &chunkPtr : m_chunks)
     {
         bool inBounds = chunkPtr->inBounds(minCoord, maxCoord);
+        if (chunkPtr->isActive() != inBounds)
+        {
+            anyStateChanged = true;
+        }
         chunkPtr->setActiveStatus(inBounds);
+    }
+    
+    // Mark trees for update if any chunk state changed
+    if (anyStateChanged)
+    {
+        m_treesNeedUpdate = true;
     }
 
     if (m_chunks.size() > m_gc_threshold)
     {
         garbageCollectChunks();
+        m_treesNeedUpdate = true;  // Trees need update after GC
     }
 }
 
@@ -350,4 +346,125 @@ float TerrainChunkManager::getPreciseHeightAt(float x, float z)
     }
 
     return 0.0f;
+}
+
+void TerrainChunkManager::renderTrees(const glm::mat4& view, const glm::mat4& projection, PhongLightConfig* light)
+{
+    if (!m_treeRenderer)
+        return;
+
+    // Rebuild instance data if chunks changed
+    if (m_treesNeedUpdate)
+    {
+        m_treeRenderer->clearInstances();
+        
+        for (const auto& chunk : m_chunks)
+        {
+            if (!chunk->isActive())
+                continue;
+                
+            for (const auto& pos : chunk->treePositions)
+            {
+                // Add some random-ish rotation based on position for variety
+                float rotation = std::fmod(pos.x * 17.3f + pos.z * 31.7f, 360.0f);
+                m_treeRenderer->addInstance(pos, 1.0f, rotation);
+            }
+        }
+        
+        m_treeRenderer->uploadInstanceData();
+        m_treesNeedUpdate = false;
+    }
+
+    m_treeRenderer->render(view, projection, light);
+}
+
+void TerrainChunkManager::renderWater(const glm::mat4& view, const glm::mat4& projection, PhongLightConfig* light, const glm::vec3& cameraPosition, float renderDistance)
+{
+    if (!m_terrainShader)
+        return;
+
+    constexpr float seaLevel = 0.13f * 100.0f + 0.1f;
+    
+    // Single water layer that covers the same area as terrain
+    // Fog is applied identically to water and terrain in the shader
+    float waterSize = renderDistance;  // Same as terrain render distance
+    
+    // Create a subdivided water grid so fog interpolates correctly
+    // (A simple 4-vertex quad would have fog interpolated from corners only)
+    const int gridSize = 10;  // 10x10 grid = 121 vertices
+    const float step = (waterSize * 2.0f) / gridSize;
+    
+    glm::vec3 normal(0.0f, 1.0f, 0.0f);
+    
+    std::vector<TerrainVertex> vertices;
+    vertices.reserve((gridSize + 1) * (gridSize + 1));
+    
+    for (int z = 0; z <= gridSize; z++)
+    {
+        for (int x = 0; x <= gridSize; x++)
+        {
+            float worldX = cameraPosition.x - waterSize + x * step;
+            float worldZ = cameraPosition.z - waterSize + z * step;
+            
+            vertices.push_back({
+                {worldX, seaLevel, worldZ},
+                normal,
+                {worldX / 10.0f, worldZ / 10.0f},
+                0.13f,
+                1.0f  // waterMask = 1.0 for textured water
+            });
+        }
+    }
+    
+    std::vector<unsigned int> indices;
+    indices.reserve(gridSize * gridSize * 6);
+    
+    for (int z = 0; z < gridSize; z++)
+    {
+        for (int x = 0; x < gridSize; x++)
+        {
+            int topLeft = z * (gridSize + 1) + x;
+            int topRight = topLeft + 1;
+            int bottomLeft = (z + 1) * (gridSize + 1) + x;
+            int bottomRight = bottomLeft + 1;
+            
+            // Two triangles per quad
+            indices.push_back(topLeft);
+            indices.push_back(bottomLeft);
+            indices.push_back(topRight);
+            
+            indices.push_back(topRight);
+            indices.push_back(bottomLeft);
+            indices.push_back(bottomRight);
+        }
+    }
+    
+    auto va_ptr = std::make_unique<VertexArray>();
+    auto vb_ptr = std::make_unique<VertexBuffer>(vertices.data(), vertices.size() * sizeof(TerrainVertex), va_ptr.get());
+    
+    VertexBufferLayout layout;
+    layout.push<float>(3);
+    layout.push<float>(3);
+    layout.push<float>(2);
+    layout.push<float>(1);
+    layout.push<float>(1);
+    va_ptr->addBuffer(vb_ptr.get(), layout);
+    
+    auto ibo_ptr = std::make_unique<IndexBuffer>(indices.data(), indices.size());
+    auto mesh_ptr = std::make_shared<Mesh>(std::move(va_ptr), std::move(vb_ptr), std::move(ibo_ptr));
+    
+    m_waterMesh = std::make_unique<MeshRenderable>(mesh_ptr, m_terrainShader);
+    m_waterMesh->m_textureReferences = m_terrainTextures;
+    m_waterMesh->setUniform("u_fogColor", m_fogColor);
+    m_waterMesh->setUniform("u_fogStart", m_fogStart);
+    m_waterMesh->setUniform("u_fogEnd", m_fogEnd);
+    
+    m_terrainShader->bind();
+    for (size_t i = 0; i < m_terrainTextures.size(); i++)
+    {
+        m_terrainTextures[i]->bindNew(static_cast<GLuint>(i));
+        m_terrainShader->setUniform(m_terrainTextures[i]->m_targetUniform, static_cast<int>(i));
+    }
+    
+    m_waterMesh->render(view, projection, light);
 }

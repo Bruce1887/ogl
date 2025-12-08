@@ -18,14 +18,16 @@ void Enemy::render(glm::mat4 view, glm::mat4 proj, PhongLightConfig* light)
     // Build model transform
     glm::mat4 transform(1.0f);
     
-    // Translate to world position
-    transform = glm::translate(transform, position);
+    // Translate to world position, adding Y offset so feet touch ground
+    glm::vec3 renderPos = position;
+    renderPos.y += modelYOffset;
+    transform = glm::translate(transform, renderPos);
     
     // Rotate by yaw so model faces forward direction
     transform = glm::rotate(transform, glm::radians(yaw), glm::vec3(0, 1, 0));
     
-    // Scale the enemy (same as player for now)
-    transform = glm::scale(transform, glm::vec3(1.0f));
+    // Scale the enemy
+    transform = glm::scale(transform, glm::vec3(modelScale));
     
     enemyModel.setTransform(transform);
     enemyModel.render(view, proj, light);

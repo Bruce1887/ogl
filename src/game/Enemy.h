@@ -13,6 +13,8 @@ public:
     
     float moveSpeed = 5.0f;  // Slower than player
     float detectionRange = 30.0f;  // Range at which enemy detects player
+    float modelYOffset = 20.0f;  // Vertical offset to place feet on ground (adjust per model)
+    float modelScale = 0.01f;   // Scale of the model
     
     Model enemyModel;
     
