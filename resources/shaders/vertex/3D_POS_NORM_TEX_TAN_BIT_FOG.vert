@@ -1,4 +1,4 @@
-// 3D Lighting Vertex Shader.
+// 3D Lighting Vertex Shader WITH FOG. 
 #version 400 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
@@ -11,6 +11,7 @@ out vec3 normal;
 out vec2 texCoord;
 out vec3 tangent;
 out vec3 bitangent;
+out float fogDistance;
 
 uniform mat4 u_model;
 uniform mat4 u_view;
@@ -24,7 +25,9 @@ void main()
     texCoord = aTexCoord;
     tangent = mat3(u_model) * aTangent;
     bitangent = mat3(u_model) * aBitangent;
-        
+    
+    // Calculate distance from camera for fog
+    fogDistance = length(u_camPos - fragPos);
     
     gl_Position = u_projection * u_view * u_model * vec4(aPos, 1.0);
 }

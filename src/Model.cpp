@@ -165,22 +165,15 @@ Model::Model(const std::filesystem::path &path)
 
         // create Shader
         auto shader_ptr = std::make_shared<Shader>();
-        shader_ptr->addShader("3D_POS_NORM_TEX_TAN_BIT.vert", ShaderType::VERTEX);
-
+        shader_ptr->addShader("3D_POS_NORM_TEX_TAN_BIT_FOG.vert", ShaderType::VERTEX);
+                
         if (m_modelData->m_hasTextureDiffuse)
-            shader_ptr->addShader("PhongMTL_diffTEX.frag", ShaderType::FRAGMENT);
+            shader_ptr->addShader("PhongMTL_FOG_diffTEX.frag", ShaderType::FRAGMENT);
         else
-            shader_ptr->addShader("PhongMTL.frag", ShaderType::FRAGMENT);
+            shader_ptr->addShader("PhongMTL_FOG.frag", ShaderType::FRAGMENT);
 
+         
         shader_ptr->createProgram();
-
-        /*
-        std::cout << "u_material_ambient " << ambient_glm.x << ", " << ambient_glm.y << ", " << ambient_glm.z << std::endl
-                  << "u_material_diffuse " << diffuse_glm.x << ", " << diffuse_glm.y << ", " << diffuse_glm.z << std::endl
-                  << "u_material_specular " << specular_glm.x << ", " << specular_glm.y << ", " << specular_glm.z << std::endl
-                  << "u_material_shininess " << shininess
-                  << std::endl;
-        */
 
         // create MeshRenderable and store it
         auto mr = std::make_shared<MeshRenderable>(mesh_ptr, shader_ptr);

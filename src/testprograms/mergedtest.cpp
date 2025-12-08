@@ -50,11 +50,7 @@ int main(int, char **)
             TEXTURE_DIR / "skybox" / "bottom.jpg",
             TEXTURE_DIR / "skybox" / "front.jpg",
             TEXTURE_DIR / "skybox" / "back.jpg"};
-
-        // Create the Skybox Object (loads textures and sets up VAO/VBO)
         std::unique_ptr<Skybox> gameSkybox = std::make_unique<Skybox>(skyboxFaces);
-
-        // Move the Skybox to the Scene
         scene.m_skybox = std::move(gameSkybox);
 
         // Shader for terrain
@@ -126,7 +122,7 @@ int main(int, char **)
             if (frameCount % 120 == 0)
             {
                 DEBUG_PRINT("Loaded chunks: " << chunkManager.m_chunks.size()
-                                              << " | FPS: " << std::fixed << std::setprecision(1) << (1.0f / dt) << "     ");
+                << " | FPS: " << std::fixed << std::setprecision(1) << (1.0f / dt));
             }
             frameCount++;
 
@@ -136,7 +132,6 @@ int main(int, char **)
                 glfwSetWindowShouldClose(g_window, true);            
         }
 
-        std::cout << std::endl;
     }
     oogaboogaExit();
     return 0;

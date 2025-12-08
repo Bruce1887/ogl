@@ -93,9 +93,7 @@ void Texture::bindNew(GLuint newslot)
 }
 
 void Texture::bind() const
-{
-    std::string type = (m_target == TEXTURE_2D) ? "2D Texture" : "Cubemap Texture";
-    std::cout << "Binding " << type << " ID " << m_rendererID << " to slot " << m_slot << " for uniform " << m_targetUniform << std::endl;
+{        
     GLCALL(glActiveTexture(GL_TEXTURE0 + m_slot));
     GLCALL(glBindTexture(m_target, m_rendererID));
     RenderingContext *rContext = RenderingContext::Current();
