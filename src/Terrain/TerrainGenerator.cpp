@@ -23,19 +23,17 @@ TerrainGenerator::~TerrainGenerator()
 }
 
 float TerrainGenerator::getPerlinHeight(float x, float z)
-{
-    float sampleX = x * TC_TERRAIN_SAMPLE_FACTOR_X;
-    float sampleZ = z * TC_TERRAIN_SAMPLE_FACTOR_Z;
+{    
 
     // Use ridge noise for sharp mountain features (primary)
-    float ridgeNoise = stb_perlin_ridge_noise3(sampleX, 0.0f, sampleZ,
+    float ridgeNoise = stb_perlin_ridge_noise3(x * TC_RIDGE_SAMPLE_FACTOR, 0.0f, z * TC_RIDGE_SAMPLE_FACTOR,
                                                TC_RIDGE_NOISE_LACUNARITY, // lacunarity
                                                TC_RIDGE_NOISE_GAIN,       // gain
                                                TC_RIDGE_NOISE_OFFSET,     // offset
                                                TC_RIDGE_NOISE_OCTAVES);   // octaves
 
     // Use FBM for gentle hills/variation (secondary) - increased for more ondulation
-    float hillNoise = stb_perlin_fbm_noise3(sampleX * 0.8f, 0.0f, sampleZ * 0.8f,
+    float hillNoise = stb_perlin_fbm_noise3(x * TC_HILL_SAMPLE_FACTOR, 0.0f, z * TC_HILL_SAMPLE_FACTOR,
                                             TC_HILL_NOISE_LACUNARITY, // lacunarity
                                             TC_HILL_NOISE_GAIN,       // gain - increased for more variation
                                             TC_HILL_NOISE_OCTAVES);   // octaves - more for ondulation

@@ -4,7 +4,7 @@
 #include <cmath>
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
-
+/*
 void addTriangle(std::vector<TerrainVertex> &vertices,
                  std::vector<unsigned int> &indices,
                  const glm::vec3 &p1, const glm::vec3 &p2, const glm::vec3 &p3,
@@ -26,6 +26,7 @@ void addTriangle(std::vector<TerrainVertex> &vertices,
 
     indices.insert(indices.end(), {baseIdx, baseIdx + 1, baseIdx + 2});
 }
+*/
 
 std::unique_ptr<Chunk> TerrainChunkManager::generateNewChunk(const ChunkCoord &coord)
 {
@@ -33,15 +34,14 @@ std::unique_ptr<Chunk> TerrainChunkManager::generateNewChunk(const ChunkCoord &c
     std::vector<unsigned int> indices;
 
     // Pre-allocate memory
-    int quadsPerChunk = (m_chunkSize / m_vertexStep) * (m_chunkSize / m_vertexStep);
-    vertices.reserve(quadsPerChunk * 6 + 6); // terrain + water plane
-    indices.reserve(quadsPerChunk * 6 + 6);
+    vertices.reserve(TC_CELLS_PER_CHUNK * 6 + 6); // terrain + water plane
+    indices.reserve(TC_CELLS_PER_CHUNK * 6 + 6);
 
     // Constants
     constexpr float heightScale = 100.0f;
     constexpr float seaLevel = 0.13f * heightScale + 0.1f;
-    const int worldOffsetX = coord.x * m_chunkSize;
-    const int worldOffsetZ = coord.z * m_chunkSize;
+    const int worldOffsetX = coord.x * TC_CHUNK_SIZE;
+    const int worldOffsetZ = coord.z * TC_CHUNK_SIZE;
 
     // Helper to add a triangle with flat shading
     auto addTriangle = [&](const glm::vec3 &p1, const glm::vec3 &p2, const glm::vec3 &p3,
@@ -65,24 +65,24 @@ std::unique_ptr<Chunk> TerrainChunkManager::generateNewChunk(const ChunkCoord &c
     };
 
     // Generate terrain vertices
-    for (int z = 0; z < m_chunkSize; z += m_vertexStep)
+    for (int z = 0; z < TC_CHUNK_SIZE; z += TC_VERTEX_STEP)
     {
-        for (int x = 0; x < m_chunkSize; x += m_vertexStep)
+        for (int x = 0; x < TC_CHUNK_SIZE; x += TC_VERTEX_STEP)
         {
             int worldX = worldOffsetX + x;
             int worldZ = worldOffsetZ + z;
 
             // Sample heights at quad corners
             float h_tl = m_generator->getPerlinHeight((float)worldX, (float)worldZ);
-            float h_tr = m_generator->getPerlinHeight((float)(worldX + m_vertexStep), (float)worldZ);
-            float h_bl = m_generator->getPerlinHeight((float)worldX, (float)(worldZ + m_vertexStep));
-            float h_br = m_generator->getPerlinHeight((float)(worldX + m_vertexStep), (float)(worldZ + m_vertexStep));
+            float h_tr = m_generator->getPerlinHeight((float)(worldX + TC_VERTEX_STEP), (float)worldZ);
+            float h_bl = m_generator->getPerlinHeight((float)worldX, (float)(worldZ + TC_VERTEX_STEP));
+            float h_br = m_generator->getPerlinHeight((float)(worldX + TC_VERTEX_STEP), (float)(worldZ + TC_VERTEX_STEP));
 
             // Calculate positions
             glm::vec3 pos_tl((float)worldX, h_tl * heightScale, (float)worldZ);
-            glm::vec3 pos_tr((float)(worldX + m_vertexStep), h_tr * heightScale, (float)worldZ);
-            glm::vec3 pos_bl((float)worldX, h_bl * heightScale, (float)(worldZ + m_vertexStep));
-            glm::vec3 pos_br((float)(worldX + m_vertexStep), h_br * heightScale, (float)(worldZ + m_vertexStep));
+            glm::vec3 pos_tr((float)(worldX + TC_VERTEX_STEP), h_tr * heightScale, (float)worldZ);
+            glm::vec3 pos_bl((float)worldX, h_bl * heightScale, (float)(worldZ + TC_VERTEX_STEP));
+            glm::vec3 pos_br((float)(worldX + TC_VERTEX_STEP), h_br * heightScale, (float)(worldZ + TC_VERTEX_STEP));
 
             // Add two triangles for the quad
             addTriangle(pos_tl, pos_bl, pos_tr, h_tl, h_bl, h_tr, 0.0f);
@@ -110,18 +110,15 @@ std::unique_ptr<Chunk> TerrainChunkManager::generateNewChunk(const ChunkCoord &c
     // Create chunk
     std::unique_ptr<Chunk> chunk = std::make_unique<Chunk>(coord, std::move(chunkTerrain_mr));
 
-    int gridCount = m_chunkSize / m_vertexStep;  
-    int gridSize  = gridCount + 1;               
+    
+    chunk->heightGrid.assign(TC_VERTICES_PER_AXIS, std::vector<float>(TC_VERTICES_PER_AXIS));
 
-    chunk->gridSize = gridSize;
-    chunk->heightGrid.assign(gridSize, std::vector<float>(gridSize));
-
-    for (int gz = 0; gz < gridSize; gz++)
+    for (int gz = 0; gz < TC_VERTICES_PER_AXIS; gz++)
     {
-        for (int gx = 0; gx < gridSize; gx++)
+        for (int gx = 0; gx < TC_VERTICES_PER_AXIS; gx++)
         {
-            float worldX = worldOffsetX + gx * m_vertexStep;
-            float worldZ = worldOffsetZ + gz * m_vertexStep;
+            float worldX = worldOffsetX + gx * TC_VERTEX_STEP;
+            float worldZ = worldOffsetZ + gz * TC_VERTEX_STEP;
 
             // EXACT match to mesh vertex samples
             chunk->heightGrid[gz][gx] = m_generator->getPerlinHeight(worldX, worldZ);
@@ -130,9 +127,9 @@ std::unique_ptr<Chunk> TerrainChunkManager::generateNewChunk(const ChunkCoord &c
 
     // Populate chunk with tree positions (for instanced rendering)
 
-    for (int z = 0; z < m_chunkSize; z += m_vertexStep)
+    for (int z = 0; z < TC_CHUNK_SIZE; z += TC_VERTEX_STEP)
     {
-        for (int x = 0; x < m_chunkSize; x += m_vertexStep)
+        for (int x = 0; x < TC_CHUNK_SIZE; x += TC_VERTEX_STEP)
         {
             float tree_perlin = m_generator->foo_treePerlin((float)(worldOffsetX + x), (float)(worldOffsetZ + z));
 
@@ -193,11 +190,11 @@ void TerrainChunkManager::garbageCollectChunks()
 #endif
 }
 
-void TerrainChunkManager::updateChunks(const glm::vec3 &cameraPosition, float renderDistance)
+void TerrainChunkManager::updateChunks(const glm::vec3 &cameraPosition)
 {
     // Optimization: Only update chunks if camera moved significantly
     float distanceMoved = glm::distance(cameraPosition, m_lastCameraPosition);
-    if (distanceMoved < m_updateThreshold)
+    if (distanceMoved < TC_UPDATE_THRESHOLD)
     {
         return; // Skip update, we havent moved far enough
     }
@@ -207,7 +204,7 @@ void TerrainChunkManager::updateChunks(const glm::vec3 &cameraPosition, float re
     // Calculate which chunks should be loaded based on camera position
     ChunkCoord cameraChunk = worldToChunk(cameraPosition);
 
-    int chunkRadius = static_cast<int>(std::ceil(renderDistance / m_chunkSize));
+    int chunkRadius = static_cast<int>(std::ceil(TC_RENDER_DISTANCE / TC_CHUNK_SIZE)); // TODO: make this a constant? since it is defined by two constants?
 
     ChunkCoord minCoord = {cameraChunk.x - chunkRadius, cameraChunk.z - chunkRadius};
     ChunkCoord maxCoord = {cameraChunk.x + chunkRadius, cameraChunk.z + chunkRadius};
@@ -239,7 +236,7 @@ void TerrainChunkManager::updateChunks(const glm::vec3 &cameraPosition, float re
         m_treesNeedUpdate = true;
     }
 
-    if (m_chunks.size() > m_gc_threshold)
+    if (m_chunks.size() > TC_GC_THRESHOLD)
     {
         garbageCollectChunks();
         m_treesNeedUpdate = true;  // Trees need update after GC
@@ -330,7 +327,7 @@ float TerrainChunkManager::getPreciseHeightAt(float x, float z)
     {
         if (chunk->coord.x == cc.x && chunk->coord.z == cc.z)
         {
-            return chunk->getPreciseHeightAt(x, z, m_chunkSize, m_vertexStep);
+            return chunk->getPreciseHeightAt(x, z, TC_CHUNK_SIZE, TC_VERTEX_STEP);
         }
     }
 
@@ -341,7 +338,7 @@ float TerrainChunkManager::getPreciseHeightAt(float x, float z)
     {
         if (chunk->coord.x == cc.x && chunk->coord.z == cc.z)
         {
-            return chunk->getPreciseHeightAt(x, z, m_chunkSize, m_vertexStep);
+            return chunk->getPreciseHeightAt(x, z, TC_CHUNK_SIZE, TC_VERTEX_STEP);
         }
     }
 

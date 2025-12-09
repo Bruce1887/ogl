@@ -80,9 +80,9 @@ private:
 class TerrainChunkManager
 {
 public:
-    TerrainChunkManager(TerrainGenerator *generator, int chunkSize, int vertexStep, std::vector<std::shared_ptr<Texture>> terrainTextures, int gc_threshold)
-        : m_generator(generator), m_chunkSize(chunkSize), m_vertexStep(vertexStep), m_updateThreshold(8.0f), m_gc_threshold(gc_threshold), m_terrainTextures(terrainTextures) {
-            std::cout << "Initialized TerrainChunkManager with chunk size " << chunkSize << " and vertex step " << vertexStep << std::endl;
+    TerrainChunkManager(TerrainGenerator *generator, std::vector<std::shared_ptr<Texture>> terrainTextures)
+        : m_generator(generator), m_terrainTextures(terrainTextures) {
+            std::cout << "Initialized TerrainChunkManager with chunk size " << TC_CHUNK_SIZE << " and vertex step " << TC_VERTEX_STEP << std::endl;
             
             // Initialize instanced tree renderer
             m_treeRenderer = std::make_unique<InstancedTreeRenderer>();
@@ -92,13 +92,7 @@ public:
     ~TerrainChunkManager() = default;
 
     // Load/unload chunks based on camera position
-    void updateChunks(const glm::vec3 &cameraPosition, float renderDistance);
-
-    // Get all currently loaded chunks
-    // const std::unordered_map<ChunkCoord, std::shared_ptr<MeshRenderable>> &getLoadedChunks() const { return m_loadedChunks; }
-
-    // Get chunk size
-    int getChunkSize() const { return m_chunkSize; }
+    void updateChunks(const glm::vec3 &cameraPosition);    
 
     // Garbage collect unused chunks (chunnks that are not active)
     void garbageCollectChunks();
@@ -127,12 +121,7 @@ public:
 
 private:
     TerrainGenerator *m_generator;
-
-    int m_chunkSize;         // Size of each chunk in grid units (e.g., 32x32)
-    int m_vertexStep;        // Spacing between vertices for LOD
-    float m_updateThreshold; // Only update chunks when camera moves this far
-    int m_gc_threshold;      // Number of chunks before triggering garbage collection
-
+    
     glm::vec3 m_lastCameraPosition = glm::vec3(0.0f);
 
     std::shared_ptr<Shader> m_terrainShader;                 // Reference to shader (not owned)
@@ -162,8 +151,8 @@ private:
     ChunkCoord worldToChunk(const glm::vec3 &worldPos) const
     {
         ChunkCoord coord;
-        coord.x = static_cast<int>(std::floor(worldPos.x / m_chunkSize));
-        coord.z = static_cast<int>(std::floor(worldPos.z / m_chunkSize));
+        coord.x = static_cast<int>(std::floor(worldPos.x / TC_CHUNK_SIZE));
+        coord.z = static_cast<int>(std::floor(worldPos.z / TC_CHUNK_SIZE));
         return coord;
     }
 };
