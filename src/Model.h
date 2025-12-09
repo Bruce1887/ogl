@@ -59,6 +59,9 @@ public:
         }
     }
 
+    // Get the shared model data (useful for instanced rendering)
+    std::shared_ptr<ModelData> getModelData() const { return m_modelData; }
+
 private:
     // Get the shared model data (useful for creating instances)
 

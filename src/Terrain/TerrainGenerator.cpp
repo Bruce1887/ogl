@@ -23,19 +23,17 @@ TerrainGenerator::~TerrainGenerator()
 }
 
 float TerrainGenerator::getPerlinHeight(float x, float z)
-{
-    float sampleX = x * TC_TERRAIN_SAMPLE_FACTOR_X;
-    float sampleZ = z * TC_TERRAIN_SAMPLE_FACTOR_Z;
+{    
 
     // Use ridge noise for sharp mountain features (primary)
-    float ridgeNoise = stb_perlin_ridge_noise3(sampleX, 0.0f, sampleZ,
+    float ridgeNoise = stb_perlin_ridge_noise3(x * TC_RIDGE_SAMPLE_FACTOR, 0.0f, z * TC_RIDGE_SAMPLE_FACTOR,
                                                TC_RIDGE_NOISE_LACUNARITY, // lacunarity
                                                TC_RIDGE_NOISE_GAIN,       // gain
                                                TC_RIDGE_NOISE_OFFSET,     // offset
                                                TC_RIDGE_NOISE_OCTAVES);   // octaves
 
     // Use FBM for gentle hills/variation (secondary) - increased for more ondulation
-    float hillNoise = stb_perlin_fbm_noise3(sampleX * 0.8f, 0.0f, sampleZ * 0.8f,
+    float hillNoise = stb_perlin_fbm_noise3(x * TC_HILL_SAMPLE_FACTOR, 0.0f, z * TC_HILL_SAMPLE_FACTOR,
                                             TC_HILL_NOISE_LACUNARITY, // lacunarity
                                             TC_HILL_NOISE_GAIN,       // gain - increased for more variation
                                             TC_HILL_NOISE_OCTAVES);   // octaves - more for ondulation
@@ -52,17 +50,17 @@ float TerrainGenerator::getPerlinHeight(float x, float z)
 
     lakeNoise = (lakeNoise + 1.0f) * 0.5f; // normalise to 0-1
 
-    // Create lake depressions (more common now)
+    // Create lake depressions (only in specific areas - higher threshold = fewer, larger lakes)
     float lakeDepression = 0.0f;
-    if (lakeNoise > 0.45f)
-    { // More common threshold - ~55% of terrain
+    if (lakeNoise > 0.65f)
+    { // Higher threshold - only ~35% of terrain can have lakes
         // Stronger depression for larger lakes
-        lakeDepression = (lakeNoise - 0.45f) * 0.5f; // Up to 0.275 units lower
+        lakeDepression = (lakeNoise - 0.65f) * 0.7f; // Up to 0.245 units lower
     }
 
-    // Base terrain centered around sea level (TC_SEA_LEVEL) with variation
-    // Range: ~0.08 to 0.20 (some below, some above sea level)
-    float baseHeight = hillNoise * TC_SEA_LEVEL + TC_SEA_LEVEL_OFFSET;
+    // Base terrain centered above sea level to prevent random puddles
+    // Only intentional lake depressions should go below sea level
+    float baseHeight = hillNoise * TC_SEA_LEVEL + TC_SEA_LEVEL_OFFSET + 0.02f;
 
     // Add ridge details for variety across the map
     float ridgeDetail = ridgeNoise * TC_RIDGE_DETAIL_FACTOR;

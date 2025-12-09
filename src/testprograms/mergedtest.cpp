@@ -6,11 +6,13 @@
 #include "Terrain/TerrainGenerator.h"
 #include "Terrain/TerrainChunk.h"
 #include "Player.h"
+#include "game/Enemy.h"
 #include "ThirdPersonCamera.h"
 #include "Frametimer.h"
 #include "Skybox.h"
 #include <sstream>
 #include <iomanip>
+#include <random>
 
 int main(int, char **)
 {
@@ -67,10 +69,7 @@ int main(int, char **)
         std::shared_ptr<Texture> whiteWaterTexture = Texture::CreateTexture2D((TEXTURE_DIR / "whiteWater.jpg"), "u_texture4");
 
         // Optimized chunk settings
-        int chunkSize = 100; // Clean 100x100 chunks
-        int vertexStep = 5;  // 5 divides 100 evenly -> 20x20 grid per chunk        
-        int gc_threshold = 35;
-        TerrainChunkManager chunkManager(&terrainGen, chunkSize, vertexStep, {groundTexture, grassTexture, mountainTexture, blueWaterTexture, whiteWaterTexture}, gc_threshold);
+        TerrainChunkManager chunkManager(&terrainGen, {groundTexture, grassTexture, mountainTexture, blueWaterTexture, whiteWaterTexture});
         chunkManager.setShader(terrainShader);
         float renderDistance = 100.0f;
 
@@ -97,12 +96,35 @@ int main(int, char **)
         // Set fog uniforms for the player model
         player.playerModel.setFogUniforms(fogColor, fogStart, fogEnd);
 
+        // Spawn enemy at random position near player (sharing model data for performance)
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<float> angleDist(0.0f, 360.0f);
+        std::uniform_real_distribution<float> distanceDist(20.0f, 40.0f); // Enemies spawn 20-40 units away from player
+
+        float spawnAngle = glm::radians(angleDist(gen));
+        float spawnDistance = distanceDist(gen);
+
+        glm::vec3 enemySpawnPos = player.position + glm::vec3(
+                                                        cos(spawnAngle) * spawnDistance, // X offset
+                                                        0.0f,                            // Y offset (ground level)
+                                                        sin(spawnAngle) * spawnDistance  // Z offset
+                                                    );
+
+        // Use shared model data from player for better performance
+        // Enemy enemy(enemySpawnPos, &player.playerModel);
+        Enemy enemy(enemySpawnPos, (MODELS_DIR / "warrior" / "Cyber_Ninja_Warrior.obj").string());
+        enemy.modelYOffset = 1.0f; // Raise model so feet touch ground
+        enemy.modelScale = 1.0f;   // Scale down - model is very large
+        enemy.enemyModel.setFogUniforms(fogColor, fogStart, fogEnd);
+
         while (!glfwWindowShouldClose(g_window))
         {
             scene.tick();
             float dt = frameTimer.getDeltaTime();
 
             player.update(dt, g_InputManager, &chunkManager);
+            enemy.update(dt, &player, &chunkManager);
 
             camController.handlePanning(dt); // uses GLFW directly
             camController.update(scene.m_activeCamera, player);
@@ -111,27 +133,42 @@ int main(int, char **)
                           scene.m_activeCamera.getProjectionMatrix(),
                           &scene.m_lightSource.config);
 
-            chunkManager.updateChunks(scene.m_activeCamera.m_Position, renderDistance);
+            enemy.render(scene.m_activeCamera.getViewMatrix(),
+                         scene.m_activeCamera.getProjectionMatrix(),
+                         &scene.m_lightSource.config);
+
+            chunkManager.updateChunks(scene.m_activeCamera.m_Position);
 
             for (const auto &chunkPtr : chunkManager.m_chunks)
             {
                 chunkPtr->render(scene.m_activeCamera.getViewMatrix(), scene.m_activeCamera.getProjectionMatrix(), &scene.m_lightSource.config);
-            }            
+            }
 
-            // Display chunk count every 60 frames
+            // Render global water plane (single mesh, no seams between chunks)
+            chunkManager.renderWater(scene.m_activeCamera.getViewMatrix(),
+                                     scene.m_activeCamera.getProjectionMatrix(),
+                                     &scene.m_lightSource.config,
+                                     scene.m_activeCamera.m_Position,
+                                     renderDistance);
+
+            // Render all trees with instanced rendering (single draw call!)
+            chunkManager.renderTrees(scene.m_activeCamera.getViewMatrix(),
+                                     scene.m_activeCamera.getProjectionMatrix(),
+                                     &scene.m_lightSource.config);
+
+            // Display chunk count every 120 frames
             if (frameCount % 120 == 0)
             {
                 DEBUG_PRINT("Loaded chunks: " << chunkManager.m_chunks.size()
-                << " | FPS: " << std::fixed << std::setprecision(1) << (1.0f / dt));
+                                              << " | FPS: " << std::fixed << std::setprecision(1) << (1.0f / dt));
             }
             frameCount++;
 
             scene.renderScene();
 
             if (glfwGetKey(g_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-                glfwSetWindowShouldClose(g_window, true);            
+                glfwSetWindowShouldClose(g_window, true);
         }
-
     }
     oogaboogaExit();
     return 0;

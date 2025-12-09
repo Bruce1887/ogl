@@ -16,6 +16,9 @@ public:
 
     void render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight) override;
 
+    // Get underlying mesh (for instanced rendering)
+    Mesh* getMesh() const { return m_mesh.get(); }
+
 private:
     std::shared_ptr<Mesh> m_mesh; // Pointer to shared data    
     // bool m_lightAffected = false; // maybe implement later (probably not)

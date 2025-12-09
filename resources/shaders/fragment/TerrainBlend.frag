@@ -83,6 +83,9 @@ void main()
 
     vec3 terrainResult = ambient + diffuse + specular;
     
+    // Calculate fog factor (same for water and terrain)
+    float fogFactor = clamp((fogDistance - u_fogStart) / (u_fogEnd - u_fogStart), 0.0, 1.0);
+    
     // Water overlay with transparency
     if (waterMask > 0.5) {
         // Sample both water textures
@@ -101,13 +104,15 @@ void main()
         vec3 waterDiffuse = u_light_diffuse * diff * vec3(waterColor) * 0.7;
         vec3 waterResult = waterAmbient + waterDiffuse + waterSpecular;
         
+        // Apply fog to water exactly like terrain (identical fade)
+        waterResult = mix(waterResult, u_fogColor, fogFactor);
+        
         // Water transparency: 0.85 alpha (semi-transparent, more opaque)
         FragColor = vec4(waterResult, 0.85);
     } else {
         FragColor = vec4(terrainResult, 1.0);
+        
+        // Apply fog effect to terrain
+        FragColor.rgb = mix(FragColor.rgb, u_fogColor, fogFactor);
     }
-    
-    // Apply fog effect
-    float fogFactor = clamp((fogDistance - u_fogStart) / (u_fogEnd - u_fogStart), 0.0, 1.0);
-    FragColor.rgb = mix(FragColor.rgb, u_fogColor, fogFactor);
 }

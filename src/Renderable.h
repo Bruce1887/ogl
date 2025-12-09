@@ -37,6 +37,15 @@ public:
         m_Uniforms[name] = v;
     }
 
+    /**
+     * @brief Get all uniforms for this renderable.
+     * Used for instanced rendering to copy material properties.
+     */
+    const std::unordered_map<std::string, UniformValue>& getUniforms() const
+    {
+        return m_Uniforms;
+    }
+
 protected:
     // Target uniform values specific to this renderable
     std::unordered_map<std::string, UniformValue> m_Uniforms;
