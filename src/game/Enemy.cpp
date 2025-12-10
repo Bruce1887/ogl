@@ -55,6 +55,9 @@ void Enemy::update(float dt, const Player* player, TerrainChunkManager* terrain)
 {
     if (!player) return;
     
+    // Update movement timer
+    m_movementTimer += dt;
+    
     // Calculate distance to player
     glm::vec3 toPlayer = player->position - position;
     toPlayer.y = 0.0f;  // Ignore vertical distance
@@ -66,13 +69,39 @@ void Enemy::update(float dt, const Player* player, TerrainChunkManager* terrain)
         // Get direction to player
         glm::vec3 direction = getDirectionToPlayer(player);
         
-        // Move toward player
-        float speed = moveSpeed * dt;
-        position += direction * speed;
+        // Apply movement pattern
+        glm::vec3 moveDirection = direction;
+        float currentSpeed = moveSpeed;
         
-        // Update yaw to face the player
-        // atan2 gives us the angle in radians, convert to degrees
-        yaw = glm::degrees(atan2(direction.x, direction.z));
+        switch (movementPattern)
+        {
+            case MovementPattern::DIRECT:
+                // Move straight toward player (default behavior)
+                break;
+                
+            case MovementPattern::ZIGZAG:
+            {
+                // Calculate perpendicular direction for zigzag
+                glm::vec3 perpendicular(-direction.z, 0.0f, direction.x);
+                
+                // Oscillate left and right using sine wave
+                float zigzagOffset = sin(m_movementTimer * zigzagFrequency) * zigzagAmplitude;
+                moveDirection = glm::normalize(direction + perpendicular * zigzagOffset * 0.3f);
+                break;
+            }
+                
+            case MovementPattern::CAUTIOUS:
+                // Move slower overall
+                currentSpeed *= 0.7f;
+                break;
+        }
+        
+        // Move toward player with pattern applied
+        float speed = currentSpeed * dt;
+        position += moveDirection * speed;
+        
+        // Update yaw to face the movement direction
+        yaw = glm::degrees(atan2(moveDirection.x, moveDirection.z));
     }
     
     // Stick to terrain height
@@ -81,4 +110,16 @@ void Enemy::update(float dt, const Player* player, TerrainChunkManager* terrain)
         float terrainY = terrain->getPreciseHeightAt(position.x, position.z);
         position.y = terrainY;
     }
+}
+
+void Enemy::takeDamage(float amount)
+{
+    health -= amount;
+    if (health < 0.0f)
+        health = 0.0f;
+}
+
+bool Enemy::isDead() const
+{
+    return health <= 0.0f;
 }

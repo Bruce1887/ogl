@@ -13,6 +13,8 @@ public:
     float yaw = 0.0f;
 
     float moveSpeed = 10.0f;
+    float modelScale = 1.0f;
+    float modelYOffset = 0.0f;
 
     Model playerModel;
 

@@ -16,14 +16,14 @@ void Player::render(glm::mat4 view, glm::mat4 proj, PhongLightConfig* light)
     // Build model transform
     glm::mat4 transform(1.0f);
 
-    // translate to world position
-    transform = glm::translate(transform, position);
+    // translate to world position (with Y offset for proper ground placement)
+    transform = glm::translate(transform, position + glm::vec3(0.0f, modelYOffset, 0.0f));
 
     // rotate by yaw so model faces forward direction
     transform = glm::rotate(transform, glm::radians(yaw), glm::vec3(0,1,0));
 
-    // optional: scale if your player model is tiny or huge
-    transform = glm::scale(transform, glm::vec3(1.0f));
+    // scale the model
+    transform = glm::scale(transform, glm::vec3(modelScale));
 
     playerModel.setTransform(transform);
     playerModel.render(view, proj, light);
