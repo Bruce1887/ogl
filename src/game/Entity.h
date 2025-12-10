@@ -27,10 +27,10 @@ public:
     using EntityID = uint32_t;         // alias for the unique ID type
 
     // Constructor: assigns a unique id
-    Entity(const std::string &name = "Entity",
-           EntityType type = EntityType::UNKNOWN)
-        : id(nextId()), name(name), type(type) {}
-
+    Entity(const std::string &init_name = "Entity", 
+           EntityType init_type = EntityType::UNKNOWN)
+        : id(nextId()), name(init_name), type(init_type) {} // Initializer list uses new names
+    
     virtual ~Entity() = default;       // virtual destructor for proper cleanup in derived classes
 
     // Core data accessors (server-authoritative fields)
@@ -38,9 +38,9 @@ public:
     EntityID getId() const { return id; }                 // return the unique ID
     const std::string &getName() const { return name; }   // return the entity's name
     void setName(const std::string &n) { name = n; }      // set the entity's name
-
+        
     // Position getter/setter (3D world position)
-    glm::vec3 getPosition() const { return position; }
+    const glm::vec3& getPosition() const { return position; }
     void setPosition(const glm::vec3 &p) { position = p; }
 
     // Rotation exposed as Euler angles (degrees) for convenience / networking
@@ -56,6 +56,9 @@ public:
     // Health accessors (gameplay state)
     float getHealth() const { return currentHealth; }
     void setHealth(float h) { currentHealth = h; }
+
+    float getStamina() const { return 0.0f; } // default: no stamina
+    void setStamina(float s) { (void)s; }     // default: no-op
 
     // Active flag (whether world should process this entity)
     bool isActive() const { return active; }
