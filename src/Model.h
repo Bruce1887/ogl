@@ -37,7 +37,8 @@ public:
 class Model : public WorldEntity
 {
 public:
-    // Constructor that loads from file (creates new ModelData)
+    Model() = default;
+
     Model(const std::filesystem::path &path);
 
     static Model copyFrom(const Model *other)

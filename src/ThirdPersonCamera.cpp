@@ -1,13 +1,13 @@
 #include "ThirdPersonCamera.h"
 #include "Camera.h"
-#include "Player.h"
+#include "game/Player.h"
 #include <GLFW/glfw3.h>
 extern GLFWwindow* g_window;  
 
 
-void ThirdPersonCamera::update(Camera& cam, const Player& player)
+void ThirdPersonCamera::update(Camera& cam, const game::Player& player)
 {
-    float yawRad = glm::radians(player.yaw);   // <-- IMPORTANT: NO MINUS HERE
+    float yawRad = glm::radians(player.yaw);
 
     glm::vec3 forward(
         sin(yawRad),
@@ -15,16 +15,13 @@ void ThirdPersonCamera::update(Camera& cam, const Player& player)
         cos(yawRad)
     );
 
-    glm::vec3 camPos = player.position
+    glm::vec3 camPos = player.getPosition()
                      - forward * distance
                      + glm::vec3(0, height, 0);
 
     cam.m_Position = camPos;
-    cam.m_Target   = player.position + glm::vec3(0, 1.8f, 0);
+    cam.m_Target   = player.getPosition() + glm::vec3(0, 1.8f, 0);
 }
-
-
-
 
 void ThirdPersonCamera::handlePanning(float dt)
 {
