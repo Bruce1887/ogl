@@ -10,6 +10,7 @@ class VertexBuffer
 {
 private:
     unsigned int m_RendererID; // Unique ID for the buffer
+    unsigned int m_Size;       // Size of the buffer in bytes
 
 public:
     VertexBuffer(const void* data, unsigned int size, VertexArray *associatedVAO, BufferUsage usage = BufferUsage::STATIC_DRAW);
@@ -23,6 +24,7 @@ public:
 
     // behöver vi nånsin hämta id här, iochmed att datan ligger i VAOn?
     // unsigned int getID() const { return m_RendererID; }
+    unsigned int getSize() const { return m_Size; }
 
     // behöver inte renderingcontext här eftersom vi inte trackar VBOs (datan är väl bunden via VAOn?)
     void bind() const;

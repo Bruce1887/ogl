@@ -1,8 +1,8 @@
 #pragma once
 #include <glm/glm.hpp>
 
+namespace game { class Player; }
 class Camera;
-class Player;
 
 class ThirdPersonCamera
 {
@@ -13,6 +13,6 @@ public:
     float maxHeight = 10.0f;
 
     void handlePanning(float dt);
-    void update(Camera& cam, const Player& player);
+    void update(Camera& cam, const game::Player& player); // la till game::Player  för forward declaration
 };
 
