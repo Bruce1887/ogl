@@ -7,8 +7,7 @@
 #include <cmath> // For std::sin/cos
 #include <iostream>
 
-namespace game
-{
+
 
 // 1. Original Game State Constructor (Basic initialization)
 Player::Player(int clientId, const std::string &name)
@@ -141,7 +140,4 @@ void Player::Update(float deltaTime)
 void Player::FixedUpdate(float fixedDelta)
 {
     // ... (Original FixedUpdate implementation body)
-}
-
-
 }

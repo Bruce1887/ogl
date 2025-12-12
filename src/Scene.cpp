@@ -50,5 +50,5 @@ void Scene::renderScene()
 		m_skybox->render(view, projection, nullptr);
 		
 	// Swap buffers
-	glfwSwapBuffers(g_window);
+	//glfwSwapBuffers(g_window);
 }

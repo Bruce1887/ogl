@@ -61,17 +61,14 @@ Leaderboard::~Leaderboard() = default;
 
 void Leaderboard::render(glm::mat4 view, glm::mat4 projection, PhongLightConfig* phongLight)
 {
-    // Render skybox background if available
-    if (m_skybox && m_skyboxShader) {
+    // Render skybox background if available (Skybox owns its shader now)
+    if (m_skybox) {
         glEnable(GL_DEPTH_TEST);
         glDepthMask(GL_TRUE);
         glEnable(GL_CULL_FACE);
         glDisable(GL_BLEND);
-        
-        m_skyboxShader->bind();
-        m_skyboxShader->setUniform("projection", projection);
-        m_skyboxShader->setUniform("view", view);
-        m_skybox->render(*m_skyboxShader, view, projection);
+
+        m_skybox->render(view, projection, nullptr);
     }
 
     // Disable 3D rendering features for 2D UI

@@ -34,7 +34,7 @@ UIManager::UIManager(int screenWidth, int screenHeight)
     };
 }
 
-void UIManager::initializeGameUI(game::Player* player, game::GameClock* clock)
+void UIManager::initializeGameUI(Player* player, GameClock* clock)
 {
     m_player = player;
     m_gameClock = clock;
