@@ -18,7 +18,7 @@ public:
     float modelYOffset = 0.0f;
     
     // Attack properties
-    float attackRange = 2.0f;
+    float attackRange = 5.0f;
     float attackDamage = 25.0f;
     float attackCooldown = 0.1f;  // seconds between attacks
 

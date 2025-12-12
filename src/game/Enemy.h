@@ -30,8 +30,8 @@ public:
     
     // Movement behavior
     MovementPattern movementPattern = MovementPattern::DIRECT;
-    float zigzagAmplitude = 3.0f;   // How far the zigzag goes left/right
-    float zigzagFrequency = 2.0f;   // How fast the zigzag oscillates
+    float zigzagAmplitude = 5.0f;   // How far the zigzag goes left/right
+    float zigzagFrequency = 3.0f;   // How fast the zigzag oscillates
     
     Model enemyModel;
     

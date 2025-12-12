@@ -136,9 +136,10 @@ int main(int, char **)
         mangeMob.detectionRange = 100.0f;  // Normal detection
         mangeMob.moveSpeed = 12.0f;        // Fast!
         mangeMob.movementPattern = MovementPattern::ZIGZAG;  // Dumb zigzag movement
-        mangeMob.zigzagAmplitude = 5.0f;   // Wide zigzag
-        mangeMob.zigzagFrequency = 3.0f;   // Fast oscillation
+        mangeMob.health = 200.0f;  // Extra health
+        mangeMob.maxHealth = 200.0f;  // Extra health
         mangeMob.enemyModel.setFogUniforms(fogColor, fogStart, fogEnd);
+        
 
         // Create enemy list for attack system
         std::vector<Enemy*> enemies = { &bobbomob, &jompamob, &mangeMob };
