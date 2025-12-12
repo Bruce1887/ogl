@@ -1,7 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 #include "../Model.h"
-#include "../Player.h"
+#include "Player.h"
 
 class TerrainChunkManager;
 

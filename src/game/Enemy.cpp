@@ -36,7 +36,7 @@ void Enemy::render(glm::mat4 view, glm::mat4 proj, PhongLightConfig* light)
 glm::vec3 Enemy::getDirectionToPlayer(const Player* player) const
 {
     // Calculate vector from enemy to player
-    glm::vec3 toPlayer = player->position - position;
+    glm::vec3 toPlayer = player->getPosition() - position;
     
     // We only care about horizontal movement (X and Z), not Y
     toPlayer.y = 0.0f;
@@ -56,7 +56,7 @@ void Enemy::update(float dt, const Player* player, TerrainChunkManager* terrain)
     if (!player) return;
     
     // Calculate distance to player
-    glm::vec3 toPlayer = player->position - position;
+    glm::vec3 toPlayer = player->getPosition() - position;
     toPlayer.y = 0.0f;  // Ignore vertical distance
     float distanceToPlayer = glm::length(toPlayer);
     

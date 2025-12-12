@@ -60,7 +60,6 @@ public:
     // Note: We rename it to clearly separate it from the input/network logic.
     void UpdateWorldMovement(float dt, InputManager* input, TerrainChunkManager* terrain);
 
-
     // Process input from client/server tick; updates position, stamina and actions. (Original)
     void ProcessInput(const PlayerInput &input); // This implementation should be moved to the CPP file
 
