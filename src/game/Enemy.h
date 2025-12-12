@@ -50,10 +50,17 @@ public:
     void takeDamage(float amount);
     bool isDead() const;
     
+    // Respawn at a random position near the given point
+    void respawn(glm::vec3 nearPosition, float minDist = 10.0f, float maxDist = 30.0f);
+    
 private:
     // Calculate direction to player
     glm::vec3 getDirectionToPlayer(const Player* player) const;
     
     // Internal timer for movement patterns
     float m_movementTimer = 0.0f;
+    
+    // Visual feedback
+    float m_hitFlashTimer = 0.0f;    // Time remaining for hit flash effect
+    float m_hitScaleBoost = 0.0f;    // Extra scale when hit (pulses down)
 };

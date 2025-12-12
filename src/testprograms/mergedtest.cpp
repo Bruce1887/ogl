@@ -140,12 +140,35 @@ int main(int, char **)
         mangeMob.zigzagFrequency = 3.0f;   // Fast oscillation
         mangeMob.enemyModel.setFogUniforms(fogColor, fogStart, fogEnd);
 
+        // Create enemy list for attack system
+        std::vector<Enemy*> enemies = { &bobbomob, &jompamob, &mangeMob };
+
         while (!glfwWindowShouldClose(g_window))
         {
             scene.tick();
             float dt = frameTimer.getDeltaTime();
 
             player.update(dt, g_InputManager, &chunkManager);
+            
+            // Check for attack input (left click or K)
+            if (g_InputManager->attackInput.fetchAttack())
+            {
+                int hits = player.attack(enemies);
+                if (hits > 0)
+                    DEBUG_PRINT("Hit " << hits << " enemies!");
+            }
+            
+            // Respawn dead enemies near the player
+            for (Enemy* enemy : enemies)
+            {
+                if (enemy->isDead())
+                {
+                    enemy->respawn(player.position, 15.0f, 40.0f);
+                    DEBUG_PRINT("Enemy respawned!");
+                }
+            }
+            
+            // Update enemies
             bobbomob.update(dt, &player, &chunkManager);
             jompamob.update(dt, &player, &chunkManager);
             mangeMob.update(dt, &player, &chunkManager);
@@ -157,7 +180,7 @@ int main(int, char **)
                           scene.m_activeCamera.getProjectionMatrix(),
                           &scene.m_lightSource.config);
 
-        
+            // Render enemies
             bobbomob.render(scene.m_activeCamera.getViewMatrix(),
                             scene.m_activeCamera.getProjectionMatrix(),
                             &scene.m_lightSource.config);

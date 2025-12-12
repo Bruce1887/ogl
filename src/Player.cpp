@@ -1,6 +1,7 @@
 #include "Player.h"
 #include "Terrain/TerrainChunk.h"
 #include "Input/UserInput.h"
+#include "game/Enemy.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 
@@ -70,5 +71,39 @@ void Player::update(float dt, InputManager* input, TerrainChunkManager* terrain)
     if (glfwGetKey(g_window, GLFW_KEY_E) == GLFW_PRESS)
         yaw -= 60.0f * dt;
 
+    // Update attack cooldown timer
+    if (m_attackTimer > 0.0f)
+        m_attackTimer -= dt;
+}
 
+int Player::attack(std::vector<Enemy*>& enemies)
+{
+    // Check cooldown
+    if (m_attackTimer > 0.0f)
+        return 0;
+    
+    // Reset cooldown
+    m_attackTimer = attackCooldown;
+    
+    int enemiesHit = 0;
+    
+    // Check all enemies and damage those within range
+    for (Enemy* enemy : enemies)
+    {
+        if (enemy->isDead())
+            continue;
+            
+        // Calculate distance to enemy (XZ plane only)
+        glm::vec3 toEnemy = enemy->position - position;
+        toEnemy.y = 0.0f;
+        float distance = glm::length(toEnemy);
+        
+        if (distance <= attackRange)
+        {
+            enemy->takeDamage(attackDamage);
+            enemiesHit++;
+        }
+    }
+    
+    return enemiesHit;
 }

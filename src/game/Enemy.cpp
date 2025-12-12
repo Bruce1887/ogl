@@ -26,8 +26,16 @@ void Enemy::render(glm::mat4 view, glm::mat4 proj, PhongLightConfig* light)
     // Rotate by yaw so model faces forward direction
     transform = glm::rotate(transform, glm::radians(yaw), glm::vec3(0, 1, 0));
     
-    // Scale the enemy
-    transform = glm::scale(transform, glm::vec3(modelScale));
+    // Apply hit wobble rotation when damaged
+    if (m_hitFlashTimer > 0.0f)
+    {
+        float wobble = sin(m_hitFlashTimer * 30.0f) * 0.2f * m_hitFlashTimer;
+        transform = glm::rotate(transform, wobble, glm::vec3(0, 0, 1));
+    }
+    
+    // Scale the enemy (with hit pulse effect)
+    float currentScale = modelScale + m_hitScaleBoost;
+    transform = glm::scale(transform, glm::vec3(currentScale));
     
     enemyModel.setTransform(transform);
     enemyModel.render(view, proj, light);
@@ -51,15 +59,29 @@ glm::vec3 Enemy::getDirectionToPlayer(const Player* player) const
     return glm::vec3(0.0f);
 }
 
-void Enemy::update(float dt, const Player* player, TerrainChunkManager* terrain)
+void Enemy::update(float dt, const Player* enemy, TerrainChunkManager* terrain)
 {
-    if (!player) return;
+    if (!enemy) return;
+    
+    // Update visual feedback timers
+    if (m_hitFlashTimer > 0.0f)
+    {
+        m_hitFlashTimer -= dt;
+        if (m_hitFlashTimer < 0.0f)
+            m_hitFlashTimer = 0.0f;
+    }
+    if (m_hitScaleBoost > 0.0f)
+    {
+        m_hitScaleBoost -= dt * 0.2f;  // Decay scale boost over time
+        if (m_hitScaleBoost < 0.0f)
+            m_hitScaleBoost = 0.0f;
+    }
     
     // Update movement timer
     m_movementTimer += dt;
     
     // Calculate distance to player
-    glm::vec3 toPlayer = player->position - position;
+    glm::vec3 toPlayer = enemy->position - position;
     toPlayer.y = 0.0f;  // Ignore vertical distance
     float distanceToPlayer = glm::length(toPlayer);
     
@@ -67,7 +89,7 @@ void Enemy::update(float dt, const Player* player, TerrainChunkManager* terrain)
     if (distanceToPlayer < detectionRange && distanceToPlayer > 3.0f)  // Stop when close
     {
         // Get direction to player
-        glm::vec3 direction = getDirectionToPlayer(player);
+        glm::vec3 direction = getDirectionToPlayer(enemy);
         
         // Apply movement pattern
         glm::vec3 moveDirection = direction;
@@ -117,9 +139,33 @@ void Enemy::takeDamage(float amount)
     health -= amount;
     if (health < 0.0f)
         health = 0.0f;
+    
+    // Trigger hit visual feedback
+    m_hitFlashTimer = 0.3f;      // Flash for 0.3 seconds
+    m_hitScaleBoost = 0.05f;     // Pulse up 5% in scale
 }
 
 bool Enemy::isDead() const
 {
     return health <= 0.0f;
+}
+
+void Enemy::respawn(glm::vec3 nearPosition, float minDist, float maxDist)
+{
+    // Generate random angle and distance
+    float angle = static_cast<float>(rand()) / RAND_MAX * 2.0f * 3.14159f;
+    float dist = minDist + static_cast<float>(rand()) / RAND_MAX * (maxDist - minDist);
+    
+    // Set new position
+    position = nearPosition + glm::vec3(cos(angle) * dist, 0.0f, sin(angle) * dist);
+    
+    // Reset health
+    health = maxHealth;
+    
+    // Reset movement timer
+    m_movementTimer = 0.0f;
+    
+    // Reset visual effects
+    m_hitFlashTimer = 0.0f;
+    m_hitScaleBoost = 0.0f;
 }
