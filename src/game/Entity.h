@@ -6,9 +6,6 @@
 #include <glm/gtc/quaternion.hpp>     // glm::quat (quaternions for rotation)
 #include <memory>
 
-namespace game 
-{
-
 // EntityType: used to categorize entities (server/world logic uses this)
 enum class EntityType : uint8_t
 {
@@ -102,5 +99,3 @@ private:
 };
 
 using EntityPtr = std::shared_ptr<Entity>; // convenience alias for shared pointers to Entities
-
-}

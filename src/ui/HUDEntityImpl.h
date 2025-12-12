@@ -10,7 +10,7 @@
 // Renaming the class from HUD to HUDEntityImpl to implement the abstract HUDEntity
 class HUDEntityImpl : public HUDEntity {
 public:
-    HUDEntityImpl(game::Player* player, game::GameClock* clock, int screenWidth, int screenHeight);
+    HUDEntityImpl(Player* player, GameClock* clock, int screenWidth, int screenHeight);
     // The destructor is virtual in Renderable, so we use 'override'
     ~HUDEntityImpl() override;
 
@@ -25,8 +25,8 @@ public:
     
 private:
     // Game state references
-    game::Player* m_player;
-    game::GameClock* m_clock;
+    Player* m_player;
+    GameClock* m_clock;
 
     // Screen dimensions used for Orthographic projection setup
     int m_screenWidth;

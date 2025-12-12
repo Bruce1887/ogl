@@ -7,8 +7,6 @@
 
 #include "Entity.h"
 
-namespace game
-{
 
 // Type of resource the ResourceNode represents
 enum class ResourceType : uint8_t
@@ -92,5 +90,3 @@ protected:
     float respawnTimer;          // internal countdown timer when node is depleted
     bool depleted;               // true if node is empty and waiting to respawn or permanently removed
 };
-
-}

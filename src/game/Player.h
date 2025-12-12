@@ -11,12 +11,9 @@
 #include "ThirdPersonCamera.h" // ADDED: Needed for friend's update/render dependencies
 
 // Forward declarations
-class TerrainChunkManager;  // ADDED: Dependency for update
-class InputManager;         // ADDED: Dependency for update
-struct PhongLightConfig;    // ADDED: Dependency for render
-
-namespace game
-{
+class TerrainChunkManager;
+class InputManager;
+struct PhongLightConfig;
 
 // Forward-declare Item
 struct Item;
@@ -76,7 +73,7 @@ public:
 
     // --- GAME STATE GETTERS/SETTERS (Original) ---
     int getClientId() const { return clientId; } 
-    void setClientId(int id) { clientId = id; }
+    void setClientId(int newId) { clientId = newId; }
     
     // ... (All other getters/setters for Inventory, Stamina, MoveSpeed)
 
@@ -94,4 +91,3 @@ private:
     static constexpr float defaultStamina = 100.0f;     
 };
 
-}

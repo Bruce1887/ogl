@@ -12,9 +12,6 @@
 
 // Include your Terrain/Chunk headers here
 
-namespace game
-{
-
 class World {
 public:
     // Stores all active dynamic entities by their unique ID
@@ -41,5 +38,3 @@ private:
     // Helper for night time enemy spawning
     void CheckNightEvents();
 };
-
-}

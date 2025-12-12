@@ -5,7 +5,7 @@
 extern GLFWwindow* g_window;  
 
 
-void ThirdPersonCamera::update(Camera& cam, const game::Player& player)
+void ThirdPersonCamera::update(Camera& cam, const Player& player)
 {
     float yawRad = glm::radians(player.yaw);
 

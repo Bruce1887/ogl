@@ -5,8 +5,6 @@
 #include <cstdint>
 #include <cmath>
 
-namespace game
-{
 
 // The GameClock is the server-authoritative timekeeper.
 // It tracks time-of-day (hours 0..24), the current day phase (DAWN/DAY/DUSK/NIGHT)
@@ -144,5 +142,3 @@ private:
         CurrentGamePhase = Phase::NIGHT;
     }
 };
-
-}

@@ -13,7 +13,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-HUDEntityImpl::HUDEntityImpl(game::Player* player, game::GameClock* clock, int screenWidth, int screenHeight)
+HUDEntityImpl::HUDEntityImpl(Player* player, GameClock* clock, int screenWidth, int screenHeight)
     : m_player(player),
       m_clock(clock),
       m_screenWidth(screenWidth),

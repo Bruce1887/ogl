@@ -8,8 +8,6 @@
 #include "GameClock.h"       // game clock
 #include "Entity.h"          // base entity type (forward usage)
  
-namespace game
-{
 
 // Forward declarations for subsystems (actual definitions live elsewhere)
 class World;
@@ -81,5 +79,3 @@ private:
 
     // Misc flags / config could be added here (window handle, config path, etc.)
 };
-
-}
