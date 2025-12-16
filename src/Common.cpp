@@ -56,7 +56,7 @@ int checkTextureUnits()
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &maxTextureUnits); // Fragment shader
     if (maxTextureUnits < REQUIRED_NUM_TEXTURE_UNITS)
     {
-        std::cout << "Warning: Fragment shader supports " << maxTextureUnits << " texture units. Required " << REQUIRED_NUM_TEXTURE_UNITS << ". Proceeding with " << maxTextureUnits << "." << std::endl;
+        DEBUG_PRINT("Warning: Fragment shader supports " << maxTextureUnits << " texture units. Required " << REQUIRED_NUM_TEXTURE_UNITS << ". Proceeding with " << maxTextureUnits << ".");
         // Allow continuation; engine will just be limited to this number.
         // TODO: Propagate actual limit instead of using NUM_TEXTURE_UNITS constant.
     }
@@ -64,7 +64,7 @@ int checkTextureUnits()
     glGetIntegerv(GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS, &maxTextureUnits); // Vertex shader
     if (maxTextureUnits < REQUIRED_NUM_TEXTURE_UNITS)
     {
-        std::cout << "Warning: Vertex shader supports " << maxTextureUnits << " texture units. Required " << REQUIRED_NUM_TEXTURE_UNITS << ". Proceeding with " << maxTextureUnits << "." << std::endl;
+        DEBUG_PRINT("Warning: Vertex shader supports " << maxTextureUnits << " texture units. Required " << REQUIRED_NUM_TEXTURE_UNITS << ". Proceeding with " << maxTextureUnits << ".");
     }
     return 0;
 }
@@ -73,7 +73,7 @@ int oogaboogaInit(const std::string &windowname)
 {
     if (!glfwInit())
     {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
+        DEBUG_PRINT("Failed to initialize GLFW");
         return -1;
     }
 
@@ -94,7 +94,7 @@ int oogaboogaInit(const std::string &windowname)
     {
         const char **e_msg = nullptr;
         glfwGetError(e_msg);
-        std::cerr << "Failed to create window: " << e_msg << std::endl;
+        DEBUG_PRINT("Failed to create window: " << e_msg);
 
         return -1;
     }
@@ -115,12 +115,12 @@ int oogaboogaInit(const std::string &windowname)
     // ####### NO GL FUNCTION CALLS UNTIL GLAD HAS LOADED THE FUNCTIONS #######
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-        std::cerr << "Failed to initialize GLAD" << std::endl;
+        DEBUG_PRINT("Failed to initialize GLAD");
         return -1;
     }
 
     // Print OpenGL version
-    std::cout << "OpenGL " << glGetString(GL_VERSION) << std::endl;
+    DEBUG_PRINT("OpenGL " << glGetString(GL_VERSION));
 
     // GLCALL(glClearColor(0.2f, 0.1f, 0.2f, 1.0f)); // dark purple background color
     GLCALL(glClearColor(0.0f, 0.0f, 0.0f, 1.0f)); // black background color

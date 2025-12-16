@@ -5,7 +5,7 @@ VertexBuffer::VertexBuffer(const void *cpu_buffer, unsigned int size, VertexArra
 {
     if (associatedVAO == nullptr)
     {
-        std::cerr << "[VertexBuffer] Warning: associatedVAO is nullptr. VertexBuffer should be associated with a VertexArray." << std::endl;
+        DEBUG_PRINT("Warning: associatedVAO is nullptr. VertexBuffer should be associated with a VertexArray.");
         return;
     }
 

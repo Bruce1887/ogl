@@ -16,7 +16,6 @@ VertexArray::~VertexArray()
 void VertexArray::addBuffer(const VertexBuffer *vb, const VertexBufferLayout &layout)
 {
     m_VertexCount = vb->getSize() / layout.getStride();
-    // std::cout << "[VertexArray] Setting vertex count to " << m_VertexCount << " based on VBO size " << m_VBO_size << " and layout stride " << layout.getStride() << std::endl;
 
     bind();
     vb->bind();

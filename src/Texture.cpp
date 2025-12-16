@@ -76,13 +76,14 @@ std::shared_ptr<Texture> Texture::CreateCubemap(const std::vector<std::filesyste
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
+    tex->m_filePath = facePaths[0].parent_path().string() + " (cubemap)";
     return tex;
 }
 
 Texture::~Texture()
 {
     std::string type = (m_target == TEXTURE_2D) ? "2D Texture" : "Cubemap Texture";
-    DEBUG_PRINT("Deleting " << type << " ID " << m_rendererID << " from slot " << m_slot << " with path: " << m_filePath);
+    DEBUG_PRINT("Deleting " << type << " ID " << m_rendererID << " with path: " << m_filePath);
     GLCALL(glDeleteTextures(1, &m_rendererID));
 }
 

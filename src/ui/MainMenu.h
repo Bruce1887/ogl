@@ -5,9 +5,9 @@
 #include <string>
 #include <functional>
 #include <memory>
+#include "../Renderable.h"
 
 // Forward declarations
-class Renderable;
 class Shader;
 class VertexArray;
 class VertexBuffer;
@@ -24,9 +24,9 @@ struct MenuButton
     std::string label;
     float x, y;           // position (top-left corner in pixels)
     float width, height;  // dimensions
-    glm::vec4 normalColor{0.2f, 0.2f, 0.3f, 0.9f};
-    glm::vec4 hoverColor{0.3f, 0.3f, 0.5f, 1.0f};
-    glm::vec4 activeColor{0.4f, 0.4f, 0.6f, 1.0f};
+    glm::vec4 normalColor;
+    glm::vec4 hoverColor;
+    glm::vec4 activeColor;
     std::function<void()> onClick;  // callback when clicked
 
     bool isHovered = false;

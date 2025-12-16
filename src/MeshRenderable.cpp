@@ -64,20 +64,15 @@ void MeshRenderable::render(glm::mat4 view, glm::mat4 projection, PhongLightConf
 
     if (m_mesh->indexBuffer != nullptr)
     {
-        // std::cout << "Drawing indexed mesh." << std::endl;
         if (rContext->m_boundIBO != m_mesh->indexBuffer->getID())
         {
-            // std::cout << "Binding index buffer object." << std::endl;
             m_mesh->indexBuffer->bind();
             rContext->m_boundIBO = m_mesh->indexBuffer->getID();
         }
 
         int count = m_mesh->indexBuffer->getCount();
-        // std::cout << "Index count: " << count << std::endl;
-
-        // std::cout << "Issuing glDrawElements call." << std::endl;
+        
         GLCALL(glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr));
-        // std::cout << "glDrawElements call completed." << std::endl;
     }
     else
     {

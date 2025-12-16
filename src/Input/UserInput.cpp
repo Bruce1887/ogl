@@ -60,7 +60,6 @@ bool MouseMoveInput::fetchDeltas(double &outDeltaX, double &outDeltaY)
     deltaX = 0.0;
     deltaY = 0.0;
     clearUpdated();
-    // std::cout << __func__ << " Mouse deltas: " << deltaX << ", " << deltaY << std::endl;
     return true;
 }
 
@@ -77,7 +76,6 @@ bool MouseScrollInput::fetchScroll(double &outScrollX, double &outScrollY)
     if (!hasInput())
         return false;
 
-    // std::cout << "Fetching scroll: " << scrollX << ", " << scrollY << std::endl;
     outScrollX = scrollX;
     outScrollY = scrollY;
     scrollX = 0.0;

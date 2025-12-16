@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <filesystem>
+#include <stdexcept>
 
 /**
  * Wrap OpenGL calls to clear errors before and check for errors after the call.
@@ -24,6 +25,7 @@
 #else
     #define DEBUG_PRINT(msg) do {} while (0)
 #endif
+
 
 
 void GLClearError();

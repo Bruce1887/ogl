@@ -39,7 +39,7 @@ Model::Model(const std::filesystem::path &path)
 
     if (!ai_scene || ai_scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !ai_scene->mRootNode)
     {
-        std::cerr << "Error loading model: " << importer.GetErrorString() << std::endl;
+        DEBUG_PRINT("Error loading model: " << importer.GetErrorString());
         return;
     }
 
@@ -184,7 +184,7 @@ Model::Model(const std::filesystem::path &path)
 
         if (m_modelData->m_hasTextureDiffuse)
         {
-            std::cout << "Loading diffuse texture: " << (path.parent_path() / texPath.C_Str()) << std::endl;
+        DEBUG_PRINT("Loading diffuse texture: " << (path.parent_path() / texPath.C_Str()));
             std::shared_ptr<Texture> diffuseTex = Texture::CreateTexture2D((path.parent_path() / texPath.C_Str()).string(), "u_texture_diffuse");    
             diffuseTex->m_targetUniform = "u_texture_diffuse";
             mr->m_textureReferences.push_back(diffuseTex);

@@ -37,7 +37,7 @@ public:
     void initializeGameUI(Player* player, GameClock* clock);
     
     // Set skybox for menu backgrounds
-    void setMenuSkybox(Skybox* skybox, Shader* skyboxShader);
+    void setMenuSkybox(std::unique_ptr<Skybox> skybox, std::unique_ptr<Shader> skyboxShader);
 
     // Update and render based on current state
     void update(float deltaTime);
@@ -82,8 +82,8 @@ private:
     GameClock* m_gameClock = nullptr;
     
     // Menu background
-    Skybox* m_menuSkybox = nullptr;
-    Shader* m_menuSkyboxShader = nullptr;
+    std::unique_ptr<Skybox> m_menuSkybox = nullptr;
+    std::unique_ptr<Shader> m_menuSkyboxShader = nullptr;
 };
 
 } // namespace ui

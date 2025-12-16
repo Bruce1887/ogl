@@ -4,29 +4,6 @@
 #include <cmath>
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
-/*
-void addTriangle(std::vector<TerrainVertex> &vertices,
-                 std::vector<unsigned int> &indices,
-                 const glm::vec3 &p1, const glm::vec3 &p2, const glm::vec3 &p3,
-                 float h1, float h2, float h3, float waterMask)
-{
-    glm::vec3 normal = glm::normalize(glm::cross(p2 - p1, p3 - p1));
-    unsigned int baseIdx = vertices.size();
-
-    auto addVertex = [&](const glm::vec3 &pos, float h)
-    {
-        vertices.push_back({pos, normal,
-                            glm::vec2(pos.x / 10.0f, pos.z / 10.0f),
-                            h, waterMask});
-    };
-
-    addVertex(p1, h1);
-    addVertex(p2, h2);
-    addVertex(p3, h3);
-
-    indices.insert(indices.end(), {baseIdx, baseIdx + 1, baseIdx + 2});
-}
-*/
 
 std::unique_ptr<Chunk> TerrainChunkManager::generateNewChunk(const ChunkCoord &coord)
 {

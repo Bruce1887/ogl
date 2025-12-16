@@ -16,17 +16,17 @@ UIManager::UIManager(int screenWidth, int screenHeight)
     
     // Wire up main menu callbacks
     m_mainMenu->onPlayClicked = [this]() {
-        std::cout << "Play clicked - starting world load..." << std::endl;
+        DEBUG_PRINT("Play clicked - starting world load..." );
         transitionTo(GameState::LOADING);
     };
 
     m_mainMenu->onSettingsClicked = [this]() {
-        std::cout << "Leaderboard clicked" << std::endl;
+        DEBUG_PRINT("Leaderboard clicked" );
         transitionTo(GameState::LEADERBOARD);
     };
 
     m_mainMenu->onQuitClicked = [this]() {
-        std::cout << "Quit clicked" << std::endl;
+        DEBUG_PRINT("Quit clicked" );
         if (onQuitGame) {
             onQuitGame();
         }
@@ -48,29 +48,29 @@ void UIManager::initializeGameUI(Player* player, GameClock* clock)
     // Create pause menu
     m_pauseMenu = std::make_unique<PauseMenu>(m_screenWidth, m_screenHeight);
     m_pauseMenu->onResumeClicked = [this]() {
-        std::cout << "Resume clicked" << std::endl;
+        DEBUG_PRINT("Resume clicked" );
         m_isPaused = false;
         if (onResumeGame) {
             onResumeGame();
         }
     };
     m_pauseMenu->onSettingsClicked = []() {
-        std::cout << "Settings clicked from pause menu" << std::endl;
+        DEBUG_PRINT("Settings clicked from pause menu" );
     };
     m_pauseMenu->onQuitClicked = [this]() {
-        std::cout << "Quit to menu clicked" << std::endl;
+        DEBUG_PRINT("Quit to menu clicked" );
         m_isPaused = false;
         transitionTo(GameState::MAIN_MENU);
     };
 }
 
-void UIManager::setMenuSkybox(Skybox* skybox, Shader* skyboxShader)
+void UIManager::setMenuSkybox(std::unique_ptr<Skybox> skybox, std::unique_ptr<Shader> skyboxShader)
 {
-    m_menuSkybox = skybox;
-    m_menuSkyboxShader = skyboxShader;
+    m_menuSkybox = std::move(skybox);
+    m_menuSkyboxShader = std::move(skyboxShader);
     
     if (m_mainMenu) {
-        m_mainMenu->setSkybox(skybox, skyboxShader);
+        m_mainMenu->setSkybox(m_menuSkybox.get(), m_menuSkyboxShader.get());
     }
 }
 
@@ -88,7 +88,7 @@ void UIManager::update(float deltaTime)
             // Transition to playing once game objects are initialized
             if (m_player && m_gameClock && m_gameHUD)
             {
-                std::cout << "World loaded! Starting gameplay" << std::endl;
+                DEBUG_PRINT("World loaded! Starting gameplay" );
                 transitionTo(GameState::PLAYING);
             }
             break;
@@ -118,9 +118,9 @@ void UIManager::render(const glm::mat4& view, const glm::mat4& projection)
             {
                 // Lazy create leaderboard
                 m_leaderboard = std::make_unique<Leaderboard>(m_screenWidth, m_screenHeight);
-                m_leaderboard->setSkybox(m_menuSkybox, m_menuSkyboxShader);
+                m_leaderboard->setSkybox(m_menuSkybox.get(), m_menuSkyboxShader.get());
                 
-                // Kommer såklart omfaktureras sen när vi har riktig data
+                // Add sample entries
                 m_leaderboard->addEntry("Player One", 5500);
                 m_leaderboard->addEntry("Alice", 7200);
                 m_leaderboard->addEntry("Bob", 4800);
@@ -134,7 +134,7 @@ void UIManager::render(const glm::mat4& view, const glm::mat4& projection)
                 m_leaderboard->addEntry("Jack", 4100);
                 
                 m_leaderboard->onBackClicked = [this]() {
-                    std::cout << "Back to menu clicked" << std::endl;
+                    DEBUG_PRINT("Back to menu clicked" );
                     transitionTo(GameState::MAIN_MENU);
                 };
             }
@@ -243,9 +243,9 @@ void UIManager::togglePause()
         
     m_isPaused = !m_isPaused;
     if (m_isPaused) {
-        std::cout << "Game paused" << std::endl;
+        DEBUG_PRINT("Game paused" );
     } else {
-        std::cout << "Game resumed" << std::endl;
+        DEBUG_PRINT("Game resumed" );
         if (onResumeGame) {
             onResumeGame();
         }
@@ -266,8 +266,8 @@ void UIManager::transitionTo(GameState newState)
     if (newState == m_currentState)
         return;
 
-    std::cout << "UI: Transitioning from " << (int)m_currentState 
-              << " to " << (int)newState << std::endl;
+    DEBUG_PRINT("UI: Transitioning from " << (int)m_currentState 
+              << " to " << (int)newState );
 
     m_currentState = newState;
     

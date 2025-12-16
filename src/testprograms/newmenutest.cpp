@@ -25,10 +25,10 @@
 
 // Forward declarations
 void initializeWorld(Scene **scene, TerrainGenerator **terrainGen, TerrainChunkManager **chunkManager,
-                     Player **player, Enemy **enemy, GameClock **gameClock, Skybox **skybox,
+                     Player **player, Enemy **enemy, GameClock **gameClock,
                      ThirdPersonCamera **camController, float *renderDistance);
 void cleanupWorld(Scene *scene, TerrainGenerator *terrainGen, TerrainChunkManager *chunkManager,
-                  Player *player, Enemy *enemy, GameClock *gameClock, Skybox *skybox,
+                  Player *player, Enemy *enemy, GameClock *gameClock,
                   ThirdPersonCamera *camController);
 
 // Module-level mouse tracking for GLFW callbacks
@@ -46,235 +46,235 @@ void cursorPosCallback(GLFWwindow * /*window*/, double xpos, double ypos)
 
 int main(int, char **)
 {
-    if (oogaboogaInit("OOGABOOOOGA"))
+    if (oogaboogaInit(__FILE__))
         return -1;
 
-    RenderingContext renderContext;
-    renderContext.makeCurrent();
-
-    // Create UI Manager
-    ui::UIManager uiManager(window_X, window_Y);
-
-    // World objects (created when loading)
-    Scene *scene = nullptr;
-    TerrainGenerator *terrainGen = nullptr;
-    TerrainChunkManager *chunkManager = nullptr;
-    Player *player = nullptr;
-    Enemy *enemy = nullptr;
-    GameClock *gameClock = nullptr;
-    Skybox *skybox = nullptr;
-    ThirdPersonCamera *camController = nullptr;
-    float renderDistance = 100.0f;
-
-    // Setup menu skybox (filesystem paths; Skybox manages its own shader)
-    std::vector<std::filesystem::path> menuSkyboxFaces = {
-        TEXTURE_DIR / "skybox" / "right.jpg",
-        TEXTURE_DIR / "skybox" / "left.jpg",
-        TEXTURE_DIR / "skybox" / "top.jpg",
-        TEXTURE_DIR / "skybox" / "bottom.jpg",
-        TEXTURE_DIR / "skybox" / "front.jpg",
-        TEXTURE_DIR / "skybox" / "back.jpg"};
-    Skybox *menuSkybox = new Skybox(menuSkyboxFaces);
-    uiManager.setMenuSkybox(menuSkybox, nullptr);
-
-    // Set up UIManager callbacks
-    uiManager.onStartGame = [&]() {
-        std::cout << "Initializing world..." << std::endl;
-        initializeWorld(&scene, &terrainGen, &chunkManager, &player, &enemy, &gameClock, &skybox, &camController, &renderDistance);
-        uiManager.initializeGameUI(player, gameClock);
-    };
-
-    uiManager.onResumeGame = [&]() {
-        // Cursor mode handled automatically by UIManager
-    };
-
-    uiManager.onQuitGame = [&]() {
-        glfwSetWindowShouldClose(g_window, GLFW_TRUE);
-    };
-
-    // Set up cursor callback (using static lambda like the old code)
-    glfwSetCursorPosCallback(g_window, cursorPosCallback);
-
-    FrameTimer frameTimer;
-    int frameCount = 0;
-
-    // ensure cursor mode is correct at startup (old code set it explicitly)
-    glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-
-    // Initialize lastShouldShowCursor so the first loop iteration will set the mode if needed.
-    bool lastShouldShowCursor = !uiManager.shouldShowCursor();
-    bool mouseButtonWasPressed = false;
-
-    while (!glfwWindowShouldClose(g_window))
     {
-        float dt = frameTimer.getDeltaTime();
+        // Create UI Manager
+        ui::UIManager uiManager(window_X, window_Y);
 
-        glfwPollEvents();
+        // World objects (created when loading)
+        Scene *scene = nullptr;
+        TerrainGenerator *terrainGen = nullptr;
+        TerrainChunkManager *chunkManager = nullptr;
+        Player *player = nullptr;
+        Enemy *enemy = nullptr;
+        GameClock *gameClock = nullptr;
+        ThirdPersonCamera *camController = nullptr;
+        float renderDistance = 100.0f;
 
-        // Update cursor mode based on UI state (do this after poll so any key events changed state)
-        bool shouldShowCursor = uiManager.shouldShowCursor();
-        if (shouldShowCursor != lastShouldShowCursor)
+        // Setup menu skybox (filesystem paths; Skybox manages its own shader)
+        std::vector<std::filesystem::path> menuSkyboxFaces = {
+            TEXTURE_DIR / "skybox" / "right.jpg",
+            TEXTURE_DIR / "skybox" / "left.jpg",
+            TEXTURE_DIR / "skybox" / "top.jpg",
+            TEXTURE_DIR / "skybox" / "bottom.jpg",
+            TEXTURE_DIR / "skybox" / "front.jpg",
+            TEXTURE_DIR / "skybox" / "back.jpg"};
+        auto menuSkybox = std::make_unique<Skybox>(menuSkyboxFaces);
+        uiManager.setMenuSkybox(std::move(menuSkybox), nullptr);
+
+        // Set up UIManager callbacks
+        uiManager.onStartGame = [&]()
         {
-            glfwSetInputMode(g_window, GLFW_CURSOR, shouldShowCursor ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
-            lastShouldShowCursor = shouldShowCursor;
-        }
+            std::cout << "Initializing world..." << std::endl;
+            initializeWorld(&scene, &terrainGen, &chunkManager, &player, &enemy, &gameClock, &camController, &renderDistance);
+            uiManager.initializeGameUI(player, gameClock);
+        };
 
-        // Handle ESC key for pause
-        static bool escPressedLastFrame = false;
-        bool escPressed = glfwGetKey(g_window, GLFW_KEY_ESCAPE) == GLFW_PRESS;
-        if (escPressed && !escPressedLastFrame)
+        uiManager.onResumeGame = [&]()
         {
-            uiManager.handleKeyPress(GLFW_KEY_ESCAPE, GLFW_PRESS);
-        }
-        escPressedLastFrame = escPressed;
+            // Cursor mode handled automatically by UIManager
+        };
 
-        // Handle mouse input for UI if cursor is visible
-        if (shouldShowCursor)
+        uiManager.onQuitGame = [&]()
         {
-            // cursor pos is updated by callback into g_cursorX/g_cursorY
-            uiManager.handleMouseMove(g_cursorX, g_cursorY);
-            bool mousePressed = glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
-            // Many UIs expect clicks to be initiated on press; forwarding release can confuse things.
-            if (mousePressed && !mouseButtonWasPressed)
-            {
-                uiManager.handleMouseClick(g_cursorX, g_cursorY, true); // pressed
-            }
-            // Optionally forward releases if your UI needs them:
-            else if (!mousePressed && mouseButtonWasPressed)
-            {
-                uiManager.handleMouseClick(g_cursorX, g_cursorY, false); // released
-            }
+            glfwSetWindowShouldClose(g_window, GLFW_TRUE);
+        };
 
-            mouseButtonWasPressed = mousePressed;
-        }
+        // Set up cursor callback (using static lambda like the old code)
+        glfwSetCursorPosCallback(g_window, cursorPosCallback);
 
-        // Update UI Manager
-        uiManager.update(dt);
+        FrameTimer frameTimer;
+        int frameCount = 0;
 
-        // Update game world if playing and not paused
-        if (uiManager.getCurrentState() == ui::GameState::PLAYING && !uiManager.isPaused())
+        // ensure cursor mode is correct at startup (old code set it explicitly)
+        glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+        // Initialize lastShouldShowCursor so the first loop iteration will set the mode if needed.
+        bool lastShouldShowCursor = !uiManager.shouldShowCursor();
+        bool mouseButtonWasPressed = false;
+
+        while (!glfwWindowShouldClose(g_window))
         {
-            if (gameClock)
+            float dt = frameTimer.getDeltaTime();
+
+            glfwPollEvents();
+
+            // Update cursor mode based on UI state (do this after poll so any key events changed state)
+            bool shouldShowCursor = uiManager.shouldShowCursor();
+            if (shouldShowCursor != lastShouldShowCursor)
             {
-                gameClock->Update(dt);
+                glfwSetInputMode(g_window, GLFW_CURSOR, shouldShowCursor ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+                lastShouldShowCursor = shouldShowCursor;
             }
 
-            if (player && chunkManager)
+            // Handle ESC key for pause
+            static bool escPressedLastFrame = false;
+            bool escPressed = glfwGetKey(g_window, GLFW_KEY_ESCAPE) == GLFW_PRESS;
+            if (escPressed && !escPressedLastFrame)
             {
-                player->update(dt, g_InputManager, chunkManager);
+                uiManager.handleKeyPress(GLFW_KEY_ESCAPE, GLFW_PRESS);
             }
+            escPressedLastFrame = escPressed;
 
-            if (enemy && player && chunkManager)
+            // Handle mouse input for UI if cursor is visible
+            if (shouldShowCursor)
             {
-                enemy->update(dt, player, chunkManager);
-            }
-
-            if (camController && scene && player)
-            {
-                camController->handlePanning(dt);
-                camController->update(scene->m_activeCamera, *player);
-            }
-
-            if (chunkManager && scene)
-            {
-                chunkManager->updateChunks(scene->m_activeCamera.m_Position);
-            }
-        }
-
-        // Render
-        glClearColor(0.5f, 0.7f, 0.9f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        // Render world if playing (even when paused, show world behind pause menu)
-        if (uiManager.getCurrentState() == ui::GameState::PLAYING && scene)
-        {
-            glEnable(GL_DEPTH_TEST);
-            glDepthMask(GL_TRUE);
-            glEnable(GL_CULL_FACE);
-            glDisable(GL_BLEND);
-
-            // Render player
-            if (player)
-            {
-                player->render(scene->m_activeCamera.getViewMatrix(),
-                               scene->m_activeCamera.getProjectionMatrix(),
-                               &scene->m_lightSource.config);
-            }
-
-            // Render enemy
-            if (enemy)
-            {
-                enemy->render(scene->m_activeCamera.getViewMatrix(),
-                              scene->m_activeCamera.getProjectionMatrix(),
-                              &scene->m_lightSource.config);
-            }
-
-            // Render terrain chunks
-            if (chunkManager)
-            {
-                for (const auto &chunk : chunkManager->m_chunks)
+                // cursor pos is updated by callback into g_cursorX/g_cursorY
+                uiManager.handleMouseMove(g_cursorX, g_cursorY);
+                bool mousePressed = glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+                // Many UIs expect clicks to be initiated on press; forwarding release can confuse things.
+                if (mousePressed && !mouseButtonWasPressed)
                 {
-                    chunk->render(scene->m_activeCamera.getViewMatrix(),
-                                  scene->m_activeCamera.getProjectionMatrix(),
-                                  &scene->m_lightSource.config);
+                    uiManager.handleMouseClick(g_cursorX, g_cursorY, true); // pressed
+                }
+                // Optionally forward releases if your UI needs them:
+                else if (!mousePressed && mouseButtonWasPressed)
+                {
+                    uiManager.handleMouseClick(g_cursorX, g_cursorY, false); // released
+                }
+
+                mouseButtonWasPressed = mousePressed;
+            }
+
+            // Update UI Manager
+            uiManager.update(dt);
+
+            // Update game world if playing and not paused
+            if (uiManager.getCurrentState() == ui::GameState::PLAYING && !uiManager.isPaused())
+            {
+                if (gameClock)
+                {
+                    gameClock->Update(dt);
+                }
+
+                if (player && chunkManager)
+                {
+                    player->update(dt, g_InputManager, chunkManager);
+                }
+
+                if (enemy && player && chunkManager)
+                {
+                    enemy->update(dt, player, chunkManager);
+                }
+
+                if (camController && scene && player)
+                {
+                    camController->handlePanning(dt);
+                    camController->update(scene->m_activeCamera, *player);
+                }
+
+                if (chunkManager && scene)
+                {
+                    chunkManager->updateChunks(scene->m_activeCamera.m_Position);
                 }
             }
 
-            // Global water
-            if (chunkManager && scene)
+            // Render
+            glClearColor(0.5f, 0.7f, 0.9f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            // Render world if playing (even when paused, show world behind pause menu)
+            if (uiManager.getCurrentState() == ui::GameState::PLAYING && scene)
             {
-                chunkManager->renderWater(scene->m_activeCamera.getViewMatrix(),
-                                          scene->m_activeCamera.getProjectionMatrix(),
-                                          &scene->m_lightSource.config,
-                                          scene->m_activeCamera.m_Position,
-                                          renderDistance);
+                glEnable(GL_DEPTH_TEST);
+                glDepthMask(GL_TRUE);
+                glEnable(GL_CULL_FACE);
+                glDisable(GL_BLEND);
+
+                // Render player
+                if (player)
+                {
+                    player->render(scene->m_activeCamera.getViewMatrix(),
+                                   scene->m_activeCamera.getProjectionMatrix(),
+                                   &scene->m_lightSource.config);
+                }
+
+                // Render enemy
+                if (enemy)
+                {
+                    enemy->render(scene->m_activeCamera.getViewMatrix(),
+                                  scene->m_activeCamera.getProjectionMatrix(),
+                                  &scene->m_lightSource.config);
+                }
+
+                // Render terrain chunks
+                if (chunkManager)
+                {
+                    for (const auto &chunk : chunkManager->m_chunks)
+                    {
+                        chunk->render(scene->m_activeCamera.getViewMatrix(),
+                                      scene->m_activeCamera.getProjectionMatrix(),
+                                      &scene->m_lightSource.config);
+                    }
+                }
+
+                // Global water
+                if (chunkManager && scene)
+                {
+                    chunkManager->renderWater(scene->m_activeCamera.getViewMatrix(),
+                                              scene->m_activeCamera.getProjectionMatrix(),
+                                              &scene->m_lightSource.config,
+                                              scene->m_activeCamera.m_Position,
+                                              renderDistance);
+                }
+
+                // Trees (instanced)
+                if (chunkManager && scene)
+                {
+                    chunkManager->renderTrees(scene->m_activeCamera.getViewMatrix(),
+                                              scene->m_activeCamera.getProjectionMatrix(),
+                                              &scene->m_lightSource.config);
+                }
+
+                // Render skybox and scene
+                scene->renderScene();
             }
 
-            // Trees (instanced)
-            if (chunkManager && scene)
+            glDisable(GL_DEPTH_TEST);
+            glDepthMask(GL_FALSE);
+            glDisable(GL_CULL_FACE);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+            // Render UI on top
+            uiManager.render(glm::mat4(1.0f), glm::mat4(1.0f));
+
+            // Stats
+            if (chunkManager && frameCount % 120 == 0 &&
+                uiManager.getCurrentState() == ui::GameState::PLAYING && !uiManager.isPaused())
             {
-                chunkManager->renderTrees(scene->m_activeCamera.getViewMatrix(),
-                                          scene->m_activeCamera.getProjectionMatrix(),
-                                          &scene->m_lightSource.config);
+                DEBUG_PRINT("Chunks: " << chunkManager->m_chunks.size()
+                                       << " | FPS: " << std::fixed << std::setprecision(1)
+                                       << (1.0f / dt));
             }
 
-            // Render skybox and scene
-            scene->renderScene();
+            frameCount++;
+            glfwSwapBuffers(g_window);
         }
 
-        glDisable(GL_DEPTH_TEST);
-        glDepthMask(GL_FALSE);
-        glDisable(GL_CULL_FACE);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        // Render UI on top
-        uiManager.render(glm::mat4(1.0f), glm::mat4(1.0f));
-
-        // Stats
-        if (chunkManager && frameCount % 120 == 0 &&
-            uiManager.getCurrentState() == ui::GameState::PLAYING && !uiManager.isPaused())
-        {
-            DEBUG_PRINT("Chunks: " << chunkManager->m_chunks.size()
-                                     << " | FPS: " << std::fixed << std::setprecision(1)
-                                     << (1.0f / dt));
-        }
-
-        frameCount++;
-        glfwSwapBuffers(g_window);
+        // Cleanup
+        if (scene)
+            cleanupWorld(scene, terrainGen, chunkManager, player, enemy, gameClock, camController);
     }
-
-    // Cleanup
-    if (scene)
-        cleanupWorld(scene, terrainGen, chunkManager, player, enemy, gameClock, skybox, camController);
-    delete menuSkybox;
-
+    DEBUG_PRINT("Exiting program.");
     oogaboogaExit();
     return 0;
 }
 
 void initializeWorld(Scene **scene, TerrainGenerator **terrainGen, TerrainChunkManager **chunkManager,
-                     Player **player, Enemy **enemy, GameClock **gameClock, Skybox **skybox,
+                     Player **player, Enemy **enemy, GameClock **gameClock,
                      ThirdPersonCamera **camController, float *renderDistance)
 {
     // Camera setup
@@ -310,7 +310,6 @@ void initializeWorld(Scene **scene, TerrainGenerator **terrainGen, TerrainChunkM
         TEXTURE_DIR / "skybox" / "back.jpg"};
 
     (*scene)->m_skybox = std::make_unique<Skybox>(skyboxFaces);
-    *skybox = (*scene)->m_skybox.get();
 
     // Terrain
     *terrainGen = new TerrainGenerator();
@@ -358,9 +357,9 @@ void initializeWorld(Scene **scene, TerrainGenerator **terrainGen, TerrainChunkM
         float spawnAngle = glm::radians(angleDist(gen));
         float spawnDistance = distanceDist(gen);
         glm::vec3 enemySpawnPos = (*player)->position + glm::vec3(
-                                                         cos(spawnAngle) * spawnDistance,
-                                                         0.0f,
-                                                         sin(spawnAngle) * spawnDistance);
+                                                            cos(spawnAngle) * spawnDistance,
+                                                            0.0f,
+                                                            sin(spawnAngle) * spawnDistance);
         *enemy = new Enemy(enemySpawnPos, (MODELS_DIR / "cow" / "cow.obj").string());
         (*enemy)->modelYOffset = 1.0f;
         (*enemy)->modelScale = 1.0f;
@@ -375,7 +374,7 @@ void initializeWorld(Scene **scene, TerrainGenerator **terrainGen, TerrainChunkM
 }
 
 void cleanupWorld(Scene *scene, TerrainGenerator *terrainGen, TerrainChunkManager *chunkManager,
-                  Player *player, Enemy *enemy, GameClock *gameClock, Skybox *skybox,
+                  Player *player, Enemy *enemy, GameClock *gameClock,
                   ThirdPersonCamera *camController)
 {
     delete camController;
@@ -384,6 +383,5 @@ void cleanupWorld(Scene *scene, TerrainGenerator *terrainGen, TerrainChunkManage
     delete player;
     delete chunkManager;
     delete terrainGen;
-    delete skybox;
     delete scene;
 }

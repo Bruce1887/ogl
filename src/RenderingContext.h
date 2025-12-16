@@ -2,6 +2,7 @@
 
 #include <glad/glad.h>
 #include <iostream>
+#include "Error.h"
 
 /**
  * RenderingContext struct to keep track of currently bound OpenGL resources (among other things).
@@ -20,7 +21,7 @@ public:
     static RenderingContext* Current() { 
         #ifdef DEBUG
         if (s_current == nullptr) {
-            std::cerr << "Warning: No current RenderingContext set!" << std::endl;
+            DEBUG_PRINT("Warning: No current RenderingContext set!");
         }
         #endif
         return s_current;

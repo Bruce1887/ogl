@@ -11,7 +11,7 @@ ShaderProgramSource Shader::parseShader(const std::string &filepath, ShaderType 
     std::ifstream file(filepath, std::ios::in | std::ios::binary);
     if (!file)
     {
-        std::cerr << "Error: Failed to open shader file: " << filepath << std::endl;
+        DEBUG_PRINT("Error: Failed to open shader file: " << filepath);
         return {"", ShaderType::UNASSIGNED};
     }
 
@@ -29,11 +29,12 @@ ShaderProgramSource Shader::parseShader(const std::string &filepath, ShaderType 
 unsigned int Shader::compileShader(ShaderType type, const std::string &shader_str)
 {
     unsigned int id = glCreateShader((int)type);
+
 #ifdef DEBUG
     if (id == 0)
     {
-        std::cerr << "Could not create shader with type: " << (int)type << std::endl;
-        std::cerr << "shader_str: " << shader_str << std::endl;
+        DEBUG_PRINT("Could not create shader with type: " << (int)type);
+        DEBUG_PRINT("shader_str: " << shader_str);
     }
 #endif
 
@@ -49,10 +50,10 @@ unsigned int Shader::compileShader(ShaderType type, const std::string &shader_st
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
         char *message = (char *)alloca(length * sizeof(char));
         glGetShaderInfoLog(id, length, &length, message);
-        std::cerr << "FAILED TO COMPILE SHADER! type: " << (int)type << std::endl // Todo: Maybe map shadertype to some string if you care
-                  << message << std::endl
-                  << std::endl
-                  << shader_str << std::endl;
+        DEBUG_PRINT("FAILED TO COMPILE SHADER! type: " << (int)type
+                                                       << message << std::endl
+                                                       << std::endl
+                                                       << shader_str);
         glDeleteShader(id);
         return 0;
     }
@@ -81,24 +82,25 @@ void Shader::createProgram()
     }
 
     GLCALL(glLinkProgram(program));
-    
+
     // Check if program linked successfully
     GLint success;
     glGetProgramiv(program, GL_LINK_STATUS, &success);
-    if (!success) {
+    if (!success)
+    {
         GLint length = 0;
         glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length);
 
         std::vector<char> log(length);
         glGetProgramInfoLog(program, length, &length, log.data());
 
-        std::cerr << "FAILED TO LINK PROGRAM!\n" 
-                << log.data() << std::endl;
+        DEBUG_PRINT("FAILED TO LINK PROGRAM!\n"
+                    << log.data());
 
         glDeleteProgram(program);
         exit(-1);
     }
-    
+
     GLCALL(glValidateProgram(program));
 
     for (auto &&ref : shader_references)
@@ -121,8 +123,7 @@ void Shader::addShader(const std::string &filename_nopath, ShaderType type)
         directory = FRAGMENT_SHADER_DIR;
     else
     {
-        std::cerr << "Error: Unsupported shader type for automatic directory selection." << std::endl;
-        return;
+        throw std::runtime_error("Shader::addShader: Unsupported shader type for automatic directory selection.");
     }
 
     m_programSources.push_back(parseShader((directory / filename_nopath).string(), type));
@@ -167,7 +168,7 @@ bool Shader::validateUniformSet(const std::string &name, int location)
 {
     if (location == -1)
         return false; // Uniform doesn't exist
-    
+
     // Ensure this shader is currently bound
     RenderingContext *rContext = RenderingContext::Current();
     if (rContext->m_boundShader != m_RendererID)
@@ -175,7 +176,7 @@ bool Shader::validateUniformSet(const std::string &name, int location)
         // Silently skip - this is expected behavior when uniforms are set before binding
         return false;
     }
-    
+
     return true;
 }
 
@@ -262,7 +263,7 @@ int Shader::getUniformLocation(const std::string &name)
     GLCALL(int location = glGetUniformLocation(m_RendererID, name.c_str()));
     if (location == -1)
     {
-        std::cerr << "Uniform " << name << " not found!" << std::endl;
+        DEBUG_PRINT("Uniform " << name << " not found!");
     }
 
     // Cache the location

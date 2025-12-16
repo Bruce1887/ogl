@@ -21,7 +21,7 @@ struct VertexBufferElement
         case GL_UNSIGNED_BYTE:
             return 1;
         default:
-            std::cerr << "[VertexBufferElement] Unknown type: " << type << std::endl;
+            DEBUG_PRINT("Unknown type: " << type);
             return 0;
         }
     }

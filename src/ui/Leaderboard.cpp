@@ -21,39 +21,39 @@ Leaderboard::Leaderboard(int screenWidth, int screenHeight)
     try {
         m_shader = std::make_shared<Shader>();
         if (!m_shader) {
-            std::cerr << "Failed to create leaderboard shader" << std::endl;
+            DEBUG_PRINT("Failed to create leaderboard shader");
             return;
         }
         m_shader->addShader("2D.vert", ShaderType::VERTEX);
         m_shader->addShader("uniformColor.frag", ShaderType::FRAGMENT);
         m_shader->createProgram();
-        std::cout << "Leaderboard shader created successfully" << std::endl;
+        DEBUG_PRINT("Leaderboard shader created successfully");
     } catch (const std::exception& e) {
-        std::cerr << "Exception creating leaderboard shader: " << e.what() << std::endl;
+        DEBUG_PRINT("Exception creating leaderboard shader: " << e.what());
         m_shader = nullptr;
     }
 
     try {
         SetupQuadRendering();
-        std::cout << "Leaderboard quad rendering set up successfully" << std::endl;
+        DEBUG_PRINT("Leaderboard quad rendering set up successfully");
     } catch (const std::exception& e) {
-        std::cerr << "Exception in SetupQuadRendering: " << e.what() << std::endl;
+        DEBUG_PRINT("Exception in SetupQuadRendering: " << e.what());
     }
     
     try {
         m_textRenderer = std::make_unique<TextRenderer>(screenWidth, screenHeight);
         m_textRenderer->LoadFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 48);
-        std::cout << "Leaderboard text renderer initialized successfully" << std::endl;
+        DEBUG_PRINT("Leaderboard text renderer initialized successfully");
     } catch (const std::exception& e) {
-        std::cerr << "Exception initializing TextRenderer: " << e.what() << std::endl;
+        DEBUG_PRINT("Exception initializing TextRenderer: " << e.what());
         m_textRenderer = nullptr;
     }
     
     try {
         InitializeButtons();
-        std::cout << "Leaderboard buttons initialized successfully" << std::endl;
+        DEBUG_PRINT("Leaderboard buttons initialized successfully");
     } catch (const std::exception& e) {
-        std::cerr << "Exception in InitializeButtons: " << e.what() << std::endl;
+        DEBUG_PRINT("Exception in InitializeButtons: " << e.what());
     }
 }
 
@@ -181,7 +181,7 @@ void Leaderboard::handleMouseClick(double mouseX, double mouseY, bool pressed)
             
             if (!pressed && button.onClick)
             {
-                std::cout << "Leaderboard button clicked: " << button.label << std::endl;
+                DEBUG_PRINT("Leaderboard button clicked: " << button.label);
                 button.onClick();
             }
         }

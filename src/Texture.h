@@ -31,7 +31,7 @@ public:
     {
         m_slot = 0;
         m_targetUniform = "[NO UNIFORM SPECIFIED]";
-        m_filePath = "[NO FILEPATH SPECIFIED (expected for cubemaps as they use multiple files)]";
+        m_filePath = "[NO FILEPATH SPECIFIED]";
     }    
     ~Texture();
 
