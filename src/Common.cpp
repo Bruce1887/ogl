@@ -25,6 +25,10 @@ void setupDefaultGLFWCallbacks()
         if (key == GLFW_KEY_W && mods & GLFW_MOD_CONTROL)
             glfwSetWindowShouldClose(wdw, GLFW_TRUE);
 
+        // Attack on K key press
+        if (key == GLFW_KEY_K && action == GLFW_PRESS)
+            g_InputManager->attackInput.triggerAttack();
+
         g_InputManager->movementInput.updateMovement(key, action, mods); });
 
     // set cursor position callback (for mouse movement input)
@@ -37,8 +41,12 @@ void setupDefaultGLFWCallbacks()
     glfwSetScrollCallback(g_window, [](GLFWwindow * /*window*/, double xoffset, double yoffset)
                           { g_InputManager->scrollInput.updateScroll(xoffset, yoffset); });
 
-    // glfwSetMouseButtonCallback(g_window, [](GLFWwindow * /*window*/, int button, int action, int mods)
-    //                            { std::cout << "Mouse button event: button=" << button << " action=" << action << " mods=" << mods << std::endl; });
+    // set mouse button callback (for attack input)
+    glfwSetMouseButtonCallback(g_window, [](GLFWwindow * /*window*/, int button, int action, int /*mods*/)
+                               {
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+            g_InputManager->attackInput.triggerAttack();
+    });
 }
 
 int checkTextureUnits()

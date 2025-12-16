@@ -161,7 +161,7 @@ int main(int, char **)
 
             if (player && chunkManager)
             {
-                player->UpdateWorldMovement(dt, g_InputManager, chunkManager);
+                player->update(dt, g_InputManager, chunkManager);
             }
 
             if (enemy && player && chunkManager)
@@ -269,9 +269,7 @@ int main(int, char **)
         cleanupWorld(scene, terrainGen, chunkManager, player, enemy, gameClock, skybox, camController);
     delete menuSkybox;
 
-    glfwDestroyWindow(g_window);
-    glfwTerminate();
-
+    oogaboogaExit();
     return 0;
 }
 
@@ -359,11 +357,11 @@ void initializeWorld(Scene **scene, TerrainGenerator **terrainGen, TerrainChunkM
         std::uniform_real_distribution<float> distanceDist(20.0f, 40.0f);
         float spawnAngle = glm::radians(angleDist(gen));
         float spawnDistance = distanceDist(gen);
-        glm::vec3 enemySpawnPos = (*player)->getPosition() + glm::vec3(
+        glm::vec3 enemySpawnPos = (*player)->position + glm::vec3(
                                                          cos(spawnAngle) * spawnDistance,
                                                          0.0f,
                                                          sin(spawnAngle) * spawnDistance);
-        *enemy = new Enemy(enemySpawnPos, (MODELS_DIR / "warrior" / "Cyber_Ninja_Warrior.obj").string());
+        *enemy = new Enemy(enemySpawnPos, (MODELS_DIR / "cow" / "cow.obj").string());
         (*enemy)->modelYOffset = 1.0f;
         (*enemy)->modelScale = 1.0f;
         (*enemy)->enemyModel.setFogUniforms(fogColor, fogStart, fogEnd);

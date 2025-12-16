@@ -85,3 +85,20 @@ bool MouseScrollInput::fetchScroll(double &outScrollX, double &outScrollY)
     clearUpdated();
     return true;
 }
+
+// AttackInput implementations
+void AttackInput::triggerAttack()
+{
+    attackPressed = true;
+    markUpdated();
+}
+
+bool AttackInput::fetchAttack()
+{
+    if (!attackPressed)
+        return false;
+    
+    attackPressed = false;
+    clearUpdated();
+    return true;
+}

@@ -161,7 +161,7 @@ int main(int, char **)
 
                 if (player && chunkManager)
                 {
-                    player->UpdateWorldMovement(dt, g_InputManager, chunkManager);
+                    player->update(dt, g_InputManager, chunkManager);
                 }
 
                 if (camController && scene && player)

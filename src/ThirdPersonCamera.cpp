@@ -15,12 +15,12 @@ void ThirdPersonCamera::update(Camera& cam, const Player& player)
         cos(yawRad)
     );
 
-    glm::vec3 camPos = player.getPosition()
+    glm::vec3 camPos = player.position
                      - forward * distance
                      + glm::vec3(0, height, 0);
 
     cam.m_Position = camPos;
-    cam.m_Target   = player.getPosition() + glm::vec3(0, 1.8f, 0);
+    cam.m_Target   = player.position + glm::vec3(0, 1.8f, 0);
 }
 
 void ThirdPersonCamera::handlePanning(float dt)

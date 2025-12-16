@@ -85,6 +85,19 @@ public:
     bool fetchScroll(double &outScrollX, double &outScrollY);
 };
 
+class AttackInput : public InputSource
+{
+private:
+    bool attackPressed = false;
+
+public:
+    // Call when attack key (K) or left mouse button is pressed
+    void triggerAttack();
+    
+    // Returns true if attack was triggered since last fetch, then resets
+    bool fetchAttack();
+};
+
 /**
  * @brief Get the mouse input state from the given GLFW window.
  *
@@ -101,4 +114,5 @@ public:
     MovementInput movementInput;
     MouseMoveInput mouseMoveInput;
     MouseScrollInput scrollInput;
+    AttackInput attackInput;
 };

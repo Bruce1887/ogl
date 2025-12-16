@@ -29,15 +29,18 @@ uniform sampler2D u_texture_diffuse;
 
 void main()
 {
+    // Flip Y coordinate - Meshy.ai uses top-left origin, OpenGL uses bottom-left
+    vec2 correctedTexCoord = vec2(texCoord.x, 1.0 - texCoord.y);
+    
     // ambient
-    vec3 ambient = u_light_ambient * u_material_ambient * vec3(texture(u_texture_diffuse, texCoord)); 
+    vec3 ambient = u_light_ambient * u_material_ambient * vec3(texture(u_texture_diffuse, correctedTexCoord)); 
     
     // diffuse
     vec3 norm = normalize(normal);
     vec3 lightDir = normalize(u_light_position - fragPos);
     float diff = max(dot(norm, lightDir), 0.0);
     // Diffuse Light * Diffuse Factor * Material Diffuse Color (Kd)
-    vec3 diffuse = u_light_diffuse * diff * u_material_diffuse * vec3(texture(u_texture_diffuse, texCoord));
+    vec3 diffuse = u_light_diffuse * diff * u_material_diffuse * vec3(texture(u_texture_diffuse, correctedTexCoord));
     
     // specular
     vec3 viewDir = normalize(u_camPos - fragPos);
@@ -45,7 +48,7 @@ void main()
     // Use Material Shininess (Ns)
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), u_material_shininess);
     // Specular Light * Specular Factor * Material Specular Color (Ks)
-    vec3 specular = u_light_specular * spec * u_material_specular * vec3(texture(u_texture_diffuse, texCoord));
+    vec3 specular = u_light_specular * spec * u_material_specular * vec3(texture(u_texture_diffuse, correctedTexCoord));
 
     // The final color is the sum of the components
     vec3 result = ambient + diffuse + specular;
