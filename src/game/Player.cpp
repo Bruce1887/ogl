@@ -7,7 +7,7 @@
 
 
 Player::Player(glm::vec3 startPos, const std::string& modelPath)
-    : position(startPos), playerModel(modelPath)
+    : position(startPos), m_playerModel(modelPath)
 {
 }
 
@@ -18,16 +18,16 @@ void Player::render(glm::mat4 view, glm::mat4 proj, PhongLightConfig* light)
     glm::mat4 transform(1.0f);
 
     // translate to world position (with Y offset for proper ground placement)
-    transform = glm::translate(transform, position + glm::vec3(0.0f, modelYOffset, 0.0f));
+    transform = glm::translate(transform, position + glm::vec3(0.0f, m_modelYOffset, 0.0f));
 
     // rotate by yaw so model faces forward direction
-    transform = glm::rotate(transform, glm::radians(yaw), glm::vec3(0,1,0));
+    transform = glm::rotate(transform, glm::radians(m_yaw), glm::vec3(0,1,0));
 
     // scale the model
-    transform = glm::scale(transform, glm::vec3(modelScale));
+    transform = glm::scale(transform, glm::vec3(m_modelScale));
 
-    playerModel.setTransform(transform);
-    playerModel.render(view, proj, light);
+    m_playerModel.setTransform(transform);
+    m_playerModel.render(view, proj, light);
 }
 
 
@@ -37,14 +37,14 @@ void Player::update(float dt, InputManager* input, TerrainChunkManager* terrain)
     bool shiftDown;
     input->movementInput.fetchMovement(forwardMove, rightMove, shiftDown);
 
-    float speed = moveSpeed * dt;
+    float speed = m_moveSpeed * dt;
     if (shiftDown) speed *= 2.0f;
 
     // derive forward vector from yaw
     glm::vec3 forward(
-        sin(glm::radians(yaw)),
+        sin(glm::radians(m_yaw)),
         0,
-        cos(glm::radians(yaw))
+        cos(glm::radians(m_yaw))
     );
 
     glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0,1,0)));
@@ -66,10 +66,10 @@ void Player::update(float dt, InputManager* input, TerrainChunkManager* terrain)
 
     // --- Turn player left/right ---
     if (glfwGetKey(g_window, GLFW_KEY_Q) == GLFW_PRESS)
-        yaw += 60.0f * dt;
+        m_yaw += m_rotationSpeed * dt;
 
     if (glfwGetKey(g_window, GLFW_KEY_E) == GLFW_PRESS)
-        yaw -= 60.0f * dt;
+        m_yaw -= m_rotationSpeed * dt;
 
     // Update attack cooldown timer
     if (m_attackTimer > 0.0f)
@@ -83,7 +83,7 @@ int Player::attack(std::vector<Enemy*>& enemies)
         return 0;
     
     // Reset cooldown
-    m_attackTimer = attackCooldown;
+    m_attackTimer = m_attackCooldown;
     
     int enemiesHit = 0;
     
@@ -98,9 +98,9 @@ int Player::attack(std::vector<Enemy*>& enemies)
         toEnemy.y = 0.0f;
         float distance = glm::length(toEnemy);
         
-        if (distance <= attackRange)
+        if (distance <= m_attackRange)
         {
-            enemy->takeDamage(attackDamage);
+            enemy->takeDamage(m_attackDamage);
             enemiesHit++;
         }
     }

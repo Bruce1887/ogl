@@ -119,4 +119,4 @@ foreach(TEST_SRC ${TEST_PROGRAMS})
 endforeach()
 
 # --- Main executable ---
-# add_gl_executable(oogabooga src/main.cpp)
+add_gl_executable(oogabooga src/main.cpp)

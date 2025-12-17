@@ -171,8 +171,7 @@ int main(int, char **)
 
                 if (camController && scene && player)
                 {
-                    camController->handlePanning(dt);
-                    camController->update(scene->m_activeCamera, *player);
+                    camController->update(scene->m_activeCamera, *player, dt);
                 }
 
                 if (chunkManager && scene)
@@ -346,7 +345,7 @@ void initializeWorld(Scene **scene, TerrainGenerator **terrainGen, TerrainChunkM
 
     // Player
     *player = new Player(glm::vec3(100, 0, 100), (MODELS_DIR / "cow" / "cow.obj").string());
-    (*player)->playerModel.setFogUniforms(fogColor, fogStart, fogEnd);
+    (*player)->m_playerModel.setFogUniforms(fogColor, fogStart, fogEnd);
 
     // Enemy spawn near player
     {

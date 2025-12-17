@@ -11,18 +11,19 @@ class Player
 {
 public:
     glm::vec3 position;
-    float yaw = 0.0f;
+    float m_yaw = 0.0f;
 
-    float moveSpeed = 10.0f;
-    float modelScale = 1.0f;
-    float modelYOffset = 0.0f;
+    float m_moveSpeed = 10.0f;
+    float m_modelScale = 1.0f;
+    float m_modelYOffset = 0.0f;
+    float m_rotationSpeed = 90.0f;
     
     // Attack properties
-    float attackRange = 5.0f;
-    float attackDamage = 25.0f;
-    float attackCooldown = 0.1f;  // seconds between attacks
+    float m_attackRange = 5.0f;
+    float m_attackDamage = 25.0f;
+    float m_attackCooldown = 0.1f;  // seconds between attacks
 
-    Model playerModel;
+    Model m_playerModel;
 
     Player(glm::vec3 startPos, const std::string& modelPath);
     void update(float dt, InputManager* input, TerrainChunkManager* terrain);

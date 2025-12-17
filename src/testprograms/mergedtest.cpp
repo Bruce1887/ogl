@@ -92,11 +92,11 @@ int main(int, char **)
 
         ThirdPersonCamera camController;
         Player player(glm::vec3(100, 0, 100), (MODELS_DIR / "BruceMob" / "BruceMob.obj").string());
-        player.modelScale = 0.3f;  // Make the player model smaller
-        player.modelYOffset = 0.0f;
+        player.m_modelScale = 0.3f; // Make the player model smaller
+        player.m_modelYOffset = 0.0f;
 
         // Set fog uniforms for the player model
-        player.playerModel.setFogUniforms(fogColor, fogStart, fogEnd);
+        player.m_playerModel.setFogUniforms(fogColor, fogStart, fogEnd);
 
         // Spawn enemies at random positions near player
         std::random_device rd;
@@ -105,7 +105,8 @@ int main(int, char **)
         std::uniform_real_distribution<float> distanceDist(3.0f, 6.0f); // Enemies spawn very close (3-6 units away)
 
         // Helper lambda to spawn at random position around player
-        auto getRandomSpawnPos = [&]() {
+        auto getRandomSpawnPos = [&]()
+        {
             float angle = glm::radians(angleDist(gen));
             float dist = distanceDist(gen);
             return player.position + glm::vec3(cos(angle) * dist, 0.0f, sin(angle) * dist);
@@ -114,35 +115,34 @@ int main(int, char **)
         // Enemy 2: BobboMob - BLIND, follows smell (long range detection)
         Enemy bobbomob(player.position + glm::vec3(-3.0f, 0.0f, 0.0f), (MODELS_DIR / "BobboMob" / "BobboMob.obj").string());
         bobbomob.modelYOffset = 0.0f;
-        bobbomob.modelScale = 0.35f;  
-        bobbomob.detectionRange = 200.0f;  // Can smell player from far away
-        bobbomob.moveSpeed = 8.0f;         // Normal speed
-        bobbomob.movementPattern = MovementPattern::DIRECT;  // Follows smell directly
+        bobbomob.modelScale = 0.35f;
+        bobbomob.detectionRange = 200.0f;                   // Can smell player from far away
+        bobbomob.moveSpeed = 8.0f;                          // Normal speed
+        bobbomob.movementPattern = MovementPattern::DIRECT; // Follows smell directly
         bobbomob.enemyModel.setFogUniforms(fogColor, fogStart, fogEnd);
 
         // Enemy 3: jompamob - Has eyes, shorter detection but cautious
         Enemy jompamob(player.position + glm::vec3(3.0f, 0.0f, 0.0f), (MODELS_DIR / "JompaMob" / "JompaMob.obj").string());
         jompamob.modelYOffset = 0.0f;
-        jompamob.modelScale = 0.32f;  
-        jompamob.detectionRange = 75.0f;   // Can only see at 75 units
-        jompamob.moveSpeed = 6.0f;         // Slightly slower than standard
-        jompamob.movementPattern = MovementPattern::CAUTIOUS;  // Moves carefully
+        jompamob.modelScale = 0.32f;
+        jompamob.detectionRange = 75.0f;                      // Can only see at 75 units
+        jompamob.moveSpeed = 6.0f;                            // Slightly slower than standard
+        jompamob.movementPattern = MovementPattern::CAUTIOUS; // Moves carefully
         jompamob.enemyModel.setFogUniforms(fogColor, fogStart, fogEnd);
 
         // Enemy 4: MangeMob - Big, fast but DUMB (zigzag pattern)
         Enemy mangeMob(player.position + glm::vec3(0.0f, 0.0f, -3.0f), (MODELS_DIR / "MangeMob" / "MangeMob.obj").string());
         mangeMob.modelYOffset = 0.0f;
-        mangeMob.modelScale = 0.45f;  
-        mangeMob.detectionRange = 100.0f;  // Normal detection
-        mangeMob.moveSpeed = 12.0f;        // Fast!
-        mangeMob.movementPattern = MovementPattern::ZIGZAG;  // Dumb zigzag movement
-        mangeMob.health = 200.0f;  // Extra health
-        mangeMob.maxHealth = 200.0f;  // Extra health
+        mangeMob.modelScale = 0.45f;
+        mangeMob.detectionRange = 100.0f;                   // Normal detection
+        mangeMob.moveSpeed = 12.0f;                         // Fast!
+        mangeMob.movementPattern = MovementPattern::ZIGZAG; // Dumb zigzag movement
+        mangeMob.health = 200.0f;                           // Extra health
+        mangeMob.maxHealth = 200.0f;                        // Extra health
         mangeMob.enemyModel.setFogUniforms(fogColor, fogStart, fogEnd);
-        
 
         // Create enemy list for attack system
-        std::vector<Enemy*> enemies = { &bobbomob, &jompamob, &mangeMob };
+        std::vector<Enemy *> enemies = {&bobbomob, &jompamob, &mangeMob};
 
         while (!glfwWindowShouldClose(g_window))
         {
@@ -150,7 +150,7 @@ int main(int, char **)
             float dt = frameTimer.getDeltaTime();
 
             player.update(dt, g_InputManager, &chunkManager);
-            
+
             // Check for attack input (left click or K)
             if (g_InputManager->attackInput.fetchAttack())
             {
@@ -158,9 +158,9 @@ int main(int, char **)
                 if (hits > 0)
                     DEBUG_PRINT("Hit " << hits << " enemies!");
             }
-            
+
             // Respawn dead enemies near the player
-            for (Enemy* enemy : enemies)
+            for (Enemy *enemy : enemies)
             {
                 if (enemy->isDead())
                 {
@@ -168,14 +168,13 @@ int main(int, char **)
                     DEBUG_PRINT("Enemy respawned!");
                 }
             }
-            
+
             // Update enemies
             bobbomob.update(dt, &player, &chunkManager);
             jompamob.update(dt, &player, &chunkManager);
             mangeMob.update(dt, &player, &chunkManager);
 
-            camController.handlePanning(dt); // uses GLFW directly
-            camController.update(scene.m_activeCamera, player);
+            camController.update(scene.m_activeCamera, player, dt);
 
             player.render(scene.m_activeCamera.getViewMatrix(),
                           scene.m_activeCamera.getProjectionMatrix(),
@@ -222,7 +221,7 @@ int main(int, char **)
             frameCount++;
 
             scene.renderScene();
-
+            glfwSwapBuffers(g_window);
             if (glfwGetKey(g_window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
                 glfwSetWindowShouldClose(g_window, true);
         }

@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <optional>
 
 class Player;
 class Camera;
@@ -7,12 +8,19 @@ class Camera;
 class ThirdPersonCamera
 {
 public:
-    float distance = 8.0f;
-    float height   = 3.0f;
-    float minHeight = 1.0f;
-    float maxHeight = 10.0f;
+    float m_distance = 8.0f;
+    float m_height = 3.0f;
+    float m_minHeight = 1.0f;
+    float m_maxHeight = 10.0f;
 
+    void update(Camera &cam, const Player &player, float dt);
+
+    void setMinHeightFunction(std::function<float(float, float)> func)
+    {
+        m_minHeightFunc = std::move(func);
+    }
+
+private:
+    std::optional<std::function<float(float, float)>> m_minHeightFunc;
     void handlePanning(float dt);
-    void update(Camera& cam, const Player& player);
 };
-

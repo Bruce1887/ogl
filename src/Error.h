@@ -26,7 +26,5 @@
     #define DEBUG_PRINT(msg) do {} while (0)
 #endif
 
-
-
 void GLClearError();
 void GLLogCall(const char *function, const char *file, int line);
