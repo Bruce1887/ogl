@@ -13,9 +13,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-HUDEntityImpl::HUDEntityImpl(Player* player, GameClock* clock, int screenWidth, int screenHeight)
+HUDEntityImpl::HUDEntityImpl(Player* player, int screenWidth, int screenHeight)
     : m_player(player),
-      m_clock(clock),
       m_screenWidth(screenWidth),
       m_screenHeight(screenHeight)
 {
@@ -48,7 +47,7 @@ void HUDEntityImpl::render(glm::mat4 view, glm::mat4 projection, PhongLightConfi
     m_shaderRef->setUniform("u_Projection", ortho);
 
     DrawVitalsBars();
-    DrawClockDisplay();
+    // DrawClockDisplay();
 
     glDisable(GL_BLEND);  // Disable blending after HUD
     glDepthMask(GL_TRUE); // Re-enable depth writing
@@ -70,6 +69,7 @@ void HUDEntityImpl::DrawVitalsBars() {
     DrawRect(x_start, y_start, bar_width * (health / maxHealth), bar_height, {0.8f, 0.1f, 0.1f, 1.0f}, 0.0f);
 }
 
+/*
 void HUDEntityImpl::DrawClockDisplay() {
     float time = m_clock ? m_clock->GetTimeOfDayHours() : 0.0f;
 
@@ -85,6 +85,7 @@ void HUDEntityImpl::DrawClockDisplay() {
     // TODO: Draw text using your text rendering system
     // DrawText(timeStr, m_screenWidth - 150.0f, m_screenHeight - 50.0f, clockColor);
 }
+*/
 
 void HUDEntityImpl::DrawRect(float x, float y, float width, float height, const glm::vec4& color, float zOffset) {
     glm::mat4 model = glm::mat4(1.0f);

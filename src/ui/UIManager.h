@@ -34,7 +34,7 @@ public:
     ~UIManager() = default;
 
     // Initialize with game objects (call when starting gameplay)
-    void initializeGameUI(Player* player, GameClock* clock);
+    void initializeGameUI(Player* player);
     
     // Set skybox for menu backgrounds
     void setMenuSkybox(std::unique_ptr<Skybox> skybox, std::unique_ptr<Shader> skyboxShader);
@@ -79,7 +79,6 @@ private:
 
     // References to game objects
     Player* m_player = nullptr;
-    GameClock* m_gameClock = nullptr;
     
     // Menu background
     std::unique_ptr<Skybox> m_menuSkybox = nullptr;

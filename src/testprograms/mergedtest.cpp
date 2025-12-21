@@ -45,14 +45,7 @@ int main(int, char **)
         Scene scene(camera, std::move(lightSource));
 
         // Setup skybox
-        std::vector<std::filesystem::path> skyboxFaces = {
-            TEXTURE_DIR / "skybox" / "right.jpg",
-            TEXTURE_DIR / "skybox" / "left.jpg",
-            TEXTURE_DIR / "skybox" / "top.jpg",
-            TEXTURE_DIR / "skybox" / "bottom.jpg",
-            TEXTURE_DIR / "skybox" / "front.jpg",
-            TEXTURE_DIR / "skybox" / "back.jpg"};
-        std::unique_ptr<Skybox> gameSkybox = std::make_unique<Skybox>(skyboxFaces);
+        std::unique_ptr<Skybox> gameSkybox = std::make_unique<Skybox>();
         scene.m_skybox = std::move(gameSkybox);
 
         // Shader for terrain
@@ -105,41 +98,49 @@ int main(int, char **)
         std::uniform_real_distribution<float> distanceDist(3.0f, 6.0f); // Enemies spawn very close (3-6 units away)
 
         // Helper lambda to spawn at random position around player
-        auto getRandomSpawnPos = [&]()
-        {
-            float angle = glm::radians(angleDist(gen));
-            float dist = distanceDist(gen);
-            return player.position + glm::vec3(cos(angle) * dist, 0.0f, sin(angle) * dist);
-        };
+        // auto getRandomSpawnPos = [&]()
+        // {
+        //     float angle = glm::radians(angleDist(gen));
+        //     float dist = distanceDist(gen);
+        //     return player.position + glm::vec3(cos(angle) * dist, 0.0f, sin(angle) * dist);
+        // };
 
         // Enemy 2: BobboMob - BLIND, follows smell (long range detection)
-        Enemy bobbomob(player.position + glm::vec3(-3.0f, 0.0f, 0.0f), (MODELS_DIR / "BobboMob" / "BobboMob.obj").string());
-        bobbomob.modelYOffset = 0.0f;
-        bobbomob.modelScale = 0.35f;
-        bobbomob.detectionRange = 200.0f;                   // Can smell player from far away
-        bobbomob.moveSpeed = 8.0f;                          // Normal speed
-        bobbomob.movementPattern = MovementPattern::DIRECT; // Follows smell directly
-        bobbomob.enemyModel.setFogUniforms(fogColor, fogStart, fogEnd);
+        EnemyData bobboData;
+        bobboData.m_position = player.m_position + glm::vec3(-3.0f, 0.0f, 0.0f);
+        bobboData.m_detectionRange = 200.0f;                   // Can smell player from far away
+        bobboData.m_moveSpeed = 8.0f;                          // Normal speed
+        bobboData.m_movementPattern = MovementPattern::DIRECT; // Follows smell directly
+        bobboData.m_modelYOffset = 0.0f;
+        bobboData.m_modelScale = 0.35f;        
+        Enemy bobbomob(bobboData, (MODELS_DIR / "BobboMob" / "BobboMob.obj").string());
+        bobbomob.m_enemyModel.setFogUniforms(fogColor, fogStart, fogEnd);
 
         // Enemy 3: jompamob - Has eyes, shorter detection but cautious
-        Enemy jompamob(player.position + glm::vec3(3.0f, 0.0f, 0.0f), (MODELS_DIR / "JompaMob" / "JompaMob.obj").string());
-        jompamob.modelYOffset = 0.0f;
-        jompamob.modelScale = 0.32f;
-        jompamob.detectionRange = 75.0f;                      // Can only see at 75 units
-        jompamob.moveSpeed = 6.0f;                            // Slightly slower than standard
-        jompamob.movementPattern = MovementPattern::CAUTIOUS; // Moves carefully
-        jompamob.enemyModel.setFogUniforms(fogColor, fogStart, fogEnd);
+        EnemyData jompaData;
+        jompaData.m_position = player.m_position + glm::vec3(3.0f, 0.0f, 0.0f);
+        jompaData.m_detectionRange = 75.0f;                      // Can only see at 75 units
+        jompaData.m_moveSpeed = 6.0f;                            // Slightly slower than standard
+        jompaData.m_movementPattern = MovementPattern::CAUTIOUS; // Moves carefully
+        jompaData.m_modelYOffset = 0.0f;
+        jompaData.m_modelScale = 0.32f;
+        Enemy jompamob(jompaData, (MODELS_DIR / "JompaMob" / "JompaMob.obj").string());
+        jompamob.m_enemyModel.setFogUniforms(fogColor, fogStart, fogEnd);
 
         // Enemy 4: MangeMob - Big, fast but DUMB (zigzag pattern)
-        Enemy mangeMob(player.position + glm::vec3(0.0f, 0.0f, -3.0f), (MODELS_DIR / "MangeMob" / "MangeMob.obj").string());
-        mangeMob.modelYOffset = 0.0f;
-        mangeMob.modelScale = 0.45f;
-        mangeMob.detectionRange = 100.0f;                   // Normal detection
-        mangeMob.moveSpeed = 12.0f;                         // Fast!
-        mangeMob.movementPattern = MovementPattern::ZIGZAG; // Dumb zigzag movement
-        mangeMob.health = 200.0f;                           // Extra health
-        mangeMob.maxHealth = 200.0f;                        // Extra health
-        mangeMob.enemyModel.setFogUniforms(fogColor, fogStart, fogEnd);
+        EnemyData mangeData;
+        mangeData.m_position = player.m_position + glm::vec3(0.0f, 0.0f, 3.0f);
+        mangeData.m_detectionRange = 100.0f;                   // Normal detection
+        mangeData.m_moveSpeed = 12.0f;                         // Fast!
+        mangeData.m_movementPattern = MovementPattern::ZIGZAG; // Dumb zigzag movement
+        mangeData.m_health = 200.0f;                           // Extra health
+        mangeData.m_maxHealth = 200.0f;
+        mangeData.m_modelYOffset = 0.0f;
+        mangeData.m_modelScale = 0.45f;
+        Enemy mangeMob(mangeData, (MODELS_DIR / "MangeMob" / "MangeMob.obj").string());
+        mangeMob.m_enemyModel.setFogUniforms(fogColor, fogStart, fogEnd);
+
+
 
         // Create enemy list for attack system
         std::vector<Enemy *> enemies = {&bobbomob, &jompamob, &mangeMob};
@@ -164,15 +165,15 @@ int main(int, char **)
             {
                 if (enemy->isDead())
                 {
-                    enemy->respawn(player.position, 15.0f, 40.0f);
+                    enemy->respawn(player.m_position, 15.0f, 40.0f);
                     DEBUG_PRINT("Enemy respawned!");
                 }
             }
 
             // Update enemies
-            bobbomob.update(dt, &player, &chunkManager);
-            jompamob.update(dt, &player, &chunkManager);
-            mangeMob.update(dt, &player, &chunkManager);
+            bobbomob.update(dt, player.m_position, &chunkManager);
+            jompamob.update(dt, player.m_position, &chunkManager);
+            mangeMob.update(dt, player.m_position, &chunkManager);
 
             camController.update(scene.m_activeCamera, player, dt);
 

@@ -1,14 +1,14 @@
-#include "InstancedTreeRenderer.h"
+#include "InstancedRenderer.h"
 #include "MeshRenderable.h"
 #include "RenderingContext.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
 
-InstancedTreeRenderer::InstancedTreeRenderer()
+InstancedRenderer::InstancedRenderer()
 {
 }
 
-InstancedTreeRenderer::~InstancedTreeRenderer()
+InstancedRenderer::~InstancedRenderer()
 {
     if (m_instanceVBO != 0)
     {
@@ -16,13 +16,12 @@ InstancedTreeRenderer::~InstancedTreeRenderer()
     }
 }
 
-void InstancedTreeRenderer::init(Model* treeModel)
+void InstancedRenderer::init(Model *model)
 {
-    m_sourceModel = treeModel;
+    m_sourceModel = model;
 
-    // Create instanced shader - use non-textured version since tree model uses material colors only
     m_instancedShader = std::make_shared<Shader>();
-    m_instancedShader->addShader("TreeInstanced.vert", ShaderType::VERTEX);
+    m_instancedShader->addShader("Instanced.vert", ShaderType::VERTEX);
     m_instancedShader->addShader("PhongMTL_FOG.frag", ShaderType::FRAGMENT);
     m_instancedShader->createProgram();
 
@@ -30,30 +29,31 @@ void InstancedTreeRenderer::init(Model* treeModel)
     glGenBuffers(1, &m_instanceVBO);
 }
 
-void InstancedTreeRenderer::clearInstances()
+void InstancedRenderer::clearInstances()
 {
     m_instanceTransforms.clear();
     m_dirty = true;
 }
 
-void InstancedTreeRenderer::addInstance(const glm::vec3& position, float scale, float rotationY)
+void InstancedRenderer::addInstance(const glm::vec3 &position, float scale, float rotationY)
 {
     glm::mat4 transform(1.0f);
     transform = glm::translate(transform, position);
     transform = glm::rotate(transform, glm::radians(rotationY), glm::vec3(0.0f, 1.0f, 0.0f));
     transform = glm::scale(transform, glm::vec3(scale));
-    
+
     m_instanceTransforms.push_back(transform);
     m_dirty = true;
 }
 
-void InstancedTreeRenderer::uploadInstanceData()
+void InstancedRenderer::uploadInstanceData()
 {
-    if (!m_dirty || m_instanceTransforms.empty())
-        return;
+#ifdef DEBUG
+    assert(m_dirty && !m_instanceTransforms.empty());
+#endif
 
     glBindBuffer(GL_ARRAY_BUFFER, m_instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, 
+    glBufferData(GL_ARRAY_BUFFER,
                  m_instanceTransforms.size() * sizeof(glm::mat4),
                  m_instanceTransforms.data(),
                  GL_DYNAMIC_DRAW);
@@ -62,27 +62,28 @@ void InstancedTreeRenderer::uploadInstanceData()
     m_dirty = false;
 }
 
-void InstancedTreeRenderer::setFogUniforms(const glm::vec3& fogColor, float fogStart, float fogEnd)
+void InstancedRenderer::setFogUniforms(const glm::vec3 &fogColor, float fogStart, float fogEnd)
 {
     m_fogColor = fogColor;
     m_fogStart = fogStart;
     m_fogEnd = fogEnd;
 }
 
-void InstancedTreeRenderer::render(const glm::mat4& view, const glm::mat4& projection, PhongLightConfig* light)
+void InstancedRenderer::render(const glm::mat4 &view, const glm::mat4 &projection, PhongLightConfig *light)
 {
     if (!m_sourceModel || m_instanceTransforms.empty())
         return;
 
     // Upload instance data if needed
-    uploadInstanceData();
+    if ((m_dirty && !m_instanceTransforms.empty()))
+        uploadInstanceData();
 
     m_instancedShader->bind();
 
     // Set common uniforms
     m_instancedShader->setUniform("u_view", view);
     m_instancedShader->setUniform("u_projection", projection);
-    
+
     // Camera position for fog
     glm::vec3 camPos = glm::vec3(glm::inverse(view)[3]);
     m_instancedShader->setUniform("u_camPos", camPos);
@@ -102,22 +103,22 @@ void InstancedTreeRenderer::render(const glm::mat4& view, const glm::mat4& proje
     }
 
     // Get the model's mesh renderables
-    const auto& meshRenderables = m_sourceModel->getModelData()->getMeshRenderables();
+    const auto &meshRenderables = m_sourceModel->getModelData()->getMeshRenderables();
 
-    for (const auto& mr : meshRenderables)
+    for (const auto &mr : meshRenderables)
     {
         // Get the mesh
-        Mesh* mesh = mr->getMesh();
-        if (!mesh) continue;
+        Mesh *mesh = mr->getMesh();
+        if (!mesh)
+            continue;
 
         // Copy material uniforms from the original mesh renderable (no textures for this model)
-        for (const auto& kv : mr->getUniforms())
+        for (const auto &kv : mr->getUniforms())
         {
-            const std::string& uniformName = kv.first;
-            const UniformValue& uniformValue = kv.second;
-            std::visit([&, uniformName](auto&& arg) {
-                m_instancedShader->setUniform(uniformName, arg);
-            }, uniformValue);
+            const std::string &uniformName = kv.first;
+            const UniformValue &uniformValue = kv.second;
+            std::visit([&, uniformName](auto &&arg)
+                       { m_instancedShader->setUniform(uniformName, arg); }, uniformValue);
         }
 
         // Bind the VAO
@@ -131,8 +132,8 @@ void InstancedTreeRenderer::render(const glm::mat4& view, const glm::mat4& proje
         {
             GLuint loc = 5 + i;
             glEnableVertexAttribArray(loc);
-            glVertexAttribPointer(loc, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), 
-                                  (void*)(sizeof(glm::vec4) * i));
+            glVertexAttribPointer(loc, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4),
+                                  (void *)(sizeof(glm::vec4) * i));
             glVertexAttribDivisor(loc, 1); // One per instance
         }
 
@@ -140,15 +141,15 @@ void InstancedTreeRenderer::render(const glm::mat4& view, const glm::mat4& proje
         if (mesh->indexBuffer)
         {
             mesh->indexBuffer->bind();
-            glDrawElementsInstanced(GL_TRIANGLES, 
+            glDrawElementsInstanced(GL_TRIANGLES,
                                     mesh->indexBuffer->getCount(),
-                                    GL_UNSIGNED_INT, 
+                                    GL_UNSIGNED_INT,
                                     nullptr,
                                     static_cast<GLsizei>(m_instanceTransforms.size()));
         }
         else
         {
-            glDrawArraysInstanced(GL_TRIANGLES, 0, 
+            glDrawArraysInstanced(GL_TRIANGLES, 0,
                                   mesh->vertexArray->getCount(),
                                   static_cast<GLsizei>(m_instanceTransforms.size()));
         }

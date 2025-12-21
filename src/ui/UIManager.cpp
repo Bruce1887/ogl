@@ -34,15 +34,14 @@ UIManager::UIManager(int screenWidth, int screenHeight)
     };
 }
 
-void UIManager::initializeGameUI(Player* player, GameClock* clock)
+void UIManager::initializeGameUI(Player* player)
 {
     m_player = player;
-    m_gameClock = clock;
 
     // Create in-game HUD
-    if (player && clock)
+    if (player)
     {
-        m_gameHUD = std::make_unique<HUDEntityImpl>(player, clock, m_screenWidth, m_screenHeight);
+        m_gameHUD = std::make_unique<HUDEntityImpl>(player, m_screenWidth, m_screenHeight);
     }
     
     // Create pause menu
@@ -86,7 +85,7 @@ void UIManager::update(float deltaTime)
                 onStartGame = nullptr;  // Only call once
             }
             // Transition to playing once game objects are initialized
-            if (m_player && m_gameClock && m_gameHUD)
+            if (m_player && m_gameHUD)
             {
                 DEBUG_PRINT("World loaded! Starting gameplay" );
                 transitionTo(GameState::PLAYING);

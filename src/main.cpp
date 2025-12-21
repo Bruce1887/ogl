@@ -36,9 +36,7 @@ int main(int, char **)
 {
     // Initialize OpenGL and window
     if (oogaboogaInit(__FILE__))
-    {
-        return -1;
-    }
+        goto out;
 
     {
         // Create UI Manager
@@ -48,34 +46,22 @@ int main(int, char **)
         std::unique_ptr<WorldManager> worldManager;
 
         // Setup menu skybox
-        std::vector<std::filesystem::path> menuSkyboxFaces = {
-            TEXTURE_DIR / "skybox" / "right.jpg",
-            TEXTURE_DIR / "skybox" / "left.jpg",
-            TEXTURE_DIR / "skybox" / "top.jpg",
-            TEXTURE_DIR / "skybox" / "bottom.jpg",
-            TEXTURE_DIR / "skybox" / "front.jpg",
-            TEXTURE_DIR / "skybox" / "back.jpg"};
-        auto menuSkybox = std::make_unique<Skybox>(menuSkyboxFaces);
+        auto menuSkybox = std::make_unique<Skybox>();
         uiManager.setMenuSkybox(std::move(menuSkybox), nullptr);
 
         // UI callback: Start game
         uiManager.onStartGame = [&]()
         {
-            DEBUG_PRINT("Starting game - Initializing world...");
-
+            DEBUG_PRINT("Initializing world...");
             worldManager = std::make_unique<WorldManager>();
-
             if (!worldManager->initialize())
             {
                 DEBUG_PRINT("Failed to initialize world!");
                 worldManager.reset();
                 return;
             }
-
             uiManager.initializeGameUI(
-                worldManager->getPlayer(),
-                worldManager->getGameClock());
-
+                worldManager->getPlayer());
             DEBUG_PRINT("World initialized successfully!");
         };
 
@@ -200,11 +186,9 @@ int main(int, char **)
             frameCount++;
             glfwSwapBuffers(g_window);
         }
-
-        // Cleanup (automatic via unique_ptr destructors)
-        worldManager.reset();
     }
 
+out:
     DEBUG_PRINT("Exiting program...");
     oogaboogaExit();
     return 0;

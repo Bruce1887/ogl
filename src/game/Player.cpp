@@ -7,7 +7,7 @@
 
 
 Player::Player(glm::vec3 startPos, const std::string& modelPath)
-    : position(startPos), m_playerModel(modelPath)
+    : m_position(startPos), m_playerModel(modelPath)
 {
 }
 
@@ -18,7 +18,7 @@ void Player::render(glm::mat4 view, glm::mat4 proj, PhongLightConfig* light)
     glm::mat4 transform(1.0f);
 
     // translate to world position (with Y offset for proper ground placement)
-    transform = glm::translate(transform, position + glm::vec3(0.0f, m_modelYOffset, 0.0f));
+    transform = glm::translate(transform, m_position + glm::vec3(0.0f, m_modelYOffset, 0.0f));
 
     // rotate by yaw so model faces forward direction
     transform = glm::rotate(transform, glm::radians(m_yaw), glm::vec3(0,1,0));
@@ -58,11 +58,11 @@ void Player::update(float dt, InputManager* input, TerrainChunkManager* terrain)
     if (rightMove != 0)
         movement += right * (rightMove * speed);
 
-    position += movement;
+    m_position += movement;
 
     // collision with terrain
-    float terrainY = terrain->getPreciseHeightAt(position.x, position.z);
-    position.y = terrainY;
+    float terrainY = terrain->getPreciseHeightAt(m_position.x, m_position.z);
+    m_position.y = terrainY;
 
     // --- Turn player left/right ---
     if (glfwGetKey(g_window, GLFW_KEY_Q) == GLFW_PRESS)
@@ -94,7 +94,7 @@ int Player::attack(std::vector<Enemy*>& enemies)
             continue;
             
         // Calculate distance to enemy (XZ plane only)
-        glm::vec3 toEnemy = enemy->position - position;
+        glm::vec3 toEnemy = enemy->m_enemyData.m_position - m_position;
         toEnemy.y = 0.0f;
         float distance = glm::length(toEnemy);
         

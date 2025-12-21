@@ -7,7 +7,7 @@
 #include "VertexBufferLayout.h"
 #include "MeshRenderable.h"
 #include "TerrainGenerator.h"
-#include "InstancedTreeRenderer.h"
+#include "../InstancedRenderer.h"
 #include "Model.h"
 
 #include <unordered_map>
@@ -85,7 +85,7 @@ public:
             std::cout << "Initialized TerrainChunkManager with chunk size " << TC_CHUNK_SIZE << " and vertex step " << TC_VERTEX_STEP << std::endl;
             
             // Initialize instanced tree renderer
-            m_treeRenderer = std::make_unique<InstancedTreeRenderer>();
+            m_treeRenderer = std::make_unique<InstancedRenderer>();
             m_treeRenderer->init(m_generator->m_terrainRenderables.gran.get());
           };
 
@@ -133,7 +133,7 @@ private:
     float m_fogEnd = 0.0f;
 
     // Instanced tree renderer
-    std::unique_ptr<InstancedTreeRenderer> m_treeRenderer;
+    std::unique_ptr<InstancedRenderer> m_treeRenderer;
     bool m_treesNeedUpdate = true;
 
     // Global water plane (single mesh to avoid seams between chunks)

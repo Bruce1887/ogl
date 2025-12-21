@@ -1,16 +1,21 @@
 #pragma once
+#include "Common.h"
+#include "Camera.h"
+#include "Scene.h"
+#include "Shader.h"
+#include "Texture.h"
+#include "Terrain/TerrainGenerator.h"
+#include "Terrain/TerrainChunk.h"
+#include "ThirdPersonCamera.h"
+#include "Skybox.h"
+#include "game/Player.h"
+#include "game/Enemy.h"
+#include "game/EnemySpawner.h"
+
 #include <memory>
 #include <glm/glm.hpp>
-
-// Forward declarations
-class Scene;
-class TerrainGenerator;
-class TerrainChunkManager;
-class Player;
-class Enemy;
-class GameClock;
-class ThirdPersonCamera;
-class InputManager;
+#include <iostream>
+#include <random>
 
 /**
  * @brief Manages all world-related systems including terrain, entities, and rendering
@@ -20,8 +25,8 @@ class InputManager;
  */
 class WorldManager {
 public:
-    WorldManager();
-    ~WorldManager();
+    WorldManager() = default;
+    ~WorldManager() = default;
 
     // Prevent copying
     WorldManager(const WorldManager&) = delete;
@@ -45,14 +50,8 @@ public:
      */
     void render();
     
-    /**
-     * @brief Cleanup all resources
-     */
-    void cleanup();
-    
     // Getters for UI and other systems
     Player* getPlayer() const { return m_player.get(); }
-    GameClock* getGameClock() const { return m_gameClock.get(); }
     Scene* getScene() const { return m_scene.get(); }
     TerrainChunkManager* getChunkManager() const { return m_chunkManager.get(); }
     ThirdPersonCamera* getCameraController() const { return m_camController.get(); }
@@ -69,8 +68,8 @@ private:
     std::unique_ptr<TerrainGenerator> m_terrainGen;
     std::unique_ptr<TerrainChunkManager> m_chunkManager;
     std::unique_ptr<Player> m_player;
-    std::unique_ptr<Enemy> m_enemy;
-    std::unique_ptr<GameClock> m_gameClock;
+    std::unique_ptr<EnemySpawner> m_enemySpawner;
+    // std::unique_ptr<GameClock> m_gameClock;
     std::unique_ptr<ThirdPersonCamera> m_camController;
     
     // Configuration

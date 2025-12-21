@@ -14,20 +14,19 @@ void ThirdPersonCamera::update(Camera &cam, const Player &player, float dt)
         0,
         cos(yawRad));
 
-    glm::vec3 camPos = player.position - forward * m_distance + glm::vec3(0, m_height, 0);
+    glm::vec3 camPos = player.m_position - forward * m_distance + glm::vec3(0, m_height, 0);
 
     handlePanning(dt);
     
     cam.m_Position = camPos;
 
+    // Apply minimum height function (if such a function is set)
     if (m_minHeightFunc.has_value())
     {
         float computedMinHeight = (*m_minHeightFunc)(cam.m_Position.x, cam.m_Position.z); 
-        DEBUG_PRINT("cam.m_Position.y: " << cam.m_Position.y << "ComputedMinHeight: " << computedMinHeight);
-
         cam.m_Position.y = glm::max(cam.m_Position.y, computedMinHeight);
     }
-    cam.m_Target = player.position + glm::vec3(0, 1.8f, 0);
+    cam.m_Target = player.m_position + glm::vec3(0, 1.8f, 0);
 }
 
 void ThirdPersonCamera::handlePanning(float dt)

@@ -10,7 +10,7 @@ class Enemy;
 class Player
 {
 public:
-    glm::vec3 position;
+    glm::vec3 m_position;
     float m_yaw = 0.0f;
 
     float m_moveSpeed = 10.0f;

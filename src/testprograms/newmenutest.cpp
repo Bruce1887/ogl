@@ -18,17 +18,16 @@
 #include "RenderingContext.h"
 
 #include "game/Player.h"
-#include "game/GameClock.h"
 #include "game/Enemy.h"
 #include "ui/UIManager.h"
 #include "ui/GameState.h"
 
 // Forward declarations
 void initializeWorld(Scene **scene, TerrainGenerator **terrainGen, TerrainChunkManager **chunkManager,
-                     Player **player, Enemy **enemy, GameClock **gameClock,
+                     Player **player, Enemy **enemy,
                      ThirdPersonCamera **camController, float *renderDistance);
 void cleanupWorld(Scene *scene, TerrainGenerator *terrainGen, TerrainChunkManager *chunkManager,
-                  Player *player, Enemy *enemy, GameClock *gameClock,
+                  Player *player, Enemy *enemy,
                   ThirdPersonCamera *camController);
 
 // Module-level mouse tracking for GLFW callbacks
@@ -59,27 +58,19 @@ int main(int, char **)
         TerrainChunkManager *chunkManager = nullptr;
         Player *player = nullptr;
         Enemy *enemy = nullptr;
-        GameClock *gameClock = nullptr;
         ThirdPersonCamera *camController = nullptr;
         float renderDistance = 100.0f;
 
-        // Setup menu skybox (filesystem paths; Skybox manages its own shader)
-        std::vector<std::filesystem::path> menuSkyboxFaces = {
-            TEXTURE_DIR / "skybox" / "right.jpg",
-            TEXTURE_DIR / "skybox" / "left.jpg",
-            TEXTURE_DIR / "skybox" / "top.jpg",
-            TEXTURE_DIR / "skybox" / "bottom.jpg",
-            TEXTURE_DIR / "skybox" / "front.jpg",
-            TEXTURE_DIR / "skybox" / "back.jpg"};
-        auto menuSkybox = std::make_unique<Skybox>(menuSkyboxFaces);
+        // Setup menu skybox
+        auto menuSkybox = std::make_unique<Skybox>();
         uiManager.setMenuSkybox(std::move(menuSkybox), nullptr);
 
         // Set up UIManager callbacks
         uiManager.onStartGame = [&]()
         {
             std::cout << "Initializing world..." << std::endl;
-            initializeWorld(&scene, &terrainGen, &chunkManager, &player, &enemy, &gameClock, &camController, &renderDistance);
-            uiManager.initializeGameUI(player, gameClock);
+            initializeWorld(&scene, &terrainGen, &chunkManager, &player, &enemy, &camController, &renderDistance);
+            uiManager.initializeGameUI(player);
         };
 
         uiManager.onResumeGame = [&]()
@@ -154,11 +145,6 @@ int main(int, char **)
             // Update game world if playing and not paused
             if (uiManager.getCurrentState() == ui::GameState::PLAYING && !uiManager.isPaused())
             {
-                if (gameClock)
-                {
-                    gameClock->Update(dt);
-                }
-
                 if (player && chunkManager)
                 {
                     player->update(dt, g_InputManager, chunkManager);
@@ -166,7 +152,7 @@ int main(int, char **)
 
                 if (enemy && player && chunkManager)
                 {
-                    enemy->update(dt, player, chunkManager);
+                    enemy->update(dt, player->m_position, chunkManager);
                 }
 
                 if (camController && scene && player)
@@ -265,7 +251,7 @@ int main(int, char **)
 
         // Cleanup
         if (scene)
-            cleanupWorld(scene, terrainGen, chunkManager, player, enemy, gameClock, camController);
+            cleanupWorld(scene, terrainGen, chunkManager, player, enemy, camController);
     }
     DEBUG_PRINT("Exiting program.");
     oogaboogaExit();
@@ -273,7 +259,7 @@ int main(int, char **)
 }
 
 void initializeWorld(Scene **scene, TerrainGenerator **terrainGen, TerrainChunkManager **chunkManager,
-                     Player **player, Enemy **enemy, GameClock **gameClock,
+                     Player **player, Enemy **enemy,
                      ThirdPersonCamera **camController, float *renderDistance)
 {
     // Camera setup
@@ -300,15 +286,7 @@ void initializeWorld(Scene **scene, TerrainGenerator **terrainGen, TerrainChunkM
     *scene = new Scene(camera, std::move(lightSource));
 
     // Skybox (Scene owns unique_ptr; Skybox manages its shader)
-    std::vector<std::filesystem::path> skyboxFaces = {
-        TEXTURE_DIR / "skybox" / "right.jpg",
-        TEXTURE_DIR / "skybox" / "left.jpg",
-        TEXTURE_DIR / "skybox" / "top.jpg",
-        TEXTURE_DIR / "skybox" / "bottom.jpg",
-        TEXTURE_DIR / "skybox" / "front.jpg",
-        TEXTURE_DIR / "skybox" / "back.jpg"};
-
-    (*scene)->m_skybox = std::make_unique<Skybox>(skyboxFaces);
+    (*scene)->m_skybox = std::make_unique<Skybox>();
 
     // Terrain
     *terrainGen = new TerrainGenerator();
@@ -355,29 +333,27 @@ void initializeWorld(Scene **scene, TerrainGenerator **terrainGen, TerrainChunkM
         std::uniform_real_distribution<float> distanceDist(20.0f, 40.0f);
         float spawnAngle = glm::radians(angleDist(gen));
         float spawnDistance = distanceDist(gen);
-        glm::vec3 enemySpawnPos = (*player)->position + glm::vec3(
-                                                            cos(spawnAngle) * spawnDistance,
-                                                            0.0f,
-                                                            sin(spawnAngle) * spawnDistance);
-        *enemy = new Enemy(enemySpawnPos, (MODELS_DIR / "cow" / "cow.obj").string());
-        (*enemy)->modelYOffset = 1.0f;
-        (*enemy)->modelScale = 1.0f;
-        (*enemy)->enemyModel.setFogUniforms(fogColor, fogStart, fogEnd);
+        glm::vec3 enemySpawnPos = (*player)->m_position + glm::vec3(
+                                                              cos(spawnAngle) * spawnDistance,
+                                                              0.0f,
+                                                              sin(spawnAngle) * spawnDistance);
+        EnemyData enemyData;
+        enemyData.m_position = enemySpawnPos;
+        enemyData.m_modelYOffset = 1.0f;
+        enemyData.m_modelScale = 1.0f;
+        *enemy = new Enemy(enemyData, (MODELS_DIR / "cow" / "cow.obj").string());
+        (*enemy)->m_enemyModel.setFogUniforms(fogColor, fogStart, fogEnd);
     }
-
-    // Game clock
-    *gameClock = new GameClock();
 
     // Third person camera
     *camController = new ThirdPersonCamera();
 }
 
 void cleanupWorld(Scene *scene, TerrainGenerator *terrainGen, TerrainChunkManager *chunkManager,
-                  Player *player, Enemy *enemy, GameClock *gameClock,
+                  Player *player, Enemy *enemy,
                   ThirdPersonCamera *camController)
 {
     delete camController;
-    delete gameClock;
     delete enemy;
     delete player;
     delete chunkManager;

@@ -5,12 +5,11 @@
 #include <string>
 
 #include "../game/Player.h"
-#include "../game/GameClock.h"
 
 // Renaming the class from HUD to HUDEntityImpl to implement the abstract HUDEntity
 class HUDEntityImpl : public HUDEntity {
 public:
-    HUDEntityImpl(Player* player, GameClock* clock, int screenWidth, int screenHeight);
+    HUDEntityImpl(Player* player, int screenWidth, int screenHeight);
     // The destructor is virtual in Renderable, so we use 'override'
     ~HUDEntityImpl() override;
 
@@ -26,7 +25,6 @@ public:
 private:
     // Game state references
     Player* m_player;
-    GameClock* m_clock;
 
     // Screen dimensions used for Orthographic projection setup
     int m_screenWidth;
@@ -40,6 +38,6 @@ private:
     // Drawing helpers
     void DrawRect(float x, float y, float width, float height, const glm::vec4& color, float zOffset = 0.0f);
     void DrawVitalsBars();
-    void DrawClockDisplay();
+    // void DrawClockDisplay();
     void SetupQuadRendering();
 };

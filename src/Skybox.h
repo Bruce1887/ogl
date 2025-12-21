@@ -11,7 +11,7 @@
 class Skybox : public Renderable
 {
 public:
-    Skybox(const std::vector<std::filesystem::path> &faces);
+    Skybox();
     void render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight) override;
     
     private:

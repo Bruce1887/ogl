@@ -5,10 +5,19 @@
 #include <iostream>
 #include <glm/gtc/type_ptr.hpp>
 
-Skybox::Skybox(const std::vector<std::filesystem::path> &faces)
+Skybox::Skybox()
     : m_shader(nullptr)
 {
     setUpShader();
+
+    // Skybox faces are hardcoded here (its annoying to pass them every time)
+    std::vector<std::filesystem::path> faces = {
+            TEXTURE_DIR / "skybox" / "right.jpg",
+            TEXTURE_DIR / "skybox" / "left.jpg",
+            TEXTURE_DIR / "skybox" / "top.jpg",
+            TEXTURE_DIR / "skybox" / "bottom.jpg",
+            TEXTURE_DIR / "skybox" / "front.jpg",
+            TEXTURE_DIR / "skybox" / "back.jpg"};
 
     m_cubemapTexture = Texture::CreateCubemap(faces, "u_cubemap");
 
