@@ -5,16 +5,16 @@
 
 extern GLFWwindow *g_window;
 
-void ThirdPersonCamera::update(Camera &cam, const Player &player, float dt)
+void ThirdPersonCamera::update(Camera &cam, const PlayerData &p_data, float dt)
 {
-    float yawRad = glm::radians(player.m_yaw);
+    float yawRad = glm::radians(p_data.m_yaw);
 
     glm::vec3 forward(
         sin(yawRad),
         0,
         cos(yawRad));
 
-    glm::vec3 camPos = player.m_position - forward * m_distance + glm::vec3(0, m_height, 0);
+    glm::vec3 camPos = p_data.m_position - forward * m_distance + glm::vec3(0, m_height, 0);
 
     handlePanning(dt);
     
@@ -26,7 +26,7 @@ void ThirdPersonCamera::update(Camera &cam, const Player &player, float dt)
         float computedMinHeight = (*m_minHeightFunc)(cam.m_Position.x, cam.m_Position.z); 
         cam.m_Position.y = glm::max(cam.m_Position.y, computedMinHeight);
     }
-    cam.m_Target = player.m_position + glm::vec3(0, 1.8f, 0);
+    cam.m_Target = p_data.m_position + glm::vec3(0, 1.8f, 0);
 }
 
 void ThirdPersonCamera::handlePanning(float dt)

@@ -2,7 +2,7 @@
 #include <glm/glm.hpp>
 #include <optional>
 
-class Player;
+class PlayerData;
 class Camera;
 
 class ThirdPersonCamera
@@ -13,7 +13,7 @@ public:
     float m_minHeight = 1.0f;
     float m_maxHeight = 10.0f;
 
-    void update(Camera &cam, const Player &player, float dt);
+    void update(Camera &cam, const PlayerData &p_data, float dt);
 
     void setMinHeightFunction(std::function<float(float, float)> func)
     {

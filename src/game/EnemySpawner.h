@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Enemy.h"
+#include "Player.h"
 #include "../InstancedRenderer.h"
 
 #include <optional>
@@ -29,7 +30,7 @@ public:
 
 	unsigned int enemyCount() const { return static_cast<unsigned int>(m_enemyDataList.size()); }
 
-	void updateAll(float dt, const glm::vec3 &playerPosition);
+	void updateAll(float dt, Player &player);
 
 	void renderAll(glm::mat4 view, glm::mat4 proj, PhongLightConfig *light)
 	{
@@ -45,17 +46,20 @@ public:
 	 * @param minDist minimum distance from the center position
 	 * @param maxDist maximum distance from the center position
 	 */
-	void spawnNew(glm::vec3 nearPosition, float minDist, float maxDist);
+	void spawnNew(glm::vec3 nearPosition);
 
 	std::unique_ptr<Model> m_enemyModel;
 
 	std::vector<EnemyData> m_enemyDataList;
 
 private:
-	unsigned int m_maxEnemies = 100;
+	unsigned int m_maxEnemies = 1000;
 
 	float m_spawnTimer = 0.0f; // Time since last spawn
-	float m_spawnInterval = 1.0f;
+	float m_spawnInterval = 0.1f;
+	float m_minSpawnDistance = 150.0f;
+	float m_maxSpawnDistance = 200.0f;
+	float m_despawnThreshold = 300.0f; // If set, enemies beyond this distance from player are despawned
 
 	std::unique_ptr<InstancedRenderer> m_instanceRenderer;
 	std::optional<std::function<float(float, float)>> m_heightFunc;

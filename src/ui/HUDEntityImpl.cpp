@@ -56,8 +56,8 @@ void HUDEntityImpl::render(glm::mat4 view, glm::mat4 projection, PhongLightConfi
 }
 
 void HUDEntityImpl::DrawVitalsBars() {
-    float health = 0.0; // m_player ? m_player->health : 0.0f; // TODO: get actual health
-    float maxHealth = 100.0f;
+    float health = m_player ? m_player->m_playerData.m_health : 0.0f;
+    float maxHealth = m_player ? m_player->m_playerData.m_maxHealth : 100.0f;
 
     float x_start = 50.0f;
     float y_start = 50.0f;

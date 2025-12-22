@@ -1,41 +1,44 @@
 #include "EnemySpawner.h"
 
-void EnemySpawner::updateAll(float dt, const glm::vec3 &playerPosition)
+void EnemySpawner::updateAll(float dt, Player &player)
 {
 	float timenow = glfwGetTime();
+	glm::vec3 playerPosition = player.m_playerData.m_position;
+
+	// Handle spawning new enemies at intervals
 	if (timenow - m_spawnTimer > m_spawnInterval)
 	{
 		m_spawnTimer = timenow;
-		spawnNew(playerPosition, 20.0f, 40.0f);
+		spawnNew(playerPosition);
 	}
 
+	// Prepare list of transforms for instanced rendering
 	std::vector<glm::mat4> newTransforms;
 	newTransforms.reserve(m_enemyDataList.size());
 
 	for (int i = 0; i < m_enemyDataList.size(); i++)
 	{
 		EnemyData &data = m_enemyDataList[i];
+
+		// Check if enemy is dead
 		if (data.isDead())
 		{
 			m_enemyDataList.erase(m_enemyDataList.begin() + i);
 			i--;
 			continue;
 		}
-		
 
-		// Update visual feedback timers
-		if (data.m_hitFlashTimer > 0.0f)
+		// Despawn enemies that are too far from the player
+		if (glm::length(data.m_position - playerPosition) > m_despawnThreshold)
 		{
-			data.m_hitFlashTimer -= dt;
-			if (data.m_hitFlashTimer < 0.0f)
-				data.m_hitFlashTimer = 0.0f;
+			// DEBUG_PRINT("Despawning enemy at distance " << glm::length(data.m_position - playerPosition));
+			m_enemyDataList.erase(m_enemyDataList.begin() + i);
+			i--;
+			continue;
 		}
-		if (data.m_hitScaleBoost > 0.0f)
-		{
-			data.m_hitScaleBoost -= dt * 0.2f; // Decay scale boost over time
-			if (data.m_hitScaleBoost < 0.0f)
-				data.m_hitScaleBoost = 0.0f;
-		}
+
+		// Update timers
+		data.updateTimers(dt);
 
 		// Update movement timer
 		data.m_movementTimer += dt;
@@ -46,7 +49,7 @@ void EnemySpawner::updateAll(float dt, const glm::vec3 &playerPosition)
 		float distanceToPlayer = glm::length(toPlayer);
 
 		// Only chase if player is within detection range
-		if (distanceToPlayer < data.m_detectionRange && distanceToPlayer > 3.0f) // Stop when close
+		if (distanceToPlayer < data.m_detectionRange && distanceToPlayer > data.m_closeRange) // Stop when close
 		{
 			// Get direction to player
 			glm::vec3 direction = data.getDirectionXZtoTarget(playerPosition);
@@ -59,7 +62,6 @@ void EnemySpawner::updateAll(float dt, const glm::vec3 &playerPosition)
 			case MovementPattern::DIRECT:
 				// Move straight toward player (default behavior)
 				break;
-
 			case MovementPattern::ZIGZAG:
 			{
 				// Calculate perpendicular direction for zigzag
@@ -70,7 +72,6 @@ void EnemySpawner::updateAll(float dt, const glm::vec3 &playerPosition)
 				moveDirection = glm::normalize(direction + perpendicular * zigzagOffset * 0.3f);
 				break;
 			}
-
 			case MovementPattern::CAUTIOUS:
 				// Move slower overall
 				currentSpeed *= 0.7f;
@@ -83,6 +84,24 @@ void EnemySpawner::updateAll(float dt, const glm::vec3 &playerPosition)
 
 			// Update yaw to face the movement direction
 			data.m_yaw = glm::degrees(atan2(moveDirection.x, moveDirection.z));
+		}
+		else if (distanceToPlayer <= data.m_closeRange)
+		{
+			// The enemy is in range to attack the player
+			float damageDealt = data.tryAttack(dt);
+			if (damageDealt > 0.0f)
+			{
+				player.m_playerData.m_health -= damageDealt;
+				if (player.m_playerData.m_health <= 0.0f)
+				{
+					// Player is dead, handle death elsewhere
+					player.m_playerData.m_health = 0.0f;
+				}
+				else {
+					//Player is hit but not dead
+					DEBUG_PRINT("Enemy at index " << i << " attacked player for " << damageDealt << " damage.");
+				}
+			}
 		}
 
 		// Stick to terrain height
@@ -118,7 +137,7 @@ void EnemySpawner::updateAll(float dt, const glm::vec3 &playerPosition)
 	m_instanceRenderer->replaceInstances(newTransforms);
 }
 
-void EnemySpawner::spawnNew(glm::vec3 nearPosition, float minDist, float maxDist)
+void EnemySpawner::spawnNew(glm::vec3 nearPosition)
 {
 	if (m_enemyDataList.size() >= m_maxEnemies)
 	{
@@ -128,7 +147,7 @@ void EnemySpawner::spawnNew(glm::vec3 nearPosition, float minDist, float maxDist
 
 	// Random angle and distance
 	float angle = static_cast<float>(rand()) / RAND_MAX * 2.0f * 3.14159265f;
-	float distance = minDist + static_cast<float>(rand()) / RAND_MAX * (maxDist - minDist);
+	float distance = m_minSpawnDistance + static_cast<float>(rand()) / RAND_MAX * (m_maxSpawnDistance - m_minSpawnDistance);
 
 	// Calculate spawn position
 	glm::vec3 spawnPos = nearPosition + glm::vec3(cos(angle), 0.0f, sin(angle)) * distance;
@@ -147,5 +166,5 @@ void EnemySpawner::spawnNew(glm::vec3 nearPosition, float minDist, float maxDist
 	// Add to list
 	m_enemyDataList.push_back(newEnemy);
 
-	DEBUG_PRINT("Spawned new enemy at " << spawnPos.x << ", " << spawnPos.y << ", " << spawnPos.z << ". Total enemies: " << m_enemyDataList.size());
+	// DEBUG_PRINT("Spawned new enemy at " << spawnPos.x << ", " << spawnPos.y << ", " << spawnPos.z << ". Total enemies: " << m_enemyDataList.size());
 }

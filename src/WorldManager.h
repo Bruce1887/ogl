@@ -68,7 +68,7 @@ private:
     std::unique_ptr<TerrainGenerator> m_terrainGen;
     std::unique_ptr<TerrainChunkManager> m_chunkManager;
     std::unique_ptr<Player> m_player;
-    std::unique_ptr<EnemySpawner> m_enemySpawner;
+    std::unique_ptr<EnemySpawner> m_enemyCowSpawner;
     // std::unique_ptr<GameClock> m_gameClock;
     std::unique_ptr<ThirdPersonCamera> m_camController;
     

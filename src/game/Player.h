@@ -1,18 +1,20 @@
 #pragma once
-#include <glm/glm.hpp>
 #include "Model.h"
+#include "Score.h"
+
+#include <glm/glm.hpp>
 #include <vector>
 
 class TerrainChunkManager;
 class InputManager;
 class EnemyData;
 
-
-class Player
-{
-public:
+struct PlayerData{
     glm::vec3 m_position;
     float m_yaw = 0.0f;
+
+    float m_maxHealth = 100.0f;
+    float m_health = m_maxHealth; // Set starting health to max health
 
     float m_moveSpeed = 10.0f;
     float m_modelScale = 1.0f;
@@ -23,6 +25,14 @@ public:
     float m_attackRange = 5.0f;
     float m_attackDamage = 25.0f;
     float m_attackCooldown = 0.1f;  // seconds between attacks
+    float m_attackTimer = 0.0f;  // tracks cooldown
+
+};
+
+class Player
+{
+public:
+    PlayerData m_playerData;
 
     Model m_playerModel;
 
@@ -35,5 +45,6 @@ public:
     void render(glm::mat4 view, glm::mat4 proj, PhongLightConfig* light);
     
 private:
-    float m_attackTimer = 0.0f;  // tracks cooldown
+
+    ScoreKeeper m_scoreKeeper;
 };

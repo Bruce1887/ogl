@@ -100,7 +100,7 @@ bool WorldManager::initializeEntities()
     m_player = std::make_unique<Player>(
         glm::vec3(100, 0, 100),
         (MODELS_DIR / "BobboMob" / "BobboMob.obj").string());
-    m_player->m_modelScale = 0.25f;
+    m_player->m_playerData.m_modelScale = 0.25f;
 
     float fogStart = m_renderDistance * m_fogStart;
     float fogEnd = m_renderDistance * m_fogEnd;
@@ -115,13 +115,12 @@ bool WorldManager::initializeEntities()
     float spawnAngle = glm::radians(angleDist(gen));
     float spawnDistance = distanceDist(gen);
 
-    EnemyData enemyData;
-    enemyData.m_position = m_player->m_position;
+    EnemyData enemyData; // default enemy data
 
-    m_enemySpawner = std::make_unique<EnemySpawner>(MODELS_DIR / "cow" / "cow.obj");
-    m_enemySpawner->setMinHeightFunction([this](float x, float z)
+    m_enemyCowSpawner = std::make_unique<EnemySpawner>(MODELS_DIR / "cow" / "cow.obj");
+    m_enemyCowSpawner->setMinHeightFunction([this](float x, float z)
                                          { return m_chunkManager->getPreciseHeightAt(x, z); });
-    m_enemySpawner->m_enemyModel.get()->setFogUniforms(m_fogColor, fogStart, fogEnd);
+    m_enemyCowSpawner->m_enemyModel.get()->setFogUniforms(m_fogColor, fogStart, fogEnd);
     return true;
 }
 
@@ -134,7 +133,7 @@ void WorldManager::update(float dt, InputManager *input)
 
     if (input->keyboardInput.getKeyState(GLFW_KEY_K).readAndClear())
     {
-        int hits = m_player->attack(m_enemySpawner->m_enemyDataList);
+        int hits = m_player->attack(m_enemyCowSpawner->m_enemyDataList);
         if (hits > 0)
             DEBUG_PRINT("Hit " << hits << " enemies!");
     }
@@ -146,15 +145,15 @@ void WorldManager::update(float dt, InputManager *input)
     }
 
     // Update enemy
-    if (m_enemySpawner && m_player)
+    if (m_enemyCowSpawner && m_player)
     {
-        m_enemySpawner->updateAll(dt, m_player.get()->m_position);
+        m_enemyCowSpawner->updateAll(dt, *m_player);
     }
 
     // Update camera
     if (m_camController)
     {
-        m_camController->update(m_scene->m_activeCamera, *m_player, dt);
+        m_camController->update(m_scene->m_activeCamera, m_player->m_playerData, dt);
     }
 
     // Update terrain chunks based on camera position
@@ -187,9 +186,9 @@ void WorldManager::render()
     }
 
     // Render enemy
-    if (m_enemySpawner)
+    if (m_enemyCowSpawner)
     {
-        m_enemySpawner->renderAll(
+        m_enemyCowSpawner->renderAll(
             m_scene->m_activeCamera.getViewMatrix(),
             m_scene->m_activeCamera.getProjectionMatrix(),
             &m_scene->m_lightSource.config);
@@ -247,8 +246,8 @@ void WorldManager::updateFogSettings()
         m_player->m_playerModel.setFogUniforms(m_fogColor, fogStart, fogEnd);
     }
 
-    if (m_enemySpawner)
+    if (m_enemyCowSpawner)
     {
-        m_enemySpawner->m_enemyModel.get()->setFogUniforms(m_fogColor, fogStart, fogEnd);
+        m_enemyCowSpawner->m_enemyModel.get()->setFogUniforms(m_fogColor, fogStart, fogEnd);
     }
 }
