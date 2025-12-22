@@ -153,12 +153,14 @@ int main(int, char **)
             player.update(dt, g_InputManager, &chunkManager);
 
             // Check for attack input (left click or K)
+            /*
             if (g_InputManager->attackInput.fetchAttack())
             {
                 int hits = player.attack(enemies);
                 if (hits > 0)
                     DEBUG_PRINT("Hit " << hits << " enemies!");
             }
+            */
 
             // Respawn dead enemies near the player
             for (Enemy *enemy : enemies)

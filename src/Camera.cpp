@@ -5,7 +5,7 @@ void Camera::orbitControl(InputManager *inputManager, float deltaTime)
 	// #### handle keyboard movement input ####
 	int forwardMovement, rightMovement;
 	bool shiftDown;
-	inputManager->movementInput.fetchMovement(forwardMovement, rightMovement, shiftDown);
+	inputManager->keyboardInput.movementInput.fetchMovement(forwardMovement, rightMovement, shiftDown);
 
 	float speed = 5.0f * deltaTime;
 	if (shiftDown)
@@ -37,7 +37,7 @@ void Camera::flyControl(InputManager *inputManager, float deltaTime)
 	// #### handle keyboard movement input ####
 	int forwardMovement, rightMovement;
 	bool shiftDown;
-	inputManager->movementInput.fetchMovement(forwardMovement, rightMovement, shiftDown);
+	inputManager->keyboardInput.movementInput.fetchMovement(forwardMovement, rightMovement, shiftDown);
 
 	float speed = 5.0f * deltaTime;
 	if (shiftDown)

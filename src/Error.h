@@ -4,6 +4,8 @@
 #include <filesystem>
 #include <stdexcept>
 
+#include <assert.h>
+
 /**
  * Wrap OpenGL calls to clear errors before and check for errors after the call.
  * Usage: GLCALL(glFunction(...));

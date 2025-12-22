@@ -1,43 +1,15 @@
 #include "UserInput.h"
 
-// MovementInput implementations
-void MovementInput::updateMovement(int key, int action, int /* mods */)
-{
-    bool isPressed = action != GLFW_RELEASE;
-    switch (key)
-    {
-    case GLFW_KEY_W:
-        wasd.w_down = isPressed;
-        break;
-    case GLFW_KEY_A:
-        wasd.a_down = isPressed;
-        break;
-    case GLFW_KEY_S:
-        wasd.s_down = isPressed;
-        break;
-    case GLFW_KEY_D:
-        wasd.d_down = isPressed;
-        break;
-    case GLFW_KEY_LEFT_SHIFT:
-        shiftDown = isPressed;
-        break;
-    default:
-        break;
-    }
-    markUpdated();
-}
-
-void MovementInput::fetchMovement(int &outForward, int &outRight, bool &outShiftDown)
-{
-    outForward = (wasd.w_down ? 1 : 0) + (wasd.s_down ? -1 : 0);
-    outRight = (wasd.d_down ? 1 : 0) + (wasd.a_down ? -1 : 0);
-    outShiftDown = shiftDown;
-    clearUpdated(); 
-}
-
 // MouseMoveInput implementations
-void MouseMoveInput::updateDeltas(double xpos, double ypos)
+void MouseMoveInput::update(const InputUpdate &updateData)
 {
+#ifdef DEBUG
+    assert(std::holds_alternative<MousePosUpdate>(updateData) && "MouseMoveInput received wrong InputUpdate variant");
+#endif
+    const MousePosUpdate &mousePosUpdate = std::get<MousePosUpdate>(updateData);
+    double xpos = mousePosUpdate.x;
+    double ypos = mousePosUpdate.y;
+
     double newDeltaX = xpos - lastX;
     double newDeltaY = ypos - lastY;
     
@@ -64,8 +36,15 @@ bool MouseMoveInput::fetchDeltas(double &outDeltaX, double &outDeltaY)
 }
 
 // MouseScrollInput implementations
-void MouseScrollInput::updateScroll(double xoffset, double yoffset)
+void MouseScrollInput::update(const InputUpdate &updateData)
 {
+#ifdef DEBUG
+    assert(std::holds_alternative<ScrollUpdate>(updateData) && "MouseScrollInput received wrong InputUpdate variant");
+#endif
+    const ScrollUpdate &scrollUpdate = std::get<ScrollUpdate>(updateData);
+    double xoffset = scrollUpdate.xoffset;
+    double yoffset = scrollUpdate.yoffset;
+
     scrollX += xoffset;
     scrollY += yoffset;
     markUpdated();
@@ -84,19 +63,37 @@ bool MouseScrollInput::fetchScroll(double &outScrollX, double &outScrollY)
     return true;
 }
 
-// AttackInput implementations
-void AttackInput::triggerAttack()
+// MouseButtonInput implementations
+void MouseButtonInput::update(const InputUpdate &updateData)
 {
-    attackPressed = true;
+#ifdef DEBUG
+    assert(std::holds_alternative<ButtonUpdate>(updateData) && "MouseButtonInput received wrong InputUpdate variant");
+#endif
+    const ButtonUpdate &buttonUpdate = std::get<ButtonUpdate>(updateData);
+    int button = buttonUpdate.button;
+    int action = buttonUpdate.action;
+
+    bool isPressed = action != GLFW_RELEASE;
+    switch (button)
+    {
+    case GLFW_MOUSE_BUTTON_LEFT:
+        leftButtonDown = isPressed;
+        break;
+    case GLFW_MOUSE_BUTTON_RIGHT:
+        rightButtonDown = isPressed;
+        break;
+    default:
+        break;
+    }
     markUpdated();
 }
 
-bool AttackInput::fetchAttack()
+bool MouseButtonInput::fetchButtons(bool &outLeftButtonDown, bool &outRightButtonDown)
 {
-    if (!attackPressed)
+    if (!hasInput())
         return false;
-    
-    attackPressed = false;
+    outLeftButtonDown = leftButtonDown;
+    outRightButtonDown = rightButtonDown;
     clearUpdated();
     return true;
 }

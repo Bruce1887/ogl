@@ -35,7 +35,7 @@ void Player::update(float dt, InputManager* input, TerrainChunkManager* terrain)
 {
     int forwardMove, rightMove;
     bool shiftDown;
-    input->movementInput.fetchMovement(forwardMove, rightMove, shiftDown);
+    input->keyboardInput.movementInput.fetchMovement(forwardMove, rightMove, shiftDown);
 
     float speed = m_moveSpeed * dt;
     if (shiftDown) speed *= 2.0f;

@@ -24,29 +24,40 @@ void setupDefaultGLFWCallbacks()
                        {        
         if (key == GLFW_KEY_W && mods & GLFW_MOD_CONTROL)
             glfwSetWindowShouldClose(wdw, GLFW_TRUE);
-
-        // Attack on K key press
-        if (key == GLFW_KEY_K && action == GLFW_PRESS)
-            g_InputManager->attackInput.triggerAttack();
-
-        g_InputManager->movementInput.updateMovement(key, action, mods); });
+        
+        const InputUpdate movementUpdate = KeyboardUpdate{ key, action, mods };
+        g_InputManager->keyboardInput.movementInput.update(movementUpdate); 
+        for(KeyState &ks : g_InputManager->keyboardInput.keyStates){
+            if(ks.key() == key && action == GLFW_RELEASE){
+                ks.update(true);
+                DEBUG_PRINT("KeyState updated for key: " << key);
+            }
+        }
+    });
 
     // set cursor position callback (for mouse movement input)
     glfwSetCursorPosCallback(g_window, [](GLFWwindow * /*window*/, double xpos, double ypos)
                              {
-        // double inverted_y = -ypos + static_cast<double>(window_Y); // Invert Y axis to match OpenGL coordinates
-        g_InputManager->mouseMoveInput.updateDeltas(xpos, ypos); });
+                                const InputUpdate mousePosUpdate = MousePosUpdate{ xpos, ypos };
+                                g_InputManager->mouseMoveInput.update(mousePosUpdate); });
 
     // set scroll callback (for mouse scroll input)
     glfwSetScrollCallback(g_window, [](GLFWwindow * /*window*/, double xoffset, double yoffset)
-                          { g_InputManager->scrollInput.updateScroll(xoffset, yoffset); });
+                          { 
+        const InputUpdate scrollUpdate = ScrollUpdate{ xoffset, yoffset }; 
+        g_InputManager->scrollInput.update(scrollUpdate); });
 
     // set mouse button callback (for attack input)
     glfwSetMouseButtonCallback(g_window, [](GLFWwindow * /*window*/, int button, int action, int /*mods*/)
                                {
+        const InputUpdate buttonUpdate = ButtonUpdate{ button, action };
+        g_InputManager->mouseButtonInput.update(buttonUpdate);
+        /*
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-            g_InputManager->attackInput.triggerAttack();
-    });
+        {
+            g_InputManager->attackInput.triggerAttack(); 
+        }
+        */ });
 }
 
 int checkTextureUnits()

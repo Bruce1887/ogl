@@ -1,60 +1,11 @@
 #pragma once
 
+#include "InputSource.h"
+#include "KeyboardInput.h"
+
 #include <GLFW/glfw3.h>
 #include <assert.h>
-
 #include <iostream>
-
-/**
- * @brief Base class for different input sources.
- *
- */
-class InputSource
-{
-private:
-    // Indicates if theres input to be handled.
-    bool hasUnprocessedInput = false;
-
-protected:
-    void markUpdated() { hasUnprocessedInput = true; }
-    void clearUpdated() { hasUnprocessedInput = false; }
-    bool hasInput() const { return hasUnprocessedInput; }
-
-    // would be nice to have these as abstract methods, but the signature varies greatly between different input sources. maybe find a workaround later.
-    // public:
-    //     virtual void update() = 0;
-    //     virtual bool fetchUpdates() = 0;
-};
-
-/**
- * @brief class to hold all keyboard-related movement input state
- *
- * wasd: WASD input state.
- * shiftDown: true if the shift key is currently pressed, false otherwise.
- * qDown: true if Q key is pressed (typically down/descend)
- * eDown: true if E key is pressed (typically up/ascend)
- */
-class MovementInput : public InputSource
-{
-    /**
-     * @brief struct to hold WASD input state
-     */
-    struct WasdInput
-    {
-        bool w_down;
-        bool a_down;
-        bool s_down;
-        bool d_down;
-    };
-    WasdInput wasd;
-    bool shiftDown;
-
-public:
-    // Call this method to update movement input state, and set hasUnprocessedInput to true. Intended to be called from a key callback.
-    void updateMovement(int key, int action, int /* mods */);
-
-    void fetchMovement(int &outForward, int &outRight, bool &outShiftDown);
-};
 
 class MouseMoveInput : public InputSource
 {
@@ -66,10 +17,15 @@ private:
 
 public:
     // Call this method to update deltas, and set hasUnprocessedInput to true. Intended to be called from a cursor position callback.
-    void updateDeltas(double xpos, double ypos);
+    void update(const InputUpdate &updateData) override;
 
     // Call this method when fetching the deltas to reset the unprocessed input flag
     bool fetchDeltas(double &outDeltaX, double &outDeltaY);
+
+    void fetchLastPosition(double &outLastX, double &outLastY){
+        outLastX = lastX;
+        outLastY = lastY;
+    }
 };
 
 class MouseScrollInput : public InputSource
@@ -80,22 +36,19 @@ private:
 
 public:
     // Call this method to update scroll offsets, and set hasUnprocessedInput to true. Intended to be called from a scroll callback.
-    void updateScroll(double xoffset, double yoffset);
+    void update(const InputUpdate &updateData) override;
 
     bool fetchScroll(double &outScrollX, double &outScrollY);
 };
 
-class AttackInput : public InputSource
+class MouseButtonInput : public InputSource
 {
 private:
-    bool attackPressed = false;
-
+    bool leftButtonDown = false;
+    bool rightButtonDown = false;
 public:
-    // Call when attack key (K) or left mouse button is pressed
-    void triggerAttack();
-    
-    // Returns true if attack was triggered since last fetch, then resets
-    bool fetchAttack();
+    void update(const InputUpdate &updateData) override; 
+    bool fetchButtons(bool &outLeftButtonDown, bool &outRightButtonDown);
 };
 
 /**
@@ -111,8 +64,8 @@ public:
     InputManager() = default;
     ~InputManager() = default;
 
-    MovementInput movementInput;
+    KeyboardInput keyboardInput;
     MouseMoveInput mouseMoveInput;
     MouseScrollInput scrollInput;
-    AttackInput attackInput;
+    MouseButtonInput mouseButtonInput;
 };
