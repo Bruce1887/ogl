@@ -178,7 +178,6 @@ namespace ui
             if (contains)
             {
                 button.isPressed = pressed;
-
                 // On mouse release (click complete), trigger callback
                 if (!pressed && button.onClick)
                 {

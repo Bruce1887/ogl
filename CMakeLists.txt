@@ -111,12 +111,12 @@ function(add_gl_executable TARGET_NAME SOURCE_FILE)
 endfunction()
 
 # --- Automatically add all test programs ---
-file(GLOB TEST_PROGRAMS "src/testprograms/*.cpp")
-foreach(TEST_SRC ${TEST_PROGRAMS})
-    get_filename_component(TEST_NAME ${TEST_SRC} NAME_WE)
-    add_gl_executable(${TEST_NAME} ${TEST_SRC})
-    target_compile_options(${TEST_NAME} PRIVATE -g)
-endforeach()
+# file(GLOB TEST_PROGRAMS "src/testprograms/*.cpp")
+# foreach(TEST_SRC ${TEST_PROGRAMS})
+#     get_filename_component(TEST_NAME ${TEST_SRC} NAME_WE)
+#     add_gl_executable(${TEST_NAME} ${TEST_SRC})
+#     target_compile_options(${TEST_NAME} PRIVATE -g)
+# endforeach()
 
 # --- Main executable ---
 add_gl_executable(oogabooga src/main.cpp)

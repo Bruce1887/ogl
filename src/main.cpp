@@ -12,25 +12,6 @@
 #include "ui/GameState.h"
 #include "Terrain/TerrainChunk.h"
 
-// Input state management
-struct InputState
-{
-    double cursorX = 0.0;
-    double cursorY = 0.0;
-    bool escPressedLastFrame = false;
-    bool mouseButtonWasPressed = false;
-};
-
-// Static input state for GLFW callbacks
-static InputState g_inputState;
-
-// GLFW cursor position callback
-void cursorPosCallback(GLFWwindow * /*window*/, double xpos, double ypos)
-{
-    g_inputState.cursorX = xpos;
-    g_inputState.cursorY = ypos;
-}
-
 int main(int, char **)
 {
     // Initialize OpenGL and window
@@ -76,9 +57,6 @@ int main(int, char **)
             glfwSetWindowShouldClose(g_window, GLFW_TRUE);
         };
 
-        // Set up GLFW cursor callback
-        glfwSetCursorPosCallback(g_window, cursorPosCallback);
-
         // Frame timing
         FrameTimer frameTimer;
         int frameCount = 0;
@@ -106,32 +84,34 @@ int main(int, char **)
             }
 
             // Handle ESC key for pause/menu
-            bool escPressed = glfwGetKey(g_window, GLFW_KEY_ESCAPE) == GLFW_PRESS;
-            if (escPressed && !g_inputState.escPressedLastFrame)
+            bool escPressed = g_InputManager->keyboardInput.getKeyState(GLFW_KEY_ESCAPE).readAndClear();
+            if (escPressed)
             {
                 uiManager.handleKeyPress(GLFW_KEY_ESCAPE, GLFW_PRESS);
             }
-            g_inputState.escPressedLastFrame = escPressed;
-
             // Handle mouse input for UI when cursor is visible
             if (shouldShowCursor)
             {
-                uiManager.handleMouseMove(g_inputState.cursorX, g_inputState.cursorY);
+                double cursorX, cursorY;
+                g_InputManager->mouseMoveInput.fetchLastPosition(cursorX, cursorY);
+                uiManager.handleMouseMove(cursorX, cursorY);
 
-                bool mousePressed = glfwGetMouseButton(g_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+                bool leftMouse, rightMouse;
+                g_InputManager->mouseButtonInput.fetchButtons(leftMouse, rightMouse);
 
                 // Forward mouse press
-                if (mousePressed && !g_inputState.mouseButtonWasPressed)
+                if (leftMouse)
                 {
-                    uiManager.handleMouseClick(g_inputState.cursorX, g_inputState.cursorY, true);
+                    uiManager.handleMouseClick(cursorX, cursorY, false);
                 }
+                /*
                 // Forward mouse release
-                else if (!mousePressed && g_inputState.mouseButtonWasPressed)
+                else if (!leftMouse && rightMouse)
                 {
                     uiManager.handleMouseClick(g_inputState.cursorX, g_inputState.cursorY, false);
                 }
-
                 g_inputState.mouseButtonWasPressed = mousePressed;
+                */
             }
 
             // Update UI
@@ -148,7 +128,6 @@ int main(int, char **)
             // === RENDERING ===
 
             // Clear screen
-            glClearColor(0.5f, 0.7f, 0.9f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             // Render world if playing (even when paused, show world behind menu)

@@ -2,6 +2,7 @@
 
 #include "InputSource.h"
 
+#include <utility>
 #include <array>
 
 /**
@@ -61,10 +62,11 @@ public:
 		return m_value;
 	}
 
+
 	bool readAndClear()
 	{
 		m_hasInput = false;
-		return m_value;
+		return std::exchange(m_value, false); 
 	}
 };
 
@@ -76,7 +78,8 @@ public:
 
 	// All other key states can be added here as needed
 	inline static std::array keyStates = {
-		KeyState{GLFW_KEY_ESCAPE}};
+		KeyState{GLFW_KEY_ESCAPE},
+		KeyState{GLFW_KEY_K}};
 
 	KeyState &getKeyState(int keyCode)
 	{

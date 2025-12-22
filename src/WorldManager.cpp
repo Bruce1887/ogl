@@ -102,8 +102,8 @@ bool WorldManager::initializeEntities()
         (MODELS_DIR / "BobboMob" / "BobboMob.obj").string());
     m_player->m_modelScale = 0.25f;
 
-    float fogStart = m_renderDistance * 0.90f;
-    float fogEnd = m_renderDistance * 0.98f;
+    float fogStart = m_renderDistance * m_fogStart;
+    float fogEnd = m_renderDistance * m_fogEnd;
     m_player->m_playerModel.setFogUniforms(m_fogColor, fogStart, fogEnd);
 
     // Spawn enemy near player at random position
@@ -130,6 +130,13 @@ void WorldManager::update(float dt, InputManager *input)
     if (!m_scene || !m_player)
     {
         return;
+    }
+
+    if (input->keyboardInput.getKeyState(GLFW_KEY_K).readAndClear())
+    {
+        int hits = m_player->attack(m_enemySpawner->m_enemyDataList);
+        if (hits > 0)
+            DEBUG_PRINT("Hit " << hits << " enemies!");
     }
 
     // Update player
@@ -228,8 +235,8 @@ void WorldManager::updateFogSettings()
 {
     assert(m_chunkManager && "Chunk manager must be initialized before updating fog settings");
 
-    float fogStart = m_renderDistance * 0.90f;
-    float fogEnd = m_renderDistance * 0.98f;
+    float fogStart = m_renderDistance * m_fogStart;
+    float fogEnd = m_renderDistance * m_fogEnd;
 
     // Update chunk manager fog settings
     m_chunkManager->setFogUniforms(m_fogColor, fogStart, fogEnd);

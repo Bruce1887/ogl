@@ -49,13 +49,14 @@ public:
 
 	std::unique_ptr<Model> m_enemyModel;
 
-private:
-	unsigned int m_maxEnemies = 100;	
-	
-	float m_spawnTimer = 0.0f; // Time since last spawn
-	float m_spawnInterval = 1.0f; 
-
 	std::vector<EnemyData> m_enemyDataList;
+
+private:
+	unsigned int m_maxEnemies = 100;
+
+	float m_spawnTimer = 0.0f; // Time since last spawn
+	float m_spawnInterval = 1.0f;
+
 	std::unique_ptr<InstancedRenderer> m_instanceRenderer;
 	std::optional<std::function<float(float, float)>> m_heightFunc;
 };

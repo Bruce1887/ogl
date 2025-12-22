@@ -58,4 +58,20 @@ struct EnemyData
 
 	float m_modelYOffset = 0.0f; // Vertical offset to place feet on ground (adjust per model)
     float m_modelScale = 1.0f;   // Scale of the model
+
+	bool isDead() const
+	{
+		return m_health <= 0.0f;
+	}
+
+	void takeDamage(float amount)
+	{
+		m_health -= amount;
+		if (m_health < 0.0f)
+			m_health = 0.0f;
+
+		// Trigger hit visual feedback
+		m_hitFlashTimer = 0.3f;  // Flash for 0.3 seconds
+		m_hitScaleBoost = 0.05f; // Pulse up 5% in scale
+	}
 };

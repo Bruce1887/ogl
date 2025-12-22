@@ -115,18 +115,12 @@ void Enemy::update(float dt, const glm::vec3& playerPosition, TerrainChunkManage
 
 void Enemy::takeDamage(float amount)
 {
-    m_enemyData.m_health -= amount;
-    if (m_enemyData.m_health < 0.0f)
-        m_enemyData.m_health = 0.0f;
-
-    // Trigger hit visual feedback
-    m_enemyData.m_hitFlashTimer = 0.3f;  // Flash for 0.3 seconds
-    m_enemyData.m_hitScaleBoost = 0.05f; // Pulse up 5% in scale
+    m_enemyData.takeDamage(amount);
 }
 
 bool Enemy::isDead() const
 {
-    return m_enemyData.m_health <= 0.0f;
+    return m_enemyData.isDead();
 }
 
 void Enemy::respawn(glm::vec3 nearPosition, float minDist, float maxDist)

@@ -15,6 +15,13 @@ void EnemySpawner::updateAll(float dt, const glm::vec3 &playerPosition)
 	for (int i = 0; i < m_enemyDataList.size(); i++)
 	{
 		EnemyData &data = m_enemyDataList[i];
+		if (data.isDead())
+		{
+			m_enemyDataList.erase(m_enemyDataList.begin() + i);
+			i--;
+			continue;
+		}
+		
 
 		// Update visual feedback timers
 		if (data.m_hitFlashTimer > 0.0f)

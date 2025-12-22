@@ -75,6 +75,8 @@ private:
     // Configuration
     float m_renderDistance = 100.0f;
     glm::vec3 m_fogColor = glm::vec3(0.51f, 0.90f, 0.95f);
+    float m_fogStart = 0.90f;
+    float m_fogEnd = 0.98f;
     
     // Initialization helpers
     bool initializeCamera();

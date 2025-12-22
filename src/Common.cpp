@@ -21,19 +21,21 @@ void setupDefaultGLFWCallbacks()
 
     // set key-callback (for movement input)
     glfwSetKeyCallback(g_window, [](GLFWwindow *wdw, int key, int /*scancode*/, int action, int mods)
-                       {        
+                       {         
+        // Close window on Ctrl+W
         if (key == GLFW_KEY_W && mods & GLFW_MOD_CONTROL)
             glfwSetWindowShouldClose(wdw, GLFW_TRUE);
         
+        // Update movement input
         const InputUpdate movementUpdate = KeyboardUpdate{ key, action, mods };
         g_InputManager->keyboardInput.movementInput.update(movementUpdate); 
+
+        // Update other key states
         for(KeyState &ks : g_InputManager->keyboardInput.keyStates){
             if(ks.key() == key && action == GLFW_RELEASE){
                 ks.update(true);
-                DEBUG_PRINT("KeyState updated for key: " << key);
             }
-        }
-    });
+        } });
 
     // set cursor position callback (for mouse movement input)
     glfwSetCursorPosCallback(g_window, [](GLFWwindow * /*window*/, double xpos, double ypos)
@@ -135,6 +137,7 @@ int oogaboogaInit(const std::string &windowname)
 
     // GLCALL(glClearColor(0.2f, 0.1f, 0.2f, 1.0f)); // dark purple background color
     GLCALL(glClearColor(0.0f, 0.0f, 0.0f, 1.0f)); // black background color
+    // glClearColor(0.5f, 0.7f, 0.9f, 1.0f);
 
     // Enable blending and set the blend function
     GLCALL(glEnable(GL_BLEND));
