@@ -6,6 +6,7 @@
 
 #include <optional>
 #include <glm/glm.hpp>
+#include "Audio.h"
 
 /**
  * @brief A class for spawning a single type of enemy and updating them (moving them etc.)
@@ -52,9 +53,18 @@ public:
 
 	std::vector<EnemyData> m_enemyDataList;
 
+	void setEntitySounds(const EntitySounds& sounds)
+	{
+		m_sounds = sounds;
+	}
+
+	std::optional<EntitySounds> getEntitySounds() const
+	{
+		return m_sounds;
+	}
+
 private:
 	unsigned int m_maxEnemies = 1000;
-
 	float m_spawnTimer = 0.0f; // Time since last spawn
 	float m_spawnInterval = 0.1f;
 	float m_minSpawnDistance = 150.0f;
@@ -63,4 +73,5 @@ private:
 
 	std::unique_ptr<InstancedRenderer> m_instanceRenderer;
 	std::optional<std::function<float(float, float)>> m_heightFunc;
+	std::optional<EntitySounds> m_sounds = std::nullopt;
 };

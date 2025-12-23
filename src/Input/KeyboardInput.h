@@ -1,7 +1,7 @@
 #pragma once
 
 #include "InputSource.h"
-
+#include "Controls.h"
 #include <utility>
 #include <array>
 
@@ -76,10 +76,10 @@ public:
 	// Capture all keyboard movement input (WASD, Shift etc.)
 	MovementInput movementInput;
 
-	// All other key states can be added here as needed
+	// All other key states can be added here as needed. i.e. if you want to register a key press for "K" key, add it here.
 	inline static std::array keyStates = {
 		KeyState{GLFW_KEY_ESCAPE},
-		KeyState{GLFW_KEY_K}};
+		KeyState{OOGABOOGA_ATTACK_KEY},};
 
 	KeyState &getKeyState(int keyCode)
 	{

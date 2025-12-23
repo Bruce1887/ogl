@@ -8,7 +8,7 @@ class Camera;
 class ThirdPersonCamera
 {
 public:
-    float m_distance = 8.0f;
+    float m_distance = 12.0f;
     float m_height = 3.0f;
     float m_minHeight = 1.0f;
     float m_maxHeight = 10.0f;

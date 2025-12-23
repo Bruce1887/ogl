@@ -27,7 +27,7 @@ bool WorldManager::initializeCamera()
 {
     // Camera setup
     CameraConfiguration camConfig{
-        .fov = 45.0f,
+        .fov = 50.0f,
         .aspect = (float)window_X / (float)window_Y,
         .near = 0.1f,
         .far = 2000.0f};
@@ -116,10 +116,12 @@ bool WorldManager::initializeEntities()
     float spawnDistance = distanceDist(gen);
 
     EnemyData enemyData; // default enemy data
+    EntitySounds cowSounds{.m_attackSound = LoadWav(AUDIO_DIR / "cow_moo.wav")};
 
     m_enemyCowSpawner = std::make_unique<EnemySpawner>(MODELS_DIR / "cow" / "cow.obj");
+    m_enemyCowSpawner->setEntitySounds(cowSounds);
     m_enemyCowSpawner->setMinHeightFunction([this](float x, float z)
-                                         { return m_chunkManager->getPreciseHeightAt(x, z); });
+                                            { return m_chunkManager->getPreciseHeightAt(x, z); });
     m_enemyCowSpawner->m_enemyModel.get()->setFogUniforms(m_fogColor, fogStart, fogEnd);
     return true;
 }
@@ -131,7 +133,7 @@ void WorldManager::update(float dt, InputManager *input)
         return;
     }
 
-    if (input->keyboardInput.getKeyState(GLFW_KEY_K).readAndClear())
+    if (input->keyboardInput.getKeyState(OOGABOOGA_ATTACK_KEY).readAndClear())
     {
         int hits = m_player->attack(m_enemyCowSpawner->m_enemyDataList);
         if (hits > 0)

@@ -26,6 +26,7 @@ struct EnemyData
 	float m_attackDamage = 5.0f;   // Damage dealt to player on attack
 	float m_attackCooldown = 1.0f; // Seconds between attacks
 	float m_attackTimer = 0.0f;	   // Tracks time since last attack
+	// float m_attackRange = 2.0f;    // Range within which enemy can attack player (this is implied by m_closeRange)
 
 	// Movement behavior
 	float m_moveSpeed = 8.0f; // Base movement speed
@@ -33,7 +34,7 @@ struct EnemyData
 	float m_zigzagAmplitude = 5.0f;								// How far the zigzag goes left/right
 	float m_zigzagFrequency = 3.0f;								// How fast the zigzag oscillates
 	float m_detectionRange = std::numeric_limits<float>::max(); // Range at which enemy detects player (default: infinite)
-	float m_closeRange = 2.0f;									// Range at which enemy stops moving toward player
+	float m_closeRange = 2.0f;									// Range at which enemy stops moving toward player (attack range)
 
 	// Internal timer for movement patterns
 	float m_movementTimer = 0.0f;

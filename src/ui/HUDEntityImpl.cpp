@@ -36,7 +36,7 @@ void HUDEntityImpl::render(glm::mat4 view, glm::mat4 projection, PhongLightConfi
     glDisable(GL_CULL_FACE); // Disable face culling for HUD
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
+    
     glm::mat4 ortho = glm::ortho(
         0.0f, (float)m_screenWidth,
         (float)m_screenHeight, 0.0f,

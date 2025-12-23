@@ -91,6 +91,12 @@ void EnemySpawner::updateAll(float dt, Player &player)
 			float damageDealt = data.tryAttack(dt);
 			if (damageDealt > 0.0f)
 			{
+				// Play attack sound if available
+				if (m_sounds.has_value())
+				{
+					SoundPlayer::getInstance().PlaySFX((*m_sounds).m_attackSound);
+				}
+				
 				player.m_playerData.m_health -= damageDealt;
 				if (player.m_playerData.m_health <= 0.0f)
 				{

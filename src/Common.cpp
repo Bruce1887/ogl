@@ -1,4 +1,5 @@
 #include "Common.h"
+#include "game/Audio.h"
 
 RenderingContext *rContext = nullptr;
 GLsizei window_X = 1024;
@@ -156,6 +157,14 @@ int oogaboogaInit(const std::string &windowname)
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK); // Cull back faces
 
+
+    // Initialize audio system
+    if (!Audio_Init())
+    {
+        DEBUG_PRINT("Failed to initialize audio system");
+        return -1;
+    }
+
     return 0;
 }
 
@@ -175,6 +184,9 @@ int oogaboogaExit()
         delete g_InputManager;
         g_InputManager = nullptr;
     }
+
+    if(s_audio_context || s_audio_device)
+        Audio_Shutdown();
 
     return 0;
 }
