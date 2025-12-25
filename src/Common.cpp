@@ -2,8 +2,8 @@
 #include "game/Audio.h"
 
 RenderingContext *rContext = nullptr;
-GLsizei window_X = 1024;
-GLsizei window_Y = 768;
+GLsizei WINDOW_X = 1024;
+GLsizei WINDOW_Y = 768;
 GLFWwindow *g_window = nullptr;
 GLFWmonitor *g_monitor = nullptr;
 InputManager *g_InputManager = nullptr;
@@ -102,7 +102,7 @@ int oogaboogaInit(const std::string &windowname)
 
     // monitor = glfwGetPrimaryMonitor(); // for fullscreen maybe?
 
-    g_window = glfwCreateWindow(window_X, window_Y, windowname.c_str(), g_monitor, NULL);
+    g_window = glfwCreateWindow(WINDOW_X, WINDOW_Y, windowname.c_str(), g_monitor, NULL);
 
     if (!g_window)
     {

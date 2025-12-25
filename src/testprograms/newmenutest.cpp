@@ -50,7 +50,7 @@ int main(int, char **)
 
     {
         // Create UI Manager
-        ui::UIManager uiManager(window_X, window_Y);
+        ui::UIManager uiManager(WINDOW_X, WINDOW_Y);
 
         // World objects (created when loading)
         Scene *scene = nullptr;
@@ -265,7 +265,7 @@ void initializeWorld(Scene **scene, TerrainGenerator **terrainGen, TerrainChunkM
     // Camera setup
     CameraConfiguration camConfig{
         .fov = 45.0f,
-        .aspect = (float)window_X / (float)window_Y,
+        .aspect = (float)WINDOW_X / (float)WINDOW_Y,
         .near = 0.1f,
         .far = 2000.0f};
 

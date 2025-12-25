@@ -29,7 +29,7 @@ struct EnemyData
 	// float m_attackRange = 2.0f;    // Range within which enemy can attack player (this is implied by m_closeRange)
 
 	// Movement behavior
-	float m_moveSpeed = 8.0f; // Base movement speed
+	float m_moveSpeed = 6.0f; // Base movement speed
 	MovementPattern m_movementPattern = MovementPattern::DIRECT;
 	float m_zigzagAmplitude = 5.0f;								// How far the zigzag goes left/right
 	float m_zigzagFrequency = 3.0f;								// How fast the zigzag oscillates

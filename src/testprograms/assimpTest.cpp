@@ -32,7 +32,7 @@ int main(int, char **)
 		// ######## Camera setup ########
 		CameraConfiguration cam_config{
 			.fov = 45.0f,
-			.aspect = (float)window_X / (float)window_Y,
+			.aspect = (float)WINDOW_X / (float)WINDOW_Y,
 			.near = 1.0f,
 			.far = 300.0f};
 

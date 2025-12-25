@@ -12,7 +12,7 @@
 // };
 
 const float DEFAULT_FOV = 45.0f;
-const float DEFAULT_ASPECT = (float)window_X / (float)window_Y;
+const float DEFAULT_ASPECT = (float)WINDOW_X / (float)WINDOW_Y;
 const float DEFAULT_NEAR = 0.1f;
 const float DEFAULT_FAR = 100.0f;
 

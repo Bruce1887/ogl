@@ -17,10 +17,9 @@ int main(int, char **)
     // Initialize OpenGL and window
     if (oogaboogaInit(__FILE__))
         goto out;
-
     {
         // Create UI Manager
-        ui::UIManager uiManager(window_X, window_Y);
+        ui::UIManager uiManager(WINDOW_X, WINDOW_Y);
 
         // World manager (nullptr until game starts)
         std::unique_ptr<WorldManager> worldManager;
@@ -126,7 +125,6 @@ int main(int, char **)
             }
 
             // === RENDERING ===
-
             // Clear screen
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -135,14 +133,6 @@ int main(int, char **)
             {
                 worldManager->render();
             }
-
-            // Render UI on top (disable depth testing, enable blending)
-            glDisable(GL_DEPTH_TEST);
-            glDepthMask(GL_FALSE);
-            glDisable(GL_CULL_FACE);
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
             uiManager.render(glm::mat4(1.0f), glm::mat4(1.0f));
 
             // Print stats periodically
@@ -160,7 +150,6 @@ int main(int, char **)
                                            << (1.0f / dt));
                 }
             }
-
             frameCount++;
             glfwSwapBuffers(g_window);
         }

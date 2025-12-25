@@ -66,10 +66,10 @@ public:
 private:
 	unsigned int m_maxEnemies = 1000;
 	float m_spawnTimer = 0.0f; // Time since last spawn
-	float m_spawnInterval = 0.1f;
-	float m_minSpawnDistance = 150.0f;
-	float m_maxSpawnDistance = 200.0f;
-	float m_despawnThreshold = 300.0f; // If set, enemies beyond this distance from player are despawned
+	float m_spawnInterval = 0.01f;
+	float m_minSpawnDistance = 70.0f;
+	float m_maxSpawnDistance = 140.0f;
+	float m_despawnThreshold = 320.0f; // If set, enemies beyond this distance from player are despawned
 
 	std::unique_ptr<InstancedRenderer> m_instanceRenderer;
 	std::optional<std::function<float(float, float)>> m_heightFunc;

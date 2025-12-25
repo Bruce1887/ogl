@@ -28,7 +28,7 @@ bool WorldManager::initializeCamera()
     // Camera setup
     CameraConfiguration camConfig{
         .fov = 50.0f,
-        .aspect = (float)window_X / (float)window_Y,
+        .aspect = (float)WINDOW_X / (float)WINDOW_Y,
         .near = 0.1f,
         .far = 2000.0f};
 

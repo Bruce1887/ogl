@@ -96,16 +96,17 @@ void EnemySpawner::updateAll(float dt, Player &player)
 				{
 					SoundPlayer::getInstance().PlaySFX((*m_sounds).m_attackSound);
 				}
-				
+
 				player.m_playerData.m_health -= damageDealt;
 				if (player.m_playerData.m_health <= 0.0f)
 				{
 					// Player is dead, handle death elsewhere
 					player.m_playerData.m_health = 0.0f;
 				}
-				else {
-					//Player is hit but not dead
-					DEBUG_PRINT("Enemy at index " << i << " attacked player for " << damageDealt << " damage.");
+				else
+				{
+					// Player is hit but not dead
+					//  DEBUG_PRINT("Enemy at index " << i << " attacked player for " << damageDealt << " damage.");
 				}
 			}
 		}
@@ -147,7 +148,7 @@ void EnemySpawner::spawnNew(glm::vec3 nearPosition)
 {
 	if (m_enemyDataList.size() >= m_maxEnemies)
 	{
-		DEBUG_PRINT("Enemycount: " << m_maxEnemies << ". Max enemies reached, cannot spawn more.");
+		// DEBUG_PRINT("Enemycount: " << m_maxEnemies << ". Max enemies reached, cannot spawn more.");
 		return;
 	}
 

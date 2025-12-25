@@ -34,8 +34,8 @@ const int REQUIRED_NUM_TEXTURE_UNITS = 32;
 
 // Global variables
 extern RenderingContext *rContext;
-extern GLsizei window_X;
-extern GLsizei window_Y;
+extern GLsizei WINDOW_X;
+extern GLsizei WINDOW_Y;
 extern GLFWwindow *g_window;
 extern GLFWmonitor *g_monitor;
 extern InputManager *g_InputManager;
