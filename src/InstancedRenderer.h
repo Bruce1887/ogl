@@ -12,31 +12,31 @@
 #include <glm/glm.hpp>
 
 /**
- * @brief Renders many instances of a tree model in a single draw call using GPU instancing.
+ * @brief Renders many instances of a model in a single draw call using GPU instancing.
  *
  * This class stores instance transforms and uploads them to the GPU, allowing
- * thousands of trees to be rendered with just one draw call per mesh.
+ * thousands of models to be rendered with just one draw call per mesh.
  */
-class InstancedRenderer
+class InstancedRenderer : public Renderable
 {
 public:
     InstancedRenderer();
     ~InstancedRenderer();
 
-    // Initialize with the tree model to instance
-    void init(Model *treeModel);
+    // Initialize with the model to instance
+    void init(std::unique_ptr<Model> model, std::shared_ptr<Shader> shader = nullptr);
 
     // Clear all instances
     void clearInstances();
 
-    // Add a tree instance at the given position
+    // Add a model instance at the given position
     void addInstance(const glm::vec3 &position, float scale = 1.0f, float rotationY = 0.0f);
 
-    // Upload instance data to GPU (call after adding all instances)
+    // Upload instance data to GPU (call after adding all instances)        
     void uploadInstanceData();
 
     // Render all instances
-    void render(const glm::mat4 &view, const glm::mat4 &projection, PhongLightConfig *light);
+    void render(const glm::mat4 view, const glm::mat4 projection, const PhongLightConfig *phongLight) override;
 
     // Set fog uniforms
     void setFogUniforms(const glm::vec3 &fogColor, float fogStart, float fogEnd);
@@ -51,11 +51,11 @@ public:
     }
 
 private:
-    // Instance transforms (mat4 stored as 16 floats)
+    // Instance transforms
     std::vector<glm::mat4> m_instanceTransforms;
 
     // Source model data (shared, not owned)
-    Model *m_sourceModel = nullptr;
+    std::unique_ptr<Model> m_sourceModel = nullptr;
 
     // GPU buffer for instance data
     GLuint m_instanceVBO = 0;

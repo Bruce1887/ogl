@@ -3,6 +3,7 @@
 #include "Enemy.h"
 #include "Player.h"
 #include "../InstancedRenderer.h"
+#include "../AnimatedInstanceRenderer.h"
 
 #include <optional>
 #include <glm/glm.hpp>
@@ -15,13 +16,14 @@
 class EnemySpawner
 {
 public:
-	EnemySpawner(const std::filesystem::path modelPath)
+	EnemySpawner()
 	{
-		m_instanceRenderer = std::make_unique<InstancedRenderer>();
-		m_enemyModel = std::make_unique<Model>(modelPath);
-		m_instanceRenderer->init(m_enemyModel.get());
+		m_animatedInstanceRenderer = std::make_unique<AnimatedInstanceRenderer>();
 	}
 	~EnemySpawner() = default;
+
+	// TODO: change visibility to private later
+	std::unique_ptr<AnimatedInstanceRenderer> m_animatedInstanceRenderer;
 
 	void setMinHeightFunction(std::function<float(float, float)> func)
 	{
@@ -35,7 +37,7 @@ public:
 
 	void renderAll(glm::mat4 view, glm::mat4 proj, PhongLightConfig *light)
 	{
-		m_instanceRenderer.get()->render(view, proj, light);
+		m_animatedInstanceRenderer->render(view, proj, light);
 	}
 
 	/**
@@ -49,11 +51,9 @@ public:
 	 */
 	void spawnNew(glm::vec3 nearPosition);
 
-	std::unique_ptr<Model> m_enemyModel;
-
 	std::vector<EnemyData> m_enemyDataList;
 
-	void setEntitySounds(const EntitySounds& sounds)
+	void setEntitySounds(const EntitySounds &sounds)
 	{
 		m_sounds = sounds;
 	}
@@ -71,7 +71,7 @@ private:
 	float m_maxSpawnDistance = 140.0f;
 	float m_despawnThreshold = 320.0f; // If set, enemies beyond this distance from player are despawned
 
-	std::unique_ptr<InstancedRenderer> m_instanceRenderer;
+	// std::unique_ptr<InstancedRenderer> m_instanceRenderer;
 	std::optional<std::function<float(float, float)>> m_heightFunc;
 	std::optional<EntitySounds> m_sounds = std::nullopt;
 };

@@ -33,24 +33,6 @@ struct TerrainVertex
     float waterMask; // 0.0 = no water, 1.0 = full water
 };
 
-/**
- * @brief Struct holding various renderables to be used in the terrain
- * The renderables defined here can be copied from and placed in the terrain, in order to not read from disk multiple times.
- * The renderables have to defined at compile time, and intitialised in the constructor.
- * 
- */
-class TerrainRenderables
-{
-public:
-    TerrainRenderables()
-    {
-        gran = std::make_unique<Model>((MODELS_DIR / "gran" / "gran.obj")); // gran som trädet gran
-    }
-    ~TerrainRenderables() = default;
-
-    std::unique_ptr<Model> gran;    
-};
-
 class TerrainGenerator
 {
 public:
@@ -71,7 +53,6 @@ public:
 
     float foo_treePerlin(float x, float z);
     
-    TerrainRenderables m_terrainRenderables;
 private:    
 
     // TerrainConfig m_config;

@@ -16,14 +16,22 @@ InstancedRenderer::~InstancedRenderer()
     }
 }
 
-void InstancedRenderer::init(Model *model)
+void InstancedRenderer::init(std::unique_ptr<Model> model, std::shared_ptr<Shader> shader)
 {
-    m_sourceModel = model;
+    m_sourceModel = std::move(model);
 
-    m_instancedShader = std::make_shared<Shader>();
-    m_instancedShader->addShader("Instanced.vert", ShaderType::VERTEX);
-    m_instancedShader->addShader("PhongMTL_FOG.frag", ShaderType::FRAGMENT);
-    m_instancedShader->createProgram();
+    if (shader)
+    {
+        m_instancedShader = shader;
+        return;
+    }
+    else
+    {
+        m_instancedShader = std::make_shared<Shader>();
+        m_instancedShader->addShader("Instanced.vert", ShaderType::VERTEX);
+        m_instancedShader->addShader("PhongMTL_FOG.frag", ShaderType::FRAGMENT);
+        m_instancedShader->createProgram();
+    }
 
     // Create instance VBO
     glGenBuffers(1, &m_instanceVBO);
@@ -69,7 +77,7 @@ void InstancedRenderer::setFogUniforms(const glm::vec3 &fogColor, float fogStart
     m_fogEnd = fogEnd;
 }
 
-void InstancedRenderer::render(const glm::mat4 &view, const glm::mat4 &projection, PhongLightConfig *light)
+void InstancedRenderer::render(const glm::mat4 view, const glm::mat4 projection, const PhongLightConfig *phongLight)
 {
     if (!m_sourceModel || m_instanceTransforms.empty())
         return;
@@ -94,12 +102,12 @@ void InstancedRenderer::render(const glm::mat4 &view, const glm::mat4 &projectio
     m_instancedShader->setUniform("u_fogEnd", m_fogEnd);
 
     // Light uniforms
-    if (light)
+    if (phongLight)
     {
-        m_instancedShader->setUniform("u_light_position", light->lightPosition);
-        m_instancedShader->setUniform("u_light_ambient", light->ambientLight);
-        m_instancedShader->setUniform("u_light_diffuse", light->diffuseLight);
-        m_instancedShader->setUniform("u_light_specular", light->specularLight);
+        m_instancedShader->setUniform("u_light_position", phongLight->lightPosition);
+        m_instancedShader->setUniform("u_light_ambient", phongLight->ambientLight);
+        m_instancedShader->setUniform("u_light_diffuse", phongLight->diffuseLight);
+        m_instancedShader->setUniform("u_light_specular", phongLight->specularLight);
     }
 
     // Get the model's mesh renderables

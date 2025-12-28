@@ -1,5 +1,6 @@
 #include <glm/glm.hpp>
 
+#include "Enums.h"
 // Movement pattern types
 enum class MovementPattern
 {
@@ -45,6 +46,8 @@ struct EnemyData
 
 	float m_modelYOffset = 0.0f; // Vertical offset to place feet on ground (adjust per model)
 	float m_modelScale = 1.0f;	 // Scale of the model
+
+	AnimationState m_animationState = AnimationState::IDLE; // Current animation state
 
 	// Calculate direction to target position on the XZ plane
 	glm::vec3 getDirectionXZtoTarget(const glm::vec3 &targetPos) const

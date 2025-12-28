@@ -48,7 +48,7 @@ public:
 
     ~Model() = default;
 
-    void render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight) override;
+    void render(const glm::mat4 view, const glm::mat4 projection, const PhongLightConfig *phongLight) override;
     
     void setFogUniforms(const glm::vec3& fogColor, float fogStart, float fogEnd)
     {

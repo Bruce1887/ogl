@@ -96,7 +96,7 @@ void Skybox::setUpMR()
     // glBindVertexArray(0);
 }
 
-void Skybox::render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight)
+void Skybox::render(const glm::mat4 view, const glm::mat4 projection, const PhongLightConfig *phongLight)
 {
     assert(phongLight == nullptr && "Skybox does not use lighting as of 5dec2025");
 

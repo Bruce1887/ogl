@@ -21,3 +21,16 @@ enum class BufferUsage
     DYNAMIC_COPY = GL_DYNAMIC_COPY,
     UNASSIGNED = -1
 };
+
+/**
+ * @brief Different animation states for animated models.
+ * 
+ */
+enum class AnimationState
+{
+	IDLE,
+	WALKING,
+	ATTACK,
+	HURT,
+	DEATH
+};

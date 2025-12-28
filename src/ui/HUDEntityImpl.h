@@ -20,7 +20,7 @@ public:
      * @param projection Ignored for HUD (we use our own Ortho projection).
      * @param phongLight Ignored for HUD.
      */
-    void render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight) override;
+    void render(const glm::mat4 view, const glm::mat4 projection, const PhongLightConfig *phongLight) override;
     
 private:
     // Game state references

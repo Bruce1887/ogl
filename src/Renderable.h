@@ -11,7 +11,7 @@
 class Renderable
 {
 public:
-    virtual void render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight) = 0;
+    virtual void render(const glm::mat4 view, const glm::mat4 projection, const PhongLightConfig *phongLight) = 0;
     virtual ~Renderable() = default;
 
     Renderable()
@@ -25,10 +25,10 @@ public:
     inline unsigned int getID() const { return m_ID; }
     inline unsigned int getRenderableTypeID() const { return m_RenderableTypeID; }
 
-    /**      
+    /**
      * @brief Set a uniform value specific to this renderable.
      * The uniform isnt actually set until render time where applyUniform is called.
-     * 
+     *
      * @param name Name of the uniform
      * @param v Value to set the uniform to
      */
@@ -41,7 +41,7 @@ public:
      * @brief Get all uniforms for this renderable.
      * Used for instanced rendering to copy material properties.
      */
-    const std::unordered_map<std::string, UniformValue>& getUniforms() const
+    const std::unordered_map<std::string, UniformValue> &getUniforms() const
     {
         return m_Uniforms;
     }
@@ -53,18 +53,19 @@ protected:
     // Potentially shared among multiple renderables.
     std::shared_ptr<Shader> m_shaderRef;
 
-    /**      
+    /**
      * @brief Apply a uniform value to the shader associated with this renderable.
      * This actually sets the uniform in the shader, in contrast to setUniform.
-     * 
+     *
      * @param name Name of the uniform
      * @param value Value to set the uniform to
-     * */ 
+     * */
     void applyUniform(const std::string &name, const UniformValue &value)
     {
         std::visit([this, &name](auto &&val)
                    { m_shaderRef->setUniform(name, val); }, value);
     }
+
 private:
     /**
      * @brief Unique ID for this instance of Renderable (i.e. the ID for a single tree and not all trees)

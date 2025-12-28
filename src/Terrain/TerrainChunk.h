@@ -51,7 +51,7 @@ public:
     std::vector<std::vector<float>> heightGrid; // stores unscaled perlin heights
     int gridSize = 0;                           // (chunkSize / vertexStep) + 1
 
-    void render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight) override
+    void render(const glm::mat4 view, const glm::mat4 projection, const PhongLightConfig *phongLight) override
     {
         // Only render if active
         if (!m_active)
@@ -86,7 +86,10 @@ public:
             
             // Initialize instanced tree renderer
             m_treeRenderer = std::make_unique<InstancedRenderer>();
-            m_treeRenderer->init(m_generator->m_terrainRenderables.gran.get());
+            // std::unique_ptr<Model> treeModel = m_generator->m_terrainRenderables.gran->copyFrom(m_generator->m_terrainRenderables.gran.get());
+
+            std::unique_ptr<Model> treeModel = std::make_unique<Model>((MODELS_DIR / "gran" / "gran.obj")); // gran som trädet gran
+            m_treeRenderer->init(std::move(treeModel));
           };
 
     ~TerrainChunkManager() = default;

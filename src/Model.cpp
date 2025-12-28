@@ -200,7 +200,7 @@ Model::Model(std::shared_ptr<ModelData> modelData)
 {
 }
 
-void Model::render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight)
+void Model::render(const glm::mat4 view, const glm::mat4 projection, const PhongLightConfig *phongLight)
 {
     for (auto &mr : m_modelData->getMeshRenderables())
     {

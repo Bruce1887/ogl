@@ -1,6 +1,6 @@
 #include "MeshRenderable.h"
 
-void MeshRenderable::render(glm::mat4 view, glm::mat4 projection, PhongLightConfig *phongLight)
+void MeshRenderable::render(const glm::mat4 view, const glm::mat4 projection, const PhongLightConfig *phongLight)
 {
     RenderingContext *rContext = RenderingContext::Current();
 

@@ -115,14 +115,31 @@ bool WorldManager::initializeEntities()
     float spawnAngle = glm::radians(angleDist(gen));
     float spawnDistance = distanceDist(gen);
 
-    EnemyData enemyData; // default enemy data
-    EntitySounds cowSounds{.m_attackSound = LoadWav(AUDIO_DIR / "cow_moo.wav")};
 
-    m_enemyCowSpawner = std::make_unique<EnemySpawner>(MODELS_DIR / "cow" / "cow.obj");
-    m_enemyCowSpawner->setEntitySounds(cowSounds);
+    // Setup Cow
+    EnemyData enemyData; // default enemy data
+
+    m_enemyCowSpawner = std::make_unique<EnemySpawner>();
     m_enemyCowSpawner->setMinHeightFunction([this](float x, float z)
                                             { return m_chunkManager->getPreciseHeightAt(x, z); });
-    m_enemyCowSpawner->m_enemyModel.get()->setFogUniforms(m_fogColor, fogStart, fogEnd);
+
+    // Add all animation frames for cow
+    std::unique_ptr<AnimatedInstanceFrame> cow_idle = AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow.obj", AnimationState::IDLE, 1.0f);
+    m_enemyCowSpawner->m_animatedInstanceRenderer->addAnimationFrame(std::move(cow_idle));
+    std::unique_ptr<AnimatedInstanceFrame> cow_walk1 = AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow.obj", AnimationState::WALKING, 1.5f);
+    m_enemyCowSpawner->m_animatedInstanceRenderer->addAnimationFrame(std::move(cow_walk1));
+    std::unique_ptr<AnimatedInstanceFrame> cow_walk2 = AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "squeezed_cow.obj", AnimationState::WALKING, 1.5f);
+    m_enemyCowSpawner->m_animatedInstanceRenderer->addAnimationFrame(std::move(cow_walk2));
+    std::unique_ptr<AnimatedInstanceFrame> cow_walk3 = AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cube_low" / "cube_low.obj", AnimationState::WALKING, 1.5f);
+    m_enemyCowSpawner->m_animatedInstanceRenderer->addAnimationFrame(std::move(cow_walk3));
+
+    // set fog uniforms
+    m_enemyCowSpawner->m_animatedInstanceRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
+
+    // set sounds
+    EntitySounds cowSounds{.m_attackSound = LoadWav(AUDIO_DIR / "cow_moo.wav")};
+    m_enemyCowSpawner->setEntitySounds(cowSounds);
+
     return true;
 }
 
@@ -250,6 +267,6 @@ void WorldManager::updateFogSettings()
 
     if (m_enemyCowSpawner)
     {
-        m_enemyCowSpawner->m_enemyModel.get()->setFogUniforms(m_fogColor, fogStart, fogEnd);
+        m_enemyCowSpawner->m_animatedInstanceRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
     }
 }

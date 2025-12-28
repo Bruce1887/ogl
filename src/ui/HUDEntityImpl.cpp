@@ -30,7 +30,7 @@ HUDEntityImpl::HUDEntityImpl(Player* player, int screenWidth, int screenHeight)
 
 HUDEntityImpl::~HUDEntityImpl() = default; // Smart pointers handle cleanup
 
-void HUDEntityImpl::render(glm::mat4 view, glm::mat4 projection, PhongLightConfig* phongLight) {
+void HUDEntityImpl::render(const glm::mat4 view, const glm::mat4 projection, const PhongLightConfig *phongLight) {
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE); // Disable depth writing
     glDisable(GL_CULL_FACE); // Disable face culling for HUD

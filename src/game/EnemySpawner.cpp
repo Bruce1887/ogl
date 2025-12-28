@@ -2,19 +2,19 @@
 
 void EnemySpawner::updateAll(float dt, Player &player)
 {
-	float timenow = glfwGetTime();
 	glm::vec3 playerPosition = player.m_playerData.m_position;
 
 	// Handle spawning new enemies at intervals
-	if (timenow - m_spawnTimer > m_spawnInterval)
+	m_spawnTimer += dt;
+	if (m_spawnTimer > m_spawnInterval)
 	{
-		m_spawnTimer = timenow;
+		m_spawnTimer = 0.0f;
 		spawnNew(playerPosition);
 	}
 
 	// Prepare list of transforms for instanced rendering
-	std::vector<glm::mat4> newTransforms;
-	newTransforms.reserve(m_enemyDataList.size());
+	std::vector<std::tuple<AnimationState, glm::mat4>> new_instanceData;
+	new_instanceData.reserve(m_enemyDataList.size());
 
 	for (int i = 0; i < m_enemyDataList.size(); i++)
 	{
@@ -51,6 +51,7 @@ void EnemySpawner::updateAll(float dt, Player &player)
 		// Only chase if player is within detection range
 		if (distanceToPlayer < data.m_detectionRange && distanceToPlayer > data.m_closeRange) // Stop when close
 		{
+			data.m_animationState = AnimationState::WALKING;
 			// Get direction to player
 			glm::vec3 direction = data.getDirectionXZtoTarget(playerPosition);
 
@@ -66,7 +67,6 @@ void EnemySpawner::updateAll(float dt, Player &player)
 			{
 				// Calculate perpendicular direction for zigzag
 				glm::vec3 perpendicular(-direction.z, 0.0f, direction.x);
-
 				// Oscillate left and right using sine wave
 				float zigzagOffset = sin(data.m_movementTimer * data.m_zigzagFrequency) * data.m_zigzagAmplitude;
 				moveDirection = glm::normalize(direction + perpendicular * zigzagOffset * 0.3f);
@@ -87,6 +87,9 @@ void EnemySpawner::updateAll(float dt, Player &player)
 		}
 		else if (distanceToPlayer <= data.m_closeRange)
 		{
+			// data.m_animationState = AnimationState::ATTACK;
+			data.m_animationState = AnimationState::IDLE; // temp fix while attack anim is missing
+
 			// The enemy is in range to attack the player
 			float damageDealt = data.tryAttack(dt);
 			if (damageDealt > 0.0f)
@@ -137,11 +140,12 @@ void EnemySpawner::updateAll(float dt, Player &player)
 		float currentScale = data.m_modelScale + data.m_hitScaleBoost;
 		transform = glm::scale(transform, glm::vec3(currentScale));
 
-		newTransforms.push_back(transform);
+		new_instanceData.push_back(std::make_tuple(data.m_animationState, transform));
 	}
 
-	// Upload all transforms to the instanced renderer
-	m_instanceRenderer->replaceInstances(newTransforms);
+	// Upload all transforms to the AnimatedInstancerenderer
+	m_animatedInstanceRenderer->updateInstances(new_instanceData, dt);
+	// m_instanceRenderer->replaceInstances(new_instanceData);
 }
 
 void EnemySpawner::spawnNew(glm::vec3 nearPosition)
