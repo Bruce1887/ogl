@@ -1,4 +1,5 @@
 #include "WorldManager.h"
+#include "game/Audio.h"
 
 bool WorldManager::initialize()
 {
@@ -19,6 +20,8 @@ bool WorldManager::initialize()
         DEBUG_PRINT("Failed to initialize entities");
         return false;
     }
+
+    SoundPlayer::getInstance().PlayMusic(LoadWav(AUDIO_DIR / "piraten.wav"), true);
 
     return true;
 }
@@ -100,21 +103,10 @@ bool WorldManager::initializeEntities()
     m_player = std::make_unique<Player>(
         glm::vec3(100, 0, 100),
         (MODELS_DIR / "BobboMob" / "BobboMob.obj").string());
-    m_player->m_playerData.m_modelScale = 0.25f;
 
     float fogStart = m_renderDistance * m_fogStart;
     float fogEnd = m_renderDistance * m_fogEnd;
     m_player->m_playerModel.setFogUniforms(m_fogColor, fogStart, fogEnd);
-
-    // Spawn enemy near player at random position
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> angleDist(0.0f, 360.0f);
-    std::uniform_real_distribution<float> distanceDist(20.0f, 40.0f);
-
-    float spawnAngle = glm::radians(angleDist(gen));
-    float spawnDistance = distanceDist(gen);
-
 
     // Setup Cow
     EnemyData enemyData; // default enemy data

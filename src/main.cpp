@@ -21,7 +21,7 @@ int main(int, char **)
         // Create UI Manager
         ui::UIManager uiManager(WINDOW_X, WINDOW_Y);
 
-        DEBUG_PRINT("Starting in LOADING state just to make things easier for testing...");
+        DEBUG_PRINT("TEMPORARY: Starting in LOADING state just to make things easier for testing...");
         uiManager.transitionTo(ui::GameState::LOADING); // TEMP: Start loading game immediately
 
         // World manager (nullptr until game starts)

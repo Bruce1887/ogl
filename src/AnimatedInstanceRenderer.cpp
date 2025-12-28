@@ -99,6 +99,7 @@ std::unique_ptr<AnimatedInstanceFrame> AnimatedInstanceRenderer::createAnimatedI
 	frame->m_state = state;
 	frame->m_duration = duration;
 	std::unique_ptr<Model> model = std::make_unique<Model>(modelPath);
+	
 	frame->m_InstancedRenderer.init(std::move(model));
 	return frame;
 }

@@ -18,7 +18,7 @@ extern ALCdevice *s_audio_device;
 extern ALCcontext *s_audio_context;
 
 /**
- * @brief Singleton class for playing sounds using OpenAL
+ * @brief Singleton class for playing sounds using OpenAL. Get the instance via SoundPlayer::getInstance().
  */
 class SoundPlayer
 {
