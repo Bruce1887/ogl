@@ -21,6 +21,9 @@ int main(int, char **)
         // Create UI Manager
         ui::UIManager uiManager(WINDOW_X, WINDOW_Y);
 
+        DEBUG_PRINT("Starting in LOADING state just to make things easier for testing...");
+        uiManager.transitionTo(ui::GameState::LOADING); // TEMP: Start loading game immediately
+
         // World manager (nullptr until game starts)
         std::unique_ptr<WorldManager> worldManager;
 
@@ -63,6 +66,8 @@ int main(int, char **)
         // Ensure cursor starts visible (in menu)
         glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         bool lastShouldShowCursor = true;
+
+
 
         // Main game loop
         while (!glfwWindowShouldClose(g_window))

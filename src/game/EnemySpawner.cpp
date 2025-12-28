@@ -91,25 +91,14 @@ void EnemySpawner::updateAll(float dt, Player &player)
 			data.m_animationState = AnimationState::IDLE; // temp fix while attack anim is missing
 
 			// The enemy is in range to attack the player
-			float damageDealt = data.tryAttack(dt);
-			if (damageDealt > 0.0f)
+			float damage = data.tryAttack(dt);
+			if (damage > 0.0f)
 			{
+				player.m_playerData.take_damage(damage);
 				// Play attack sound if available
 				if (m_sounds.has_value())
 				{
 					SoundPlayer::getInstance().PlaySFX((*m_sounds).m_attackSound);
-				}
-
-				player.m_playerData.m_health -= damageDealt;
-				if (player.m_playerData.m_health <= 0.0f)
-				{
-					// Player is dead, handle death elsewhere
-					player.m_playerData.m_health = 0.0f;
-				}
-				else
-				{
-					// Player is hit but not dead
-					//  DEBUG_PRINT("Enemy at index " << i << " attacked player for " << damageDealt << " damage.");
 				}
 			}
 		}

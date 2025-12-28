@@ -27,6 +27,13 @@ struct PlayerData{
     float m_attackCooldown = 0.1f;  // seconds between attacks
     float m_attackTimer = 0.0f;  // tracks cooldown
 
+    void take_damage(float damage){
+        if(damage >= m_health){
+            m_health = 0.0;
+        } else {
+            m_health -= damage;
+        }
+    }
 };
 
 class Player
