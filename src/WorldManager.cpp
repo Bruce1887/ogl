@@ -126,12 +126,10 @@ bool WorldManager::initializeEntities()
     // Add all animation frames for cow
     std::unique_ptr<AnimatedInstanceFrame> cow_idle = AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow.obj", AnimationState::IDLE, 1.0f);
     m_enemyCowSpawner->m_animatedInstanceRenderer->addAnimationFrame(std::move(cow_idle));
-    std::unique_ptr<AnimatedInstanceFrame> cow_walk1 = AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow.obj", AnimationState::WALKING, 1.5f);
+    std::unique_ptr<AnimatedInstanceFrame> cow_walk1 = AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow_walk1.obj", AnimationState::WALKING, 0.6f);
     m_enemyCowSpawner->m_animatedInstanceRenderer->addAnimationFrame(std::move(cow_walk1));
-    std::unique_ptr<AnimatedInstanceFrame> cow_walk2 = AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "squeezed_cow.obj", AnimationState::WALKING, 1.5f);
+    std::unique_ptr<AnimatedInstanceFrame> cow_walk2 = AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow_walk2.obj", AnimationState::WALKING, 0.6f);
     m_enemyCowSpawner->m_animatedInstanceRenderer->addAnimationFrame(std::move(cow_walk2));
-    std::unique_ptr<AnimatedInstanceFrame> cow_walk3 = AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cube_low" / "cube_low.obj", AnimationState::WALKING, 1.5f);
-    m_enemyCowSpawner->m_animatedInstanceRenderer->addAnimationFrame(std::move(cow_walk3));
 
     // set fog uniforms
     m_enemyCowSpawner->m_animatedInstanceRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
