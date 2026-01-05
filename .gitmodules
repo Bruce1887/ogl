@@ -1,3 +1,6 @@
 [submodule "src/vendor/openal-soft"]
 	path = src/vendor/openal-soft
 	url = https://github.com/kcat/openal-soft.git
+[submodule "src/vendor/freetype"]
+	path = src/vendor/freetype
+	url = https://github.com/freetype/freetype.git
