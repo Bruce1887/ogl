@@ -12,16 +12,16 @@ void EnemySpawner::updateAll(float dt, Player &player)
 		spawnNew(playerPosition);
 	}
 
-	// Prepare list of transforms for instanced rendering
-	std::vector<std::tuple<AnimationState, glm::mat4>> new_instanceData;
-	new_instanceData.reserve(m_enemyDataList.size());
+	// Prepare map of transforms for instanced rendering
+	std::unordered_map<AnimationState, std::vector<glm::mat4>> instanceTransformsByState;
+	instanceTransformsByState.reserve(m_enemyDataList.size());
 
 	for (int i = 0; i < m_enemyDataList.size(); i++)
 	{
-		EnemyData &data = m_enemyDataList[i];
+		EnemyData &enemy_data = m_enemyDataList[i];
 
 		// Check if enemy is dead
-		if (data.isDead())
+		if (enemy_data.isDead())
 		{
 			m_enemyDataList.erase(m_enemyDataList.begin() + i);
 			i--;
@@ -29,7 +29,7 @@ void EnemySpawner::updateAll(float dt, Player &player)
 		}
 
 		// Despawn enemies that are too far from the player
-		if (glm::length(data.m_position - playerPosition) > m_despawnThreshold)
+		if (glm::length(enemy_data.m_position - playerPosition) > m_despawnThreshold)
 		{
 			// DEBUG_PRINT("Despawning enemy at distance " << glm::length(data.m_position - playerPosition));
 			m_enemyDataList.erase(m_enemyDataList.begin() + i);
@@ -38,27 +38,27 @@ void EnemySpawner::updateAll(float dt, Player &player)
 		}
 
 		// Update timers
-		data.updateTimers(dt);
+		enemy_data.updateTimers(dt);
 
-		// Update movement timer
-		data.m_movementTimer += dt;
+		// Lock animation state if attacking (attacktimer tracks time since last attack)
+		// enemy_data.lockAnimationState(enemy_data.m_attackTimer < enemy_data.m_attackCooldown);
 
 		// Calculate distance to player
-		glm::vec3 toPlayer = playerPosition - data.m_position;
+		glm::vec3 toPlayer = playerPosition - enemy_data.m_position;
 		toPlayer.y = 0.0f; // Ignore vertical distance
 		float distanceToPlayer = glm::length(toPlayer);
+		glm::vec3 direction_to_player = enemy_data.getDirectionXZtoTarget(playerPosition);
 
 		// Only chase if player is within detection range
-		if (distanceToPlayer < data.m_detectionRange && distanceToPlayer > data.m_closeRange) // Stop when close
+		if (distanceToPlayer < enemy_data.m_detectionRange && distanceToPlayer > enemy_data.m_closeRange) // Stop when close
 		{
-			data.m_animationState = AnimationState::WALKING;
+			enemy_data.setAnimationState(AnimationState::WALKING);
 			// Get direction to player
-			glm::vec3 direction = data.getDirectionXZtoTarget(playerPosition);
 
 			// Apply movement pattern
-			glm::vec3 moveDirection = direction;
-			float currentSpeed = data.m_moveSpeed;
-			switch (data.m_movementPattern)
+			glm::vec3 moveDirection = direction_to_player;
+			float currentSpeed = enemy_data.m_moveSpeed;
+			switch (enemy_data.m_movementPattern)
 			{
 			case MovementPattern::DIRECT:
 				// Move straight toward player (default behavior)
@@ -66,10 +66,10 @@ void EnemySpawner::updateAll(float dt, Player &player)
 			case MovementPattern::ZIGZAG:
 			{
 				// Calculate perpendicular direction for zigzag
-				glm::vec3 perpendicular(-direction.z, 0.0f, direction.x);
+				glm::vec3 perpendicular(-direction_to_player.z, 0.0f, direction_to_player.x);
 				// Oscillate left and right using sine wave
-				float zigzagOffset = sin(data.m_movementTimer * data.m_zigzagFrequency) * data.m_zigzagAmplitude;
-				moveDirection = glm::normalize(direction + perpendicular * zigzagOffset * 0.3f);
+				float zigzagOffset = sin(enemy_data.m_movementTimer * enemy_data.m_zigzagFrequency) * enemy_data.m_zigzagAmplitude;
+				moveDirection = glm::normalize(direction_to_player + perpendicular * zigzagOffset * 0.3f);
 				break;
 			}
 			case MovementPattern::CAUTIOUS:
@@ -80,18 +80,17 @@ void EnemySpawner::updateAll(float dt, Player &player)
 
 			// Move toward player with pattern applied
 			float speed = currentSpeed * dt;
-			data.m_position += moveDirection * speed;
+			enemy_data.m_position += moveDirection * speed;
 
 			// Update yaw to face the movement direction
-			data.m_yaw = glm::degrees(atan2(moveDirection.x, moveDirection.z));
+			enemy_data.m_yaw = glm::degrees(atan2(moveDirection.x, moveDirection.z));
 		}
-		else if (distanceToPlayer <= data.m_closeRange)
+		else if (distanceToPlayer <= enemy_data.m_closeRange)
 		{
-			// data.m_animationState = AnimationState::ATTACK;
-			data.m_animationState = AnimationState::IDLE; // temp fix while attack anim is missing
+			enemy_data.setAnimationState(AnimationState::ATTACK);
 
 			// The enemy is in range to attack the player
-			float damage = data.tryAttack(dt);
+			float damage = enemy_data.tryAttack(dt);
 			if (damage > 0.0f)
 			{
 				player.m_playerData.take_damage(damage);
@@ -105,35 +104,35 @@ void EnemySpawner::updateAll(float dt, Player &player)
 
 		// Stick to terrain height
 		if (m_heightFunc.has_value())
-			data.m_position.y = (*m_heightFunc)(data.m_position.x, data.m_position.z);
+			enemy_data.m_position.y = (*m_heightFunc)(enemy_data.m_position.x, enemy_data.m_position.z);
 
 		// Build transform matrix for this enemy instance
 		glm::mat4 transform(1.0f);
 
 		// Translate to world position, adding Y offset so feet touch ground
-		glm::vec3 renderPos = data.m_position;
-		renderPos.y += data.m_modelYOffset;
+		glm::vec3 renderPos = enemy_data.m_position;
+		renderPos.y += enemy_data.m_modelYOffset;
 		transform = glm::translate(transform, renderPos);
 
 		// Rotate by yaw so model faces forward direction
-		transform = glm::rotate(transform, glm::radians(data.m_yaw), glm::vec3(0, 1, 0));
+		transform = glm::rotate(transform, glm::radians(enemy_data.m_yaw), glm::vec3(0, 1, 0));
 
 		// Apply hit wobble rotation when damaged
-		if (data.m_hitFlashTimer > 0.0f)
+		if (enemy_data.m_hitFlashTimer > 0.0f)
 		{
-			float wobble = sin(data.m_hitFlashTimer * 30.0f) * 0.2f * data.m_hitFlashTimer;
+			float wobble = sin(enemy_data.m_hitFlashTimer * 30.0f) * 0.2f * enemy_data.m_hitFlashTimer;
 			transform = glm::rotate(transform, wobble, glm::vec3(0, 0, 1));
 		}
 
 		// Scale the enemy (with hit pulse effect)
-		float currentScale = data.m_modelScale + data.m_hitScaleBoost;
+		float currentScale = enemy_data.m_modelScale + enemy_data.m_hitScaleBoost;
 		transform = glm::scale(transform, glm::vec3(currentScale));
 
-		new_instanceData.push_back(std::make_tuple(data.m_animationState, transform));
+		instanceTransformsByState[enemy_data.getAnimationState()].push_back(transform);
 	}
 
 	// Upload all transforms to the AnimatedInstancerenderer
-	m_animatedInstanceRenderer->updateInstances(new_instanceData, dt);
+	m_animatedInstanceRenderer->updateInstances(instanceTransformsByState, dt);
 	// m_instanceRenderer->replaceInstances(new_instanceData);
 }
 

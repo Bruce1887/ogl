@@ -10,7 +10,7 @@
 #include <glm/glm.hpp>
 
 #define MUSIC_SOUND_SOURCES 1 // num sources reserved for music
-#define SFX_SOUND_SOURCES 127  // num sources reserved for various sound effects
+#define SFX_SOUND_SOURCES 15  // num sources reserved for various sound effects
 
 inline const std::filesystem::path AUDIO_DIR = std::filesystem::path("resources") / "audio";
 

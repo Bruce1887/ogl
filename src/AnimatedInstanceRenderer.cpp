@@ -2,6 +2,9 @@
 
 void AnimatedInstanceRenderer::addAnimationFrame(std::unique_ptr<AnimatedInstanceFrame> frame)
 {
+#ifdef DEBUG
+	assert(frame.get()->m_duration > 0.0f);
+#endif
 	m_animationFrames[frame->m_state].push_back(std::move(frame));
 }
 
@@ -16,17 +19,10 @@ void AnimatedInstanceRenderer::updateFogUniforms(const glm::vec3 &fogColor, floa
 	}
 }
 
-void AnimatedInstanceRenderer::updateInstances(std::vector<std::tuple<AnimationState, glm::mat4>> &instanceData, float dt)
+void AnimatedInstanceRenderer::updateInstances(std::unordered_map<AnimationState, std::vector<glm::mat4>> &instanceTransformsByState, float dt)
 {
-	// Group instances by animation state
-	std::unordered_map<AnimationState, std::vector<glm::mat4>> instancesByState;
-	for (const auto &[state, transform] : instanceData)
-	{
-		instancesByState[state].push_back(transform);
-	}
-
 	// Now process each animation state
-	for (auto &[state, transforms] : instancesByState)
+	for (auto &[state, transforms] : instanceTransformsByState)
 	{
 		// Update animation timer for this state
 		float &timer = m_animationTimers[state];
@@ -70,7 +66,7 @@ void AnimatedInstanceRenderer::updateInstances(std::vector<std::tuple<AnimationS
 	for (auto &kv : m_animationFrames)
 	{
 		AnimationState state = kv.first;
-		if (instancesByState.find(state) == instancesByState.end())
+		if (instanceTransformsByState.find(state) == instanceTransformsByState.end())
 		{
 			// No instances for this state - clear all its frames
 			for (auto &frame : kv.second)
@@ -93,13 +89,13 @@ void AnimatedInstanceRenderer::render(const glm::mat4 view, const glm::mat4 proj
 	}
 }
 
-std::unique_ptr<AnimatedInstanceFrame> AnimatedInstanceRenderer::createAnimatedInstanceFrame(const std::filesystem::path &modelPath, AnimationState state, float duration)
+std::unique_ptr<AnimatedInstanceFrame> AnimatedInstanceRenderer::createAnimatedInstanceFrame(const std::filesystem::path &modelPath, AnimationState state, float duration, std::shared_ptr<Shader> shader)
 {
 	auto frame = std::make_unique<AnimatedInstanceFrame>();
 	frame->m_state = state;
 	frame->m_duration = duration;
 	std::unique_ptr<Model> model = std::make_unique<Model>(modelPath);
-	
-	frame->m_InstancedRenderer.init(std::move(model));
+
+	frame->m_InstancedRenderer.init(std::move(model), shader);
 	return frame;
 }

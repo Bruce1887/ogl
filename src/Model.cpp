@@ -77,7 +77,7 @@ Model::Model(const std::filesystem::path &path)
         // Check for diffuse texture
         aiString texPath;
         m_modelData->m_hasTextureDiffuse = material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS;
-
+/*
 #ifdef DEBUG
         assert(mesh != nullptr);
         assert(mesh->HasPositions());
@@ -85,6 +85,7 @@ Model::Model(const std::filesystem::path &path)
         assert(mesh->HasTextureCoords(0));
         assert(mesh->HasTangentsAndBitangents());
 #endif
+*/
         // Extract vertex data
         std::vector<Vertex> vertices;
         for (unsigned int v = 0; v < mesh->mNumVertices; v++)

@@ -10,8 +10,8 @@ class ThirdPersonCamera
 public:
     float m_distance = 12.0f;
     float m_height = 3.0f;
-    float m_minHeight = 1.0f;
-    float m_maxHeight = 10.0f;
+    float m_minHeight = -5.0f;
+    float m_maxHeight = 15.0f;
 
     void update(Camera &cam, const PlayerData &p_data, float dt);
 

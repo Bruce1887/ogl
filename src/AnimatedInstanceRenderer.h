@@ -36,7 +36,7 @@ public:
 	 * @param duration Duration to display this frame (in seconds)
 	 * @return std::unique_ptr<AnimatedInstanceFrame> The created animated instance frame
 	 */
-	static std::unique_ptr<AnimatedInstanceFrame> createAnimatedInstanceFrame(const std::filesystem::path &modelPath, AnimationState state, float duration);
+	static std::unique_ptr<AnimatedInstanceFrame> createAnimatedInstanceFrame(const std::filesystem::path &modelPath, AnimationState state, float duration, std::shared_ptr<Shader> shader = nullptr);
 	
 	/**
 	 * @brief Add an animation frame to this renderer.
@@ -45,10 +45,10 @@ public:
 	 * @param frame The frame to add
 	 */
 	void addAnimationFrame(std::unique_ptr<AnimatedInstanceFrame> frame);
-	
+
 	void updateFogUniforms(const glm::vec3 &fogColor, float fogStart, float fogEnd);
 
-	void updateInstances(std::vector<std::tuple<AnimationState, glm::mat4>> &instanceData, float dt);
+	void updateInstances(std::unordered_map<AnimationState, std::vector<glm::mat4>> &instanceTransformsByState, float dt);
 	
 	void render(const glm::mat4 view, const glm::mat4 projection, const PhongLightConfig *phongLight) override;
 

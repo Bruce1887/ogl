@@ -1,3 +1,4 @@
+#pragma once
 #include <glm/glm.hpp>
 
 #include "Enums.h"
@@ -25,7 +26,7 @@ struct EnemyData
 
 	// Attack properties
 	float m_attackDamage = 5.0f;   // Damage dealt to player on attack
-	float m_attackCooldown = 1.0f; // Seconds between attacks
+	float m_attackCooldown = 4.0f; // Seconds between attacks
 	float m_attackTimer = 0.0f;	   // Tracks time since last attack
 	// float m_attackRange = 2.0f;    // Range within which enemy can attack player (this is implied by m_closeRange)
 
@@ -46,8 +47,6 @@ struct EnemyData
 
 	float m_modelYOffset = 0.0f; // Vertical offset to place feet on ground (adjust per model)
 	float m_modelScale = 1.0f;	 // Scale of the model
-
-	AnimationState m_animationState = AnimationState::IDLE; // Current animation state
 
 	// Calculate direction to target position on the XZ plane
 	glm::vec3 getDirectionXZtoTarget(const glm::vec3 &targetPos) const
@@ -72,6 +71,8 @@ struct EnemyData
 	{
 		// Time since last attack
 		m_attackTimer += dt;
+		// Movement pattern timer
+		m_movementTimer += dt;
 
 		// Visual feedback timers
 		if (m_hitFlashTimer > 0.0f)
@@ -117,4 +118,24 @@ struct EnemyData
 		// For now, always return damage (attack logic handled elsewhere)
 		return m_attackDamage;
 	}
+
+	void setAnimationState(AnimationState state)
+	{
+		if (m_animation_lock)
+			return;
+		m_animationState = state;
+	}
+
+	AnimationState getAnimationState() const
+	{
+		return m_animationState;
+	}
+
+	void lockAnimationState(bool lock)
+	{
+		m_animation_lock = lock;
+	}
+private:
+	AnimationState m_animationState = AnimationState::IDLE; // Current animation state
+	bool m_animation_lock = false;							// If true, animation state won't change automatically
 };

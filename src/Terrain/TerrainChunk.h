@@ -45,8 +45,8 @@ public:
         : coord(c), terrain_mr(std::move(tmr)) {
           };
     ChunkCoord coord;
-    std::vector<glm::vec3> treePositions;  // Store just positions, rendered via instancing
-    std::unique_ptr<MeshRenderable> terrain_mr;                    // terrain and water
+    std::vector<glm::vec3> treePositions;       // Store just positions, rendered via instancing
+    std::unique_ptr<MeshRenderable> terrain_mr; // terrain and water
 
     std::vector<std::vector<float>> heightGrid; // stores unscaled perlin heights
     int gridSize = 0;                           // (chunkSize / vertexStep) + 1
@@ -81,21 +81,24 @@ class TerrainChunkManager
 {
 public:
     TerrainChunkManager(TerrainGenerator *generator, std::vector<std::shared_ptr<Texture>> terrainTextures)
-        : m_generator(generator), m_terrainTextures(terrainTextures) {
-            std::cout << "Initialized TerrainChunkManager with chunk size " << TC_CHUNK_SIZE << " and vertex step " << TC_VERTEX_STEP << std::endl;
-            
-            // Initialize instanced tree renderer
-            m_treeRenderer = std::make_unique<InstancedRenderer>();
-            // std::unique_ptr<Model> treeModel = m_generator->m_terrainRenderables.gran->copyFrom(m_generator->m_terrainRenderables.gran.get());
+        : m_generator(generator), m_terrainTextures(terrainTextures)
+    {
+        DEBUG_PRINT("Initialized TerrainChunkManager with chunk size " << TC_CHUNK_SIZE << " and vertex step " << TC_VERTEX_STEP);
 
-            std::unique_ptr<Model> treeModel = std::make_unique<Model>((MODELS_DIR / "gran" / "gran.obj")); // gran som trädet gran
-            m_treeRenderer->init(std::move(treeModel));
-          };
+        // Initialize instanced tree renderer
+        m_treeRenderer = std::make_unique<InstancedRenderer>();
+        // std::unique_ptr<Model> treeModel = m_generator->m_terrainRenderables.gran->copyFrom(m_generator->m_terrainRenderables.gran.get());
+
+        std::unique_ptr<Model> treeModel = std::make_unique<Model>((MODELS_DIR / "gran" / "gran.obj")); // gran som trädet gran
+        DEBUG_PRINT("treemodel ptr: " << treeModel.get());
+
+        m_treeRenderer->init(std::move(treeModel));
+    };
 
     ~TerrainChunkManager() = default;
 
     // Load/unload chunks based on camera position
-    void updateChunks(const glm::vec3 &cameraPosition);    
+    void updateChunks(const glm::vec3 &cameraPosition);
 
     // Garbage collect unused chunks (chunnks that are not active)
     void garbageCollectChunks();
@@ -108,23 +111,23 @@ public:
         m_fogColor = fogColor;
         m_fogStart = fogStart;
         m_fogEnd = fogEnd;
-        
+
         // Also set on tree renderer
         if (m_treeRenderer)
             m_treeRenderer->setFogUniforms(fogColor, fogStart, fogEnd);
     }
 
     float getPreciseHeightAt(float x, float z);
-    
+
     // Render all trees using instanced rendering (call after rendering chunks)
-    void renderTrees(const glm::mat4& view, const glm::mat4& projection, PhongLightConfig* light);
+    void renderTrees(const glm::mat4 &view, const glm::mat4 &projection, PhongLightConfig *light);
 
     // Render global water plane (call after terrain, before trees for proper transparency)
-    void renderWater(const glm::mat4& view, const glm::mat4& projection, PhongLightConfig* light, const glm::vec3& cameraPosition, float renderDistance);
+    void renderWater(const glm::mat4 &view, const glm::mat4 &projection, PhongLightConfig *light, const glm::vec3 &cameraPosition, float renderDistance);
 
 private:
     TerrainGenerator *m_generator;
-    
+
     glm::vec3 m_lastCameraPosition = glm::vec3(0.0f);
 
     std::shared_ptr<Shader> m_terrainShader;                 // Reference to shader (not owned)

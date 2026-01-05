@@ -102,7 +102,8 @@ bool WorldManager::initializeEntities()
     // Create player
     m_player = std::make_unique<Player>(
         glm::vec3(100, 0, 100),
-        (MODELS_DIR / "BobboMob" / "BobboMob.obj").string());
+        //(MODELS_DIR / "Knight" / "Knight_WIP.obj").string());
+        (MODELS_DIR / "Knight" / "Knight_WIP.obj").string());
 
     float fogStart = m_renderDistance * m_fogStart;
     float fogEnd = m_renderDistance * m_fogEnd;
@@ -115,13 +116,16 @@ bool WorldManager::initializeEntities()
     m_enemyCowSpawner->setMinHeightFunction([this](float x, float z)
                                             { return m_chunkManager->getPreciseHeightAt(x, z); });
 
-    // Add all animation frames for cow
-    std::unique_ptr<AnimatedInstanceFrame> cow_idle = AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow.obj", AnimationState::IDLE, 1.0f);
-    m_enemyCowSpawner->m_animatedInstanceRenderer->addAnimationFrame(std::move(cow_idle));
-    std::unique_ptr<AnimatedInstanceFrame> cow_walk1 = AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow_walk1.obj", AnimationState::WALKING, 0.6f);
-    m_enemyCowSpawner->m_animatedInstanceRenderer->addAnimationFrame(std::move(cow_walk1));
-    std::unique_ptr<AnimatedInstanceFrame> cow_walk2 = AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow_walk2.obj", AnimationState::WALKING, 0.6f);
-    m_enemyCowSpawner->m_animatedInstanceRenderer->addAnimationFrame(std::move(cow_walk2));
+    // Add IDLE animation frames
+    m_enemyCowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow.obj", AnimationState::IDLE, 1.0f));
+    // Add WALKING animation frames
+    m_enemyCowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow_walk1.obj", AnimationState::WALKING, 0.5f));
+    m_enemyCowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow_walk2.obj", AnimationState::WALKING, 0.5f));
+    // Add ATTACK animation frames
+    auto difftex_shader = std::make_shared<Shader>();
+    difftex_shader->addShader("Instanced.vert", ShaderType::VERTEX);
+    difftex_shader->addShader("PhongMTL_FOG.frag", ShaderType::FRAGMENT);
+    m_enemyCowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbe_trim_18736.obj", AnimationState::ATTACK, enemyData.m_attackCooldown));
 
     // set fog uniforms
     m_enemyCowSpawner->m_animatedInstanceRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);

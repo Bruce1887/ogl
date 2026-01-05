@@ -29,7 +29,12 @@ void InstancedRenderer::init(std::unique_ptr<Model> model, std::shared_ptr<Shade
     {
         m_instancedShader = std::make_shared<Shader>();
         m_instancedShader->addShader("Instanced.vert", ShaderType::VERTEX);
-        m_instancedShader->addShader("PhongMTL_FOG.frag", ShaderType::FRAGMENT);
+
+        if (m_sourceModel->getModelData()->m_hasTextureDiffuse)
+            m_instancedShader->addShader("PhongMTL_FOG_diffTEX.frag", ShaderType::FRAGMENT);
+        else
+            m_instancedShader->addShader("PhongMTL_FOG.frag", ShaderType::FRAGMENT);
+
         m_instancedShader->createProgram();
     }
 
@@ -86,6 +91,8 @@ void InstancedRenderer::render(const glm::mat4 view, const glm::mat4 projection,
     if ((m_dirty && !m_instanceTransforms.empty()))
         uploadInstanceData();
 
+    // TODO: bind textures from the model's mesh renderables
+
     m_instancedShader->bind();
 
     // Set common uniforms
@@ -110,15 +117,24 @@ void InstancedRenderer::render(const glm::mat4 view, const glm::mat4 projection,
         m_instancedShader->setUniform("u_light_specular", phongLight->specularLight);
     }
 
-    // Get the model's mesh renderables
-    const auto &meshRenderables = m_sourceModel->getModelData()->getMeshRenderables();
-
+    auto meshRenderables = m_sourceModel->getModelData()->getMeshRenderables();
     for (const auto &mr : meshRenderables)
     {
         // Get the mesh
         Mesh *mesh = mr->getMesh();
         if (!mesh)
             continue;
+
+#ifdef DEBUG
+        assert(mr.get()->m_textureReferences.size() <= 1 && "InstancedRenderer only supports one diffuse texture per mesh.");
+#endif
+
+        for (const auto &tex :
+             mr.get()->m_textureReferences) // should only be one diffuse texture (if any)
+        {
+            tex->bind();
+            m_instancedShader->setUniform("u_texture_diffuse", tex->getSlot());
+        }
 
         // Copy material uniforms from the original mesh renderable (no textures for this model)
         for (const auto &kv : mr->getUniforms())

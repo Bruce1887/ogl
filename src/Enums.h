@@ -1,11 +1,11 @@
-#pragma once	
+#pragma once
 
 /**
  * @brief Different hints to opengl about how the data is going to be used.
  * See OpenGL documentation on glBufferData() or glNamedBufferData()
- * 
+ *
  * These are just hints and dont enforce any kind of usage, but may help GL optimize stuff.
- * 
+ *
  * We will almost exclusively use GL_*_DRAW.
  */
 enum class BufferUsage
@@ -24,13 +24,13 @@ enum class BufferUsage
 
 /**
  * @brief Different animation states for animated models.
- * 
+ *
  */
 enum class AnimationState
 {
-	IDLE,
-	WALKING,
-	ATTACK,
-	HURT,
-	DEATH
+    IDLE,
+    WALKING,
+    ATTACK,
+    HURT,
+    DEATH
 };
