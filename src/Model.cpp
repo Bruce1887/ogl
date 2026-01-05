@@ -30,6 +30,7 @@ ModelData::~ModelData()
 }
 
 Model::Model(const std::filesystem::path &path)
+    : m_modelPath(path)
 {
     Assimp::Importer importer;
     const aiScene *ai_scene = importer.ReadFile(path.string(),
@@ -77,15 +78,15 @@ Model::Model(const std::filesystem::path &path)
         // Check for diffuse texture
         aiString texPath;
         m_modelData->m_hasTextureDiffuse = material->GetTexture(aiTextureType_DIFFUSE, 0, &texPath) == AI_SUCCESS;
-/*
-#ifdef DEBUG
-        assert(mesh != nullptr);
-        assert(mesh->HasPositions());
-        assert(mesh->HasNormals());
-        assert(mesh->HasTextureCoords(0));
-        assert(mesh->HasTangentsAndBitangents());
-#endif
-*/
+        /*
+        #ifdef DEBUG
+                assert(mesh != nullptr);
+                assert(mesh->HasPositions());
+                assert(mesh->HasNormals());
+                assert(mesh->HasTextureCoords(0));
+                assert(mesh->HasTangentsAndBitangents());
+        #endif
+        */
         // Extract vertex data
         std::vector<Vertex> vertices;
         for (unsigned int v = 0; v < mesh->mNumVertices; v++)
@@ -167,13 +168,12 @@ Model::Model(const std::filesystem::path &path)
         // create Shader
         auto shader_ptr = std::make_shared<Shader>();
         shader_ptr->addShader("3D_POS_NORM_TEX_TAN_BIT_FOG.vert", ShaderType::VERTEX);
-                
+
         if (m_modelData->m_hasTextureDiffuse)
             shader_ptr->addShader("PhongMTL_FOG_diffTEX.frag", ShaderType::FRAGMENT);
         else
             shader_ptr->addShader("PhongMTL_FOG.frag", ShaderType::FRAGMENT);
 
-         
         shader_ptr->createProgram();
 
         // create MeshRenderable and store it
@@ -183,10 +183,11 @@ Model::Model(const std::filesystem::path &path)
         mr->setUniform("u_material_specular", specular_glm);
         mr->setUniform("u_material_shininess", shininess);
 
+        DEBUG_PRINT("modelpath " << m_modelPath << " model has texture diffuse: " << m_modelData->m_hasTextureDiffuse);
         if (m_modelData->m_hasTextureDiffuse)
         {
-        DEBUG_PRINT("Loading diffuse texture: " << (path.parent_path() / texPath.C_Str()));
-            std::shared_ptr<Texture> diffuseTex = Texture::CreateTexture2D((path.parent_path() / texPath.C_Str()).string(), "u_texture_diffuse");    
+            DEBUG_PRINT("Loading diffuse texture: " << (path.parent_path() / texPath.C_Str()));
+            std::shared_ptr<Texture> diffuseTex = Texture::CreateTexture2D((path.parent_path() / texPath.C_Str()).string(), "u_texture_diffuse");
             diffuseTex->m_targetUniform = "u_texture_diffuse";
             mr->m_textureReferences.push_back(diffuseTex);
         }

@@ -24,7 +24,7 @@ public:
     ~InstancedRenderer();
 
     // Initialize with the model to instance
-    void init(std::unique_ptr<Model> model, std::shared_ptr<Shader> shader = nullptr);
+    void init(std::unique_ptr<Model> model);
 
     // Clear all instances
     void clearInstances();

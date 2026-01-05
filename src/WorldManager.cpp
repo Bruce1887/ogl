@@ -109,31 +109,61 @@ bool WorldManager::initializeEntities()
     float fogEnd = m_renderDistance * m_fogEnd;
     m_player->m_playerModel.setFogUniforms(m_fogColor, fogStart, fogEnd);
 
+    initializeEnemySpawners();
+
+    return true;
+}
+
+bool WorldManager::initializeEnemySpawners()
+{
+    float fogStart = m_renderDistance * m_fogStart;
+    float fogEnd = m_renderDistance * m_fogEnd;    
+
     // Setup Cow
-    EnemyData enemyData; // default enemy data
-
-    m_enemyCowSpawner = std::make_unique<EnemySpawner>();
-    m_enemyCowSpawner->setMinHeightFunction([this](float x, float z)
-                                            { return m_chunkManager->getPreciseHeightAt(x, z); });
-
-    // Add IDLE animation frames
-    m_enemyCowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow.obj", AnimationState::IDLE, 1.0f));
-    // Add WALKING animation frames
-    m_enemyCowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow_walk1.obj", AnimationState::WALKING, 0.5f));
-    m_enemyCowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow_walk2.obj", AnimationState::WALKING, 0.5f));
-    // Add ATTACK animation frames
-    auto difftex_shader = std::make_shared<Shader>();
-    difftex_shader->addShader("Instanced.vert", ShaderType::VERTEX);
-    difftex_shader->addShader("PhongMTL_FOG.frag", ShaderType::FRAGMENT);
-    m_enemyCowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbe_trim_18736.obj", AnimationState::ATTACK, enemyData.m_attackCooldown));
-
+    EnemyData cowEnemyData; // default enemy data
+    std::unique_ptr<EnemySpawner> cowSpawner = std::make_unique<EnemySpawner>(cowEnemyData,20,1);
+    cowSpawner->setMinHeightFunction([this](float x, float z)
+                                     { return m_chunkManager->getPreciseHeightAt(x, z); });
+    // Add animation frames
+    cowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow.obj", AnimationState::IDLE, 1.0f));
+    cowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow_walk1.obj", AnimationState::WALKING, 0.5f));
+    cowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow_walk2.obj", AnimationState::WALKING, 0.5f));
+    cowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbe_trim_18736.obj", AnimationState::ATTACK, cowEnemyData.m_attackCooldown));
     // set fog uniforms
-    m_enemyCowSpawner->m_animatedInstanceRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
-
+    cowSpawner->m_animatedInstanceRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
     // set sounds
     EntitySounds cowSounds{.m_attackSound = LoadWav(AUDIO_DIR / "cow_moo.wav")};
-    m_enemyCowSpawner->setEntitySounds(cowSounds);
+    cowSpawner->setEntitySounds(cowSounds);
+    // add to world manager
+    m_enemySpawners.push_back(std::move(cowSpawner));
+    
 
+    // Setup Mange
+    EnemyData mangeEnemyData; // default enemy data
+    mangeEnemyData.m_maxHealth = 250.0f;
+    mangeEnemyData.m_health = 250.0f;
+    mangeEnemyData.m_attackDamage = 25.0f;
+    mangeEnemyData.m_attackCooldown = 6.0f;
+    mangeEnemyData.m_moveSpeed = 4.0f;
+
+    std::unique_ptr<EnemySpawner> mangeSpawner = std::make_unique<EnemySpawner>(mangeEnemyData,1,1);
+    mangeSpawner->setMinHeightFunction([this](float x, float z)
+                                       { return m_chunkManager->getPreciseHeightAt(x, z); });
+    // Add animation frames
+    mangeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "MangeMob" / "MangeMob.obj", AnimationState::IDLE, 0.5f));
+    mangeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "MangeMob" / "MangeWalk1.obj", AnimationState::WALKING, 0.5f));
+    mangeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "MangeMob" / "MangeWalk2.obj", AnimationState::WALKING, 0.5f));
+    mangeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "MangeMob" / "MangeAttack1.obj", AnimationState::ATTACK, 0.3));
+    mangeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "MangeMob" / "MangeAttack2.obj", AnimationState::ATTACK, 0.3));
+
+    // set sounds
+    EntitySounds mangeSounds{.m_attackSound = LoadWav(AUDIO_DIR / "gun_explosion.wav")};
+    mangeSpawner->setEntitySounds(mangeSounds);
+    // set fog uniforms
+    mangeSpawner->m_animatedInstanceRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
+
+
+    m_enemySpawners.push_back(std::move(mangeSpawner));
     return true;
 }
 
@@ -144,11 +174,19 @@ void WorldManager::update(float dt, InputManager *input)
         return;
     }
 
+    std::vector<EnemyData *> allEnemies;
+    for (auto &spawner : m_enemySpawners)
+    {
+        for (auto &enemy : spawner->m_enemyDataList)
+        {
+            allEnemies.push_back(&enemy);
+        }
+    }
+
     if (input->keyboardInput.getKeyState(OOGABOOGA_ATTACK_KEY).readAndClear())
     {
-        int hits = m_player->attack(m_enemyCowSpawner->m_enemyDataList);
-        if (hits > 0)
-            DEBUG_PRINT("Hit " << hits << " enemies!");
+        int hits = m_player->attack(allEnemies);
+        DEBUG_PRINT("Hit " << hits << " enemies!");
     }
 
     // Update player
@@ -157,10 +195,10 @@ void WorldManager::update(float dt, InputManager *input)
         m_player->update(dt, input, m_chunkManager.get());
     }
 
-    // Update enemy
-    if (m_enemyCowSpawner && m_player)
+    // Update enemies
+    for (auto &spawner : m_enemySpawners)
     {
-        m_enemyCowSpawner->updateAll(dt, *m_player);
+        spawner->updateAll(dt, *m_player);
     }
 
     // Update camera
@@ -199,9 +237,9 @@ void WorldManager::render()
     }
 
     // Render enemy
-    if (m_enemyCowSpawner)
+    for (const auto &spawner : m_enemySpawners)
     {
-        m_enemyCowSpawner->renderAll(
+        spawner->renderAll(
             m_scene->m_activeCamera.getViewMatrix(),
             m_scene->m_activeCamera.getProjectionMatrix(),
             &m_scene->m_lightSource.config);
@@ -259,8 +297,8 @@ void WorldManager::updateFogSettings()
         m_player->m_playerModel.setFogUniforms(m_fogColor, fogStart, fogEnd);
     }
 
-    if (m_enemyCowSpawner)
+    for (auto &spawner : m_enemySpawners)
     {
-        m_enemyCowSpawner->m_animatedInstanceRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
+        spawner->m_animatedInstanceRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
     }
 }

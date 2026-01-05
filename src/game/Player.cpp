@@ -75,7 +75,7 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
 
 }
 
-int Player::attack(std::vector<EnemyData> &enemies)
+int Player::attack(std::vector<EnemyData*> &enemies)
 {
     // Check cooldown
     if (m_playerData.m_attackTimer > 0.0f)
@@ -87,22 +87,22 @@ int Player::attack(std::vector<EnemyData> &enemies)
     int enemiesHit = 0;
 
     // Check all enemies and damage those within range
-    for (EnemyData &e_data : enemies)
+    for (EnemyData* e_data : enemies)
     {
-        if (e_data.isDead())
+        if (e_data->isDead())
             continue;
 
         // Calculate distance to enemy (XZ plane only)
-        glm::vec3 toEnemy = e_data.m_position - m_playerData.m_position;
+        glm::vec3 toEnemy = e_data->m_position - m_playerData.m_position;
         toEnemy.y = 0.0f;
         float distance = glm::length(toEnemy);
 
         if (distance <= m_playerData.m_attackRange)
         {
-            e_data.takeDamage(m_playerData.m_attackDamage);
+            e_data->takeDamage(m_playerData.m_attackDamage);
             enemiesHit++;
 
-            if(e_data.isDead())
+            if(e_data->isDead())
                 m_scoreKeeper.addPoints(1); // Award points for kill
         }
     }

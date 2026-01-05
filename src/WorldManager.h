@@ -68,7 +68,8 @@ private:
     std::unique_ptr<TerrainGenerator> m_terrainGen;
     std::unique_ptr<TerrainChunkManager> m_chunkManager;
     std::unique_ptr<Player> m_player;
-    std::unique_ptr<EnemySpawner> m_enemyCowSpawner;
+
+    std::vector<std::unique_ptr<EnemySpawner>> m_enemySpawners;
     // std::unique_ptr<GameClock> m_gameClock;
     std::unique_ptr<ThirdPersonCamera> m_camController;
     
@@ -82,5 +83,6 @@ private:
     bool initializeCamera();
     bool initializeTerrain();
     bool initializeEntities();
+    bool initializeEnemySpawners();
     void updateFogSettings();
 };

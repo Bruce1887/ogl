@@ -159,7 +159,7 @@ void EnemySpawner::spawnNew(glm::vec3 nearPosition)
 	}
 
 	// Create new enemy data
-	EnemyData newEnemy;
+	EnemyData newEnemy = m_prototypeEnemyData;
 	newEnemy.m_position = spawnPos;
 
 	// Add to list

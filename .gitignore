@@ -4,3 +4,4 @@ windows-build/
 html/
 latex/
 doxy_output/
+.cache/

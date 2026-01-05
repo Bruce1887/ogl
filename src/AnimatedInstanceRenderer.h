@@ -36,7 +36,7 @@ public:
 	 * @param duration Duration to display this frame (in seconds)
 	 * @return std::unique_ptr<AnimatedInstanceFrame> The created animated instance frame
 	 */
-	static std::unique_ptr<AnimatedInstanceFrame> createAnimatedInstanceFrame(const std::filesystem::path &modelPath, AnimationState state, float duration, std::shared_ptr<Shader> shader = nullptr);
+	static std::unique_ptr<AnimatedInstanceFrame> createAnimatedInstanceFrame(const std::filesystem::path &modelPath, AnimationState state, float duration);
 	
 	/**
 	 * @brief Add an animation frame to this renderer.

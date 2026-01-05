@@ -16,27 +16,20 @@ InstancedRenderer::~InstancedRenderer()
     }
 }
 
-void InstancedRenderer::init(std::unique_ptr<Model> model, std::shared_ptr<Shader> shader)
+void InstancedRenderer::init(std::unique_ptr<Model> model)
 {
     m_sourceModel = std::move(model);
 
-    if (shader)
-    {
-        m_instancedShader = shader;
-        return;
-    }
+    m_instancedShader = std::make_shared<Shader>();
+    m_instancedShader->addShader("Instanced.vert", ShaderType::VERTEX);
+
+    DEBUG_PRINT("modelpath " << m_sourceModel->m_modelPath << " model has texture diffuse: " << m_sourceModel->getModelData()->m_hasTextureDiffuse);
+    if (m_sourceModel->getModelData()->m_hasTextureDiffuse)
+        m_instancedShader->addShader("PhongMTL_FOG_diffTEX.frag", ShaderType::FRAGMENT);
     else
-    {
-        m_instancedShader = std::make_shared<Shader>();
-        m_instancedShader->addShader("Instanced.vert", ShaderType::VERTEX);
+        m_instancedShader->addShader("PhongMTL_FOG.frag", ShaderType::FRAGMENT);
 
-        if (m_sourceModel->getModelData()->m_hasTextureDiffuse)
-            m_instancedShader->addShader("PhongMTL_FOG_diffTEX.frag", ShaderType::FRAGMENT);
-        else
-            m_instancedShader->addShader("PhongMTL_FOG.frag", ShaderType::FRAGMENT);
-
-        m_instancedShader->createProgram();
-    }
+    m_instancedShader->createProgram();
 
     // Create instance VBO
     glGenBuffers(1, &m_instanceVBO);

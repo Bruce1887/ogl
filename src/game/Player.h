@@ -47,7 +47,7 @@ public:
     void update(float dt, InputManager* input, TerrainChunkManager* terrain);
     
     // Attack all enemies within attackRange, returns number of enemies hit
-    int attack(std::vector<EnemyData>& enemies);
+    int attack(std::vector<EnemyData*>& enemies);
 
     void render(glm::mat4 view, glm::mat4 proj, PhongLightConfig* light);
     
