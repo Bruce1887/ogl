@@ -96,54 +96,80 @@ namespace Database
         file.close();
         
         // Simple JSON parsing (Firebase returns: { "key1": {...}, "key2": {...} })
-        // Look for each entry pattern: "name":"...", "time":..., "kills":...
-        size_t pos = 0;
-        while ((pos = response.find("\"name\"", pos)) != std::string::npos)
+        // Find each nested object by looking for opening/closing braces within the main object
+        // Skip the outermost braces
+        size_t pos = response.find('{');
+        if (pos == std::string::npos) return entries;
+        pos++; // Skip outer opening brace
+        
+        while (pos < response.length())
         {
-            Entry entry;
+            // Find next nested object (starts after a colon following the Firebase key)
+            size_t objStart = response.find('{', pos);
+            if (objStart == std::string::npos) break;
             
-            // Parse name
-            size_t nameStart = response.find("\"", pos + 7) + 1;
-            size_t nameEnd = response.find("\"", nameStart);
-            if (nameStart != std::string::npos && nameEnd != std::string::npos)
+            // Find matching closing brace for this object
+            size_t objEnd = response.find('}', objStart);
+            if (objEnd == std::string::npos) break;
+            
+            // Extract just this entry's JSON object
+            std::string entryJson = response.substr(objStart, objEnd - objStart + 1);
+            
+            Entry entry;
+            entry.time = 0.0f;
+            entry.kills = 0;
+            
+            // Parse name within this entry
+            size_t namePos = entryJson.find("\"name\"");
+            if (namePos != std::string::npos)
             {
-                entry.name = response.substr(nameStart, nameEnd - nameStart);
+                size_t nameStart = entryJson.find("\"", namePos + 6) + 1;
+                size_t nameEnd = entryJson.find("\"", nameStart);
+                if (nameStart != std::string::npos && nameEnd != std::string::npos && nameStart < nameEnd)
+                {
+                    entry.name = entryJson.substr(nameStart, nameEnd - nameStart);
+                }
             }
             
-            // Parse time
-            size_t timePos = response.find("\"time\"", pos);
-            if (timePos != std::string::npos && timePos < pos + 200)
+            // Parse time within this entry
+            size_t timePos = entryJson.find("\"time\"");
+            if (timePos != std::string::npos)
             {
-                size_t timeStart = response.find(":", timePos) + 1;
-                size_t timeEnd = response.find_first_of(",}", timeStart);
+                size_t timeStart = entryJson.find(":", timePos) + 1;
+                size_t timeEnd = entryJson.find_first_of(",}", timeStart);
                 if (timeStart != std::string::npos && timeEnd != std::string::npos)
                 {
                     try {
-                        entry.time = std::stof(response.substr(timeStart, timeEnd - timeStart));
+                        entry.time = std::stof(entryJson.substr(timeStart, timeEnd - timeStart));
                     } catch (...) {
                         entry.time = 0.0f;
                     }
                 }
             }
             
-            // Parse kills
-            size_t killsPos = response.find("\"kills\"", pos);
-            if (killsPos != std::string::npos && killsPos < pos + 200)
+            // Parse kills within this entry
+            size_t killsPos = entryJson.find("\"kills\"");
+            if (killsPos != std::string::npos)
             {
-                size_t killsStart = response.find(":", killsPos) + 1;
-                size_t killsEnd = response.find_first_of(",}", killsStart);
+                size_t killsStart = entryJson.find(":", killsPos) + 1;
+                size_t killsEnd = entryJson.find_first_of(",}", killsStart);
                 if (killsStart != std::string::npos && killsEnd != std::string::npos)
                 {
                     try {
-                        entry.kills = std::stoi(response.substr(killsStart, killsEnd - killsStart));
+                        entry.kills = std::stoi(entryJson.substr(killsStart, killsEnd - killsStart));
                     } catch (...) {
                         entry.kills = 0;
                     }
                 }
             }
             
-            entries.push_back(entry);
-            pos = nameEnd + 1;
+            // Only add if we got a valid name
+            if (!entry.name.empty())
+            {
+                entries.push_back(entry);
+            }
+            
+            pos = objEnd + 1;
         }
         
         // Sort by kills (highest first) - Firebase limitToLast gives ascending order
