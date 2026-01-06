@@ -21,7 +21,7 @@ bool WorldManager::initialize()
         return false;
     }
 
-    SoundPlayer& sp = SoundPlayer::getInstance();
+    SoundPlayer &sp = SoundPlayer::getInstance();
     sp.PlayMusic(sp.LoadWav(AUDIO_DIR / "piraten.wav"), true);
 
     return true;
@@ -101,14 +101,23 @@ bool WorldManager::initializeTerrain()
 bool WorldManager::initializeEntities()
 {
     // Create player
-    m_player = std::make_unique<Player>(
-        glm::vec3(100, 0, 100),
-        //(MODELS_DIR / "Knight" / "Knight_WIP.obj").string());
-        (MODELS_DIR / "Knight" / "Knight_WIP.obj").string());
+    PlayerData playerData;
+    playerData.m_position = glm::vec3(100.0f, 0.0f, 100.0f);
 
+    m_player = std::make_unique<Player>(playerData);
+
+    m_player->m_playerRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeIdle.obj", AnimationState::IDLE, 0.5f));
+    m_player->m_playerRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeRun1.obj", AnimationState::WALKING, 0.2f));
+    m_player->m_playerRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeRun2.obj", AnimationState::WALKING, 0.2f));
+    m_player->m_playerRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeAttack1.obj", AnimationState::ATTACK, m_player->m_playerData.m_attackCooldown / 3.0f));
+    m_player->m_playerRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeAttack2.obj", AnimationState::ATTACK, m_player->m_playerData.m_attackCooldown / 3.0f));
+    m_player->m_playerRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeAttack3.obj", AnimationState::ATTACK, m_player->m_playerData.m_attackCooldown / 3.0f));
+
+    EntitySounds playerSounds{.m_attackSound = SoundPlayer::getInstance().LoadWav(AUDIO_DIR / "swordSwoosh.wav")};
+    m_player->setEntitySounds(playerSounds);
     float fogStart = m_renderDistance * m_fogStart;
     float fogEnd = m_renderDistance * m_fogEnd;
-    m_player->m_playerModel.setFogUniforms(m_fogColor, fogStart, fogEnd);
+    m_player->m_playerRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
 
     initializeEnemySpawners();
 
@@ -118,11 +127,11 @@ bool WorldManager::initializeEntities()
 bool WorldManager::initializeEnemySpawners()
 {
     float fogStart = m_renderDistance * m_fogStart;
-    float fogEnd = m_renderDistance * m_fogEnd;    
+    float fogEnd = m_renderDistance * m_fogEnd;
 
     // Setup Cow
     EnemyData cowEnemyData; // default enemy data
-    std::unique_ptr<EnemySpawner> cowSpawner = std::make_unique<EnemySpawner>(cowEnemyData,2000,1);
+    std::unique_ptr<EnemySpawner> cowSpawner = std::make_unique<EnemySpawner>(cowEnemyData, 2000, 1);
     cowSpawner->setMinHeightFunction([this](float x, float z)
                                      { return m_chunkManager->getPreciseHeightAt(x, z); });
     // Add animation frames
@@ -130,7 +139,7 @@ bool WorldManager::initializeEnemySpawners()
     cowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow_walk1.obj", AnimationState::WALKING, 0.5f));
     cowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow_walk2.obj", AnimationState::WALKING, 0.5f));
     cowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow.obj", AnimationState::ATTACK, 1.0f));
-    
+
     // set fog uniforms
     cowSpawner->m_animatedInstanceRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
     // set sounds
@@ -138,7 +147,6 @@ bool WorldManager::initializeEnemySpawners()
     cowSpawner->setEntitySounds(cowSounds);
     // add to world manager
     m_enemySpawners.push_back(std::move(cowSpawner));
-    
 
     // Setup Mange
     EnemyData mangeEnemyData; // default enemy data
@@ -148,7 +156,7 @@ bool WorldManager::initializeEnemySpawners()
     mangeEnemyData.m_attackCooldown = 6.0f;
     mangeEnemyData.m_moveSpeed = 4.0f;
 
-    std::unique_ptr<EnemySpawner> mangeSpawner = std::make_unique<EnemySpawner>(mangeEnemyData,100,5);
+    std::unique_ptr<EnemySpawner> mangeSpawner = std::make_unique<EnemySpawner>(mangeEnemyData, 100, 5);
     mangeSpawner->setMinHeightFunction([this](float x, float z)
                                        { return m_chunkManager->getPreciseHeightAt(x, z); });
     // Add animation frames
@@ -165,7 +173,6 @@ bool WorldManager::initializeEnemySpawners()
     mangeSpawner->m_animatedInstanceRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
     m_enemySpawners.push_back(std::move(mangeSpawner));
 
-
     // Setup Abbe
 
     EnemyData abbeEnemyData; // default enemy data
@@ -174,9 +181,9 @@ bool WorldManager::initializeEnemySpawners()
     abbeEnemyData.m_attackDamage = 15.0f;
     abbeEnemyData.m_attackCooldown = 4.0f;
     abbeEnemyData.m_moveSpeed = 8.0f;
-    std::unique_ptr<EnemySpawner> abbeSpawner = std::make_unique<EnemySpawner>(abbeEnemyData,150,3);
+    std::unique_ptr<EnemySpawner> abbeSpawner = std::make_unique<EnemySpawner>(abbeEnemyData, 150, 3);
     abbeSpawner->setMinHeightFunction([this](float x, float z)
-                                     { return m_chunkManager->getPreciseHeightAt(x, z); });
+                                      { return m_chunkManager->getPreciseHeightAt(x, z); });
     // Add animation frames
     abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeIdle.obj", AnimationState::IDLE, 0.5f));
     abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeRun1.obj", AnimationState::WALKING, 0.2f));
@@ -320,7 +327,7 @@ void WorldManager::updateFogSettings()
     // Update entity fog settings if they exist
     if (m_player)
     {
-        m_player->m_playerModel.setFogUniforms(m_fogColor, fogStart, fogEnd);
+        m_player->m_playerRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
     }
 
     for (auto &spawner : m_enemySpawners)
