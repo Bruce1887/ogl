@@ -45,8 +45,7 @@ private:
 	}
 
 	~SoundPlayer()
-	{
-		std::cout << "Shutting down SoundPlayer and deleting sources." << std::endl;
+	{	
 		alDeleteSources(SFX_SOUND_SOURCES, m_SFXSourcesPool);
 		alDeleteSources(MUSIC_SOUND_SOURCES, m_musicSourcesPool);
 		for (ALuint buffer : m_buffers)
