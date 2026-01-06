@@ -111,21 +111,30 @@ set(ASSIMP_BUILD_MMD_IMPORTER OFF CACHE BOOL "" FORCE)
 add_subdirectory(src/vendor/assimp)
 target_link_libraries(oogabooga_common PUBLIC assimp)
 
-# OpenAL Soft config
-set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(ALSOFT_UTILS OFF CACHE BOOL "" FORCE)
-set(ALSOFT_TESTS OFF CACHE BOOL "" FORCE)
+# OpenAL - Platform-specific configuration
+if(APPLE)
+    # OpenAL (from Homebrew - explicit paths to avoid macOS system OpenAL)
+    set(OPENAL_INCLUDE_DIR "/usr/local/opt/openal-soft/include")
+    set(OPENAL_LIBRARY "/usr/local/opt/openal-soft/lib/libopenal.dylib")
+    target_include_directories(oogabooga_common PUBLIC ${OPENAL_INCLUDE_DIR})
+    target_link_libraries(oogabooga_common PUBLIC ${OPENAL_LIBRARY})
+else()
+    # OpenAL Soft from submodule for Windows/Linux
+    set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(ALSOFT_UTILS OFF CACHE BOOL "" FORCE)
+    set(ALSOFT_TESTS OFF CACHE BOOL "" FORCE)
 
-set(ALSOFT_BACKEND_ALSA ON CACHE BOOL "" FORCE)
-set(ALSOFT_BACKEND_PULSEAUDIO ON CACHE BOOL "" FORCE)
-set(ALSOFT_BACKEND_PIPEWIRE ON CACHE BOOL "" FORCE)
+    set(ALSOFT_BACKEND_ALSA ON CACHE BOOL "" FORCE)
+    set(ALSOFT_BACKEND_PULSEAUDIO ON CACHE BOOL "" FORCE)
+    set(ALSOFT_BACKEND_PIPEWIRE ON CACHE BOOL "" FORCE)
 
-set(ALSOFT_BACKEND_WASAPI ON CACHE BOOL "" FORCE)
-set(ALSOFT_BACKEND_WINMM OFF CACHE BOOL "" FORCE)
+    set(ALSOFT_BACKEND_WASAPI ON CACHE BOOL "" FORCE)
+    set(ALSOFT_BACKEND_WINMM OFF CACHE BOOL "" FORCE)
 
-set(ALSOFT_BACKEND_COREAUDIO ON CACHE BOOL "" FORCE)
-add_subdirectory(src/vendor/openal-soft)
-target_link_libraries(oogabooga_common PUBLIC OpenAL)
+    set(ALSOFT_BACKEND_COREAUDIO ON CACHE BOOL "" FORCE)
+    add_subdirectory(src/vendor/openal-soft)
+    target_link_libraries(oogabooga_common PUBLIC OpenAL)
+endif()
 
 # --- Function for building executables ---
 function(add_gl_executable TARGET_NAME SOURCE_FILE)

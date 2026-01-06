@@ -35,6 +35,8 @@ public:
 	}
 
 	unsigned int enemyCount() const { return static_cast<unsigned int>(m_enemyDataList.size()); }
+	unsigned int getMaxEnemies() const { return m_maxEnemies; }
+	void setMaxEnemies(unsigned int max) { m_maxEnemies = max; }
 
 	void updateAll(float dt, Player &player);
 
