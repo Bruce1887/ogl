@@ -64,6 +64,9 @@ public:
 
     void render(glm::mat4 view, glm::mat4 proj, PhongLightConfig* light);
     
+    // Get player's current score (enemies killed)
+    int getScore() const { return m_scoreKeeper.getScore(); }
+    
 private:
 
     ScoreKeeper m_scoreKeeper;

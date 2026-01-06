@@ -99,6 +99,10 @@ private:
     GLuint m_flashVBO = 0;
     bool m_flashInitialized = false;
     
+    // Game over / death state
+    bool m_isGameOver = false;
+    bool m_scorePosted = false;
+    
     // Initialization helpers
     bool initializeCamera();
     bool initializeTerrain();
