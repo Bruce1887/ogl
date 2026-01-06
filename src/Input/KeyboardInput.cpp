@@ -39,5 +39,21 @@ void MovementInput::fetchMovement(int &outForward, int &outRight, bool &outShift
     outForward = (wasd.w_down ? 1 : 0) + (wasd.s_down ? -1 : 0);
     outRight = (wasd.d_down ? 1 : 0) + (wasd.a_down ? -1 : 0);
     outShiftDown = shiftDown;
-    clearUpdated(); 
+    clearUpdated();
+}
+
+KeyState &KeyboardInput::getKeyState(int keyCode)
+{
+    for (KeyState &ks : keyStates)
+    {
+        if (ks.key() == keyCode)
+        {
+            return ks;
+        }
+    }
+
+    assert(false && "KeyState for given keyCode not found!");
+
+    static KeyState dummy = KeyState(-1);
+    return dummy;
 }

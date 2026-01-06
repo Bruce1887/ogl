@@ -183,10 +183,10 @@ Model::Model(const std::filesystem::path &path)
         mr->setUniform("u_material_specular", specular_glm);
         mr->setUniform("u_material_shininess", shininess);
 
-        DEBUG_PRINT("modelpath " << m_modelPath << " model has texture diffuse: " << m_modelData->m_hasTextureDiffuse);
+        // DEBUG_PRINT("modelpath " << m_modelPath << " model has texture diffuse: " << m_modelData->m_hasTextureDiffuse);
         if (m_modelData->m_hasTextureDiffuse)
         {
-            DEBUG_PRINT("Loading diffuse texture: " << (path.parent_path() / texPath.C_Str()));
+            // DEBUG_PRINT("Loading diffuse texture: " << (path.parent_path() / texPath.C_Str()));
             std::shared_ptr<Texture> diffuseTex = Texture::CreateTexture2D((path.parent_path() / texPath.C_Str()).string(), "u_texture_diffuse");
             diffuseTex->m_targetUniform = "u_texture_diffuse";
             mr->m_textureReferences.push_back(diffuseTex);

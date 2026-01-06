@@ -83,17 +83,5 @@ public:
         KeyState{OOGABOOGA_SPECIAL_ATTACK_KEY},
         KeyState{OOGABOOGA_ATTACK_KEY},};
 
-	KeyState &getKeyState(int keyCode)
-	{
-		for (KeyState &ks : keyStates)
-		{
-			if (ks.key() == keyCode)
-			{
-				return ks;
-			}
-		}
-#ifdef DEBUG
-		assert(false && "KeyState for given keyCode not found!");
-#endif
-	}
+	KeyState &getKeyState(int keyCode);
 };
