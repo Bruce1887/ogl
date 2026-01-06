@@ -102,7 +102,7 @@ bool WorldManager::initializeEntities()
 {
     // Initialize game clock (1 game day = 10 minutes real time)
     m_gameClock = std::make_unique<GameClock>(600.0f);
-    
+
     // Create player
     PlayerData playerData;
     playerData.m_position = glm::vec3(100.0f, 0.0f, 100.0f);
@@ -132,9 +132,15 @@ bool WorldManager::initializeEnemySpawners()
     float fogStart = m_renderDistance * m_fogStart;
     float fogEnd = m_renderDistance * m_fogEnd;
 
-    // Setup Cow - starts with base enemy count
+    // Setup Cow - unlocks at wave 1 (basic enemy)
     EnemyData cowEnemyData; // default enemy data
-    std::unique_ptr<EnemySpawner> cowSpawner = std::make_unique<EnemySpawner>(cowEnemyData, m_baseEnemyCount, 1);
+    SpawnerConfig cowSpawnerConfig{
+        .m_maxEnemies = 10,
+        .m_enemiesPerWave = 0,
+        .m_enemiesPerWaveFactor = 2, // doubles each wave
+        .m_spawnInterval = 0.1f,
+    };
+    std::unique_ptr<EnemySpawner> cowSpawner = std::make_unique<EnemySpawner>(cowEnemyData, cowSpawnerConfig);
     cowSpawner->setMinHeightFunction([this](float x, float z)
                                      { return m_chunkManager->getPreciseHeightAt(x, z); });
     // Add animation frames
@@ -142,7 +148,6 @@ bool WorldManager::initializeEnemySpawners()
     cowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow_walk1.obj", AnimationState::WALKING, 0.5f));
     cowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow_walk2.obj", AnimationState::WALKING, 0.5f));
     cowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow.obj", AnimationState::ATTACK, 1.0f));
-
     // set fog uniforms
     cowSpawner->m_animatedInstanceRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
     // set sounds
@@ -150,17 +155,52 @@ bool WorldManager::initializeEnemySpawners()
     cowSpawner->setEntitySounds(cowSounds);
     // add to world manager
     m_enemySpawners.push_back(std::move(cowSpawner));
-    
 
-    // Setup Mange - unlocks at wave 2 (stronger enemy)
+    // Setup Abbe - unlocks at wave 2 (faster enemy)
+    EnemyData abbeEnemyData; // default enemy data
+    abbeEnemyData.m_maxHealth = 75.0f;
+    abbeEnemyData.m_health = 75.0f;
+    abbeEnemyData.m_attackDamage = 9.0f;
+    abbeEnemyData.m_attackCooldown = 4.0f;
+    abbeEnemyData.m_moveSpeed = 10.0f;
+    abbeEnemyData.killScore = 3; // Abbe gives moderate points
+    SpawnerConfig abbeSpawnerConfig{
+        .m_maxEnemies = 5,
+        .m_enemiesPerWave = 5,
+        .m_spawnInterval = 0.3f,
+        .m_minSpawnDistance = 200.0f,
+        .m_maxSpawnDistance = 250.0f,
+        .m_despawnThreshold = 400.0f};
+    std::unique_ptr<EnemySpawner> abbeSpawner = std::make_unique<EnemySpawner>(abbeEnemyData, abbeSpawnerConfig);
+    abbeSpawner->setMinHeightFunction([this](float x, float z)
+                                      { return m_chunkManager->getPreciseHeightAt(x, z); });
+    // Add animation frames
+    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeIdle.obj", AnimationState::IDLE, 0.5f));
+    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeRun1.obj", AnimationState::WALKING, 0.2f));
+    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeRun2.obj", AnimationState::WALKING, 0.2f));
+    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeAttack1.obj", AnimationState::ATTACK, 0.1f));
+    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeAttack2.obj", AnimationState::ATTACK, 0.1f));
+    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeAttack3.obj", AnimationState::ATTACK, 0.1f));
+    abbeSpawner->m_animatedInstanceRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
+    // set sounds
+    EntitySounds abbeSounds{.m_attackSound = SoundPlayer::getInstance().LoadWav(AUDIO_DIR / "swordAttack.wav")};
+    abbeSpawner->setEntitySounds(abbeSounds);
+    m_enemySpawners.push_back(std::move(abbeSpawner));
+
+    // Setup Mange - unlocks at wave 3 (stronger enemy)
     EnemyData mangeEnemyData; // default enemy data
-    mangeEnemyData.m_maxHealth = 250.0f;
-    mangeEnemyData.m_health = 250.0f;
+    mangeEnemyData.m_maxHealth = 300.0f;
+    mangeEnemyData.m_health = 300.0f;
     mangeEnemyData.m_attackDamage = 25.0f;
     mangeEnemyData.m_attackCooldown = 6.0f;
     mangeEnemyData.m_moveSpeed = 4.0f;
-
-    std::unique_ptr<EnemySpawner> mangeSpawner = std::make_unique<EnemySpawner>(mangeEnemyData, 0, 1); // Starts with 0, unlocks at wave 3
+    mangeEnemyData.killScore = 10; // Mange gives more points
+    SpawnerConfig mangeSpawnerConfig{
+        .m_maxEnemies = 1,
+        .m_enemiesPerWave = 2,
+        .m_spawnInterval = 2.0f,
+    };
+    std::unique_ptr<EnemySpawner> mangeSpawner = std::make_unique<EnemySpawner>(mangeEnemyData, mangeSpawnerConfig);
     mangeSpawner->setMinHeightFunction([this](float x, float z)
                                        { return m_chunkManager->getPreciseHeightAt(x, z); });
     // Add animation frames
@@ -176,30 +216,6 @@ bool WorldManager::initializeEnemySpawners()
     // set fog uniforms
     mangeSpawner->m_animatedInstanceRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
     m_enemySpawners.push_back(std::move(mangeSpawner));
-
-    // Setup Abbe
-
-    EnemyData abbeEnemyData; // default enemy data
-    abbeEnemyData.m_maxHealth = 150.0f;
-    abbeEnemyData.m_health = 150.0f;
-    abbeEnemyData.m_attackDamage = 15.0f;
-    abbeEnemyData.m_attackCooldown = 4.0f;
-    abbeEnemyData.m_moveSpeed = 12.0f;
-    std::unique_ptr<EnemySpawner> abbeSpawner = std::make_unique<EnemySpawner>(abbeEnemyData, 0, 1); // Starts with 0, unlocks at wave 5
-    abbeSpawner->setMinHeightFunction([this](float x, float z)
-                                      { return m_chunkManager->getPreciseHeightAt(x, z); });
-    // Add animation frames
-    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeIdle.obj", AnimationState::IDLE, 0.5f));
-    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeRun1.obj", AnimationState::WALKING, 0.2f));
-    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeRun2.obj", AnimationState::WALKING, 0.2f));
-    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeAttack1.obj", AnimationState::ATTACK, 0.1f));
-    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeAttack2.obj", AnimationState::ATTACK, 0.1f));
-    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeAttack3.obj", AnimationState::ATTACK, 0.1f));
-    abbeSpawner->m_animatedInstanceRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
-    // set sounds
-    EntitySounds abbeSounds{.m_attackSound = SoundPlayer::getInstance().LoadWav(AUDIO_DIR / "swordAttack.wav")};
-    abbeSpawner->setEntitySounds(abbeSounds);
-    m_enemySpawners.push_back(std::move(abbeSpawner));
 
     return true;
 }
@@ -237,7 +253,7 @@ void WorldManager::update(float dt, InputManager *input)
 
     if (input->keyboardInput.getKeyState(OOGABOOGA_ATTACK_KEY).readAndClear())
     {
-        int hits = m_player->attack(allEnemies);        
+        int hits = m_player->attack(allEnemies);
     }
 
     // Special attack - J key
@@ -246,24 +262,32 @@ void WorldManager::update(float dt, InputManager *input)
         if (m_player->m_playerData.isSpecialAttackReady())
         {
             int kills = m_player->specialAttack(allEnemies);
-            triggerScreenFlash();    
+            triggerScreenFlash();
         }
     }
+
+#ifdef DEBUG
+    if (input->keyboardInput.getKeyState(OOGABOOGA_DEBUG_WILDCARD_KEY).readAndClear())
+    {
+        DEBUG_PRINT("DEBUG: Advancing to next wave");
+        advanceWave();
+    }
+#endif
 
     // Update player
     if (m_player && m_chunkManager)
     {
         m_player->update(dt, input, m_chunkManager.get());
-        
+
         // Check for player death (UI handles the death screen and score submission)
         if (m_player->m_playerData.m_health <= 0.0f && !m_scorePosted)
         {
             m_isGameOver = true;
             m_scorePosted = true;
-            
+
             float timeSurvived = m_gameClock ? m_gameClock->GetTotalElapsedSeconds() : 0.0f;
             int enemiesKilled = m_player->getScore();
-            
+
             DEBUG_PRINT("=== GAME OVER ===");
             DEBUG_PRINT("Time survived: " << timeSurvived << " seconds");
             DEBUG_PRINT("Enemies killed: " << enemiesKilled);
@@ -349,7 +373,7 @@ void WorldManager::render()
 
     // Render skybox and scene effects
     m_scene->renderScene();
-    
+
     // Render screen flash overlay (if active)
     renderScreenFlash();
 }
@@ -385,7 +409,7 @@ void WorldManager::updateFogSettings()
 void WorldManager::updateWaveSystem(float dt)
 {
     m_waveTimer += dt;
-    
+
     if (m_waveTimer >= m_waveDuration)
     {
         m_waveTimer = 0.0f;
@@ -396,43 +420,39 @@ void WorldManager::updateWaveSystem(float dt)
 void WorldManager::advanceWave()
 {
     m_currentWave++;
-    
+
     DEBUG_PRINT("=== WAVE " << m_currentWave << " STARTED ===");
     DEBUG_PRINT("Game time: " << m_gameClock->GetTimeOfDayHours() << " hours");
-    
-    // Increase cow count with each wave
-    if (!m_enemySpawners.empty())
+
+#ifdef DEBUG
+    assert(!m_enemySpawners.empty() && "No enemy spawners initialized!");
+#endif
+
+    size_t num_spawners = m_enemySpawners.size();
+
+    for (size_t i = 0; i < num_spawners; i++)
     {
-        // Spawner 0 is cows - increase their max count
-        int newCowCount = m_baseEnemyCount + (m_currentWave * m_enemiesPerWave);
-        m_enemySpawners[0]->setMaxEnemies(newCowCount);
-        DEBUG_PRINT("Cows max count increased to: " << newCowCount);
+        EnemySpawner &spawner = *m_enemySpawners[i];
+        // The first rounds we spawn only a single enemy type. After that, all spawners are active.
+        if ((i + 1) == m_currentWave || m_currentWave > num_spawners)
+        {
+            DEBUG_PRINT("Activating spawner " << i << " for wave " << m_currentWave);
+            spawner.activate();
+            int current_max = spawner.m_spawnerConfig.m_maxEnemies;
+            int factor = spawner.m_spawnerConfig.m_enemiesPerWaveFactor;
+            int additional = spawner.m_spawnerConfig.m_enemiesPerWave;
+            spawner.m_spawnerConfig.m_maxEnemies = current_max * factor + additional;
+            DEBUG_PRINT("Spawner " << i << " max enemies increased to: " << spawner.m_spawnerConfig.m_maxEnemies);
+        }
+        else
+            spawner.deactivate(); // Disable this spawner for now
     }
-    
-    // Unlock Mange enemies at wave 3
-    if (m_currentWave >= 3 && m_enemySpawners.size() > 1)
-    {
-        int mangeCount = 2 + ((m_currentWave - 3) * 2);  // 2 at wave 3, 4 at wave 4, 6 at wave 5, etc.
-        m_enemySpawners[1]->setMaxEnemies(mangeCount);
-        DEBUG_PRINT("Mange enemies unlocked! Count: " << mangeCount);
-    }
-    
-    // Unlock Abbe enemies at wave 5
-    if (m_currentWave >= 5 && m_enemySpawners.size() > 2)
-    {
-        int abbeCount = 3 + ((m_currentWave - 3) * 5);  // 3 at wave 3, 8 at wave 4, 13 at wave 5, etc.
-        m_enemySpawners[2]->setMaxEnemies(abbeCount);
-        DEBUG_PRINT("Abbe enemies unlocked! Count: " << abbeCount);
-    }
-    
-    // Future: Add more enemy types at higher waves
-    // if (m_currentWave >= 5) { /* Unlock boss enemies */ }
 }
 
 void WorldManager::triggerScreenFlash()
 {
     m_screenFlashTimer = m_screenFlashDuration;
-    
+
     // Play explosion sound
     if (m_explosionSound == 0)
     {
@@ -445,35 +465,34 @@ void WorldManager::initializeFlashEffect()
 {
     if (m_flashInitialized)
         return;
-    
+
     // Load the flash shader
     m_flashShader = std::make_unique<Shader>();
     m_flashShader->addShader("ScreenFlash.vert", ShaderType::VERTEX);
     m_flashShader->addShader("ScreenFlash.frag", ShaderType::FRAGMENT);
     m_flashShader->createProgram();
-    
+
     // Create fullscreen quad vertices (NDC coordinates)
     float quadVertices[] = {
         -1.0f, -1.0f,
-         1.0f, -1.0f,
-         1.0f,  1.0f,
+        1.0f, -1.0f,
+        1.0f, 1.0f,
         -1.0f, -1.0f,
-         1.0f,  1.0f,
-        -1.0f,  1.0f
-    };
-    
+        1.0f, 1.0f,
+        -1.0f, 1.0f};
+
     glGenVertexArrays(1, &m_flashVAO);
     glGenBuffers(1, &m_flashVBO);
-    
+
     glBindVertexArray(m_flashVAO);
     glBindBuffer(GL_ARRAY_BUFFER, m_flashVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices, GL_STATIC_DRAW);
-    
+
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
-    
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void *)0);
+
     glBindVertexArray(0);
-    
+
     m_flashInitialized = true;
 }
 
@@ -481,29 +500,29 @@ void WorldManager::renderScreenFlash()
 {
     if (m_screenFlashTimer <= 0.0f)
         return;
-    
+
     // Initialize on first use
     if (!m_flashInitialized)
         initializeFlashEffect();
-    
+
     // Calculate alpha based on remaining time (fade out) - starts at full brightness
     float alpha = m_screenFlashTimer / m_screenFlashDuration;
-    
+
     // Use additive blending for extra bright flashbang effect
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive blending for BRIGHT flash
-    
+
     m_flashShader->bind();
-    m_flashShader->setUniform("u_flashColor", 
-        glm::vec4(m_screenFlashColor.r, m_screenFlashColor.g, m_screenFlashColor.b, alpha));
-    
+    m_flashShader->setUniform("u_flashColor",
+                              glm::vec4(m_screenFlashColor.r, m_screenFlashColor.g, m_screenFlashColor.b, alpha));
+
     glBindVertexArray(m_flashVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
-    
+
     m_flashShader->unbind();
-    
+
     // Restore state
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);

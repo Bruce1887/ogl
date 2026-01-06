@@ -41,7 +41,7 @@ DeathScreen::DeathScreen(int screenWidth, int screenHeight)
     try
     {
         m_textRenderer = std::make_unique<TextRenderer>(screenWidth, screenHeight);
-        m_textRenderer->LoadFont(FONTS_DIR / "DejaVuSans.ttf", 48);
+        m_textRenderer->LoadFont((FONTS_DIR / "DejaVuSans.ttf").string(), 48);
     }
     catch (const std::exception& e)
     {

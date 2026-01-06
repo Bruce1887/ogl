@@ -85,9 +85,7 @@ private:
     // Wave/difficulty system
     int m_currentWave = 0;
     float m_waveTimer = 0.0f;
-    float m_waveDuration = 30.0f;  // Seconds per wave
-    int m_baseEnemyCount = 20;     // Starting enemy count
-    int m_enemiesPerWave = 3;      // Additional enemies per wave
+    float m_waveDuration = 20.0f;  // Seconds per wave
     
     // Screen flash effect
     float m_screenFlashTimer = 0.0f;

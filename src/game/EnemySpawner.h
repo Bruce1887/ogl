@@ -10,6 +10,17 @@
 #include <glm/glm.hpp>
 #include "Audio.h"
 
+struct SpawnerConfig {
+	unsigned int m_maxEnemies = 1;
+    int m_enemiesPerWave = 1;      // Additional enemies per wave
+	int m_enemiesPerWaveFactor = 1; // Additional enemies per wave
+	
+	float m_spawnInterval = 0.5f;
+	float m_minSpawnDistance = 50.0f;
+	float m_maxSpawnDistance = 100.0f;
+	float m_despawnThreshold = 320.0f; // If set, enemies beyond this distance from player are despawned
+};
+
 /**
  * @brief A class for spawning a single type of enemy and updating them (moving them etc.)
  *
@@ -17,26 +28,24 @@
 class EnemySpawner
 {
 public:
-	EnemySpawner(const EnemyData &prototypeData, unsigned int maxEnemies = 1, float spawnInterval = 0.5f)
-		: m_maxEnemies(maxEnemies), m_spawnInterval(spawnInterval)
+	EnemySpawner(const EnemyData &prototypeData, SpawnerConfig config)
+		: m_spawnerConfig(config)
 	{
 		m_animatedInstanceRenderer = std::make_unique<AnimatedInstanceRenderer>();
 		m_prototypeEnemyData = prototypeData;
 	}
 	~EnemySpawner() = default;
 
+	SpawnerConfig m_spawnerConfig;
 	// TODO: change visibility to private later
 	std::unique_ptr<AnimatedInstanceRenderer> m_animatedInstanceRenderer;
 
 	void setMinHeightFunction(std::function<float(float, float)> func)
 	{
-		m_heightFunc = std::move(func);
-		DEBUG_PRINT("Set enemy spawner height function.");
+		m_heightFunc = std::move(func);		
 	}
 
-	unsigned int enemyCount() const { return static_cast<unsigned int>(m_enemyDataList.size()); }
-	unsigned int getMaxEnemies() const { return m_maxEnemies; }
-	void setMaxEnemies(unsigned int max) { m_maxEnemies = max; }
+	unsigned int enemyCount() const { return static_cast<unsigned int>(m_enemyDataList.size()); }	
 
 	void updateAll(float dt, Player &player);
 
@@ -68,13 +77,14 @@ public:
 		return m_sounds;
 	}
 
+	// Activate spawner (starts spawning new enemies),
+	void activate() { m_active = true; }
+	// Deactivate spawner (stops spawning new enemies),
+	void deactivate() { m_active = false; }
 private:
-	unsigned int m_maxEnemies = 1;
+	bool m_active = false;
+
 	float m_spawnTimer = 0.0f; // Time since last spawn
-	float m_spawnInterval = 0.5f;
-	float m_minSpawnDistance = 50.0f;
-	float m_maxSpawnDistance = 100.0f;
-	float m_despawnThreshold = 320.0f; // If set, enemies beyond this distance from player are despawned
 
 	EnemyData m_prototypeEnemyData; // Prototype enemy data to copy from when spawning new enemies
 

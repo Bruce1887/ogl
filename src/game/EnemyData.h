@@ -20,6 +20,8 @@ struct EnemyData
 	glm::vec3 m_position;
 	float m_yaw = 0.0f;
 
+	int killScore = 1; // Points awarded to player for killing this enemy
+
 	// Health system
 	float m_health = 100.0f;
 	float m_maxHealth = 100.0f;
@@ -46,7 +48,7 @@ struct EnemyData
 	float m_hitScaleBoost = 0.0f; // Extra scale when hit (pulses down)
 
 	float m_modelYOffset = 0.0f; // Vertical offset to place feet on ground (adjust per model)
-	float m_modelScale = 1.0f;	 // Scale of the model
+	float m_modelScale = 1.0f;	 // Scale of the model (dont think this works)
 
 	// Calculate direction to target position on the XZ plane
 	glm::vec3 getDirectionXZtoTarget(const glm::vec3 &targetPos) const

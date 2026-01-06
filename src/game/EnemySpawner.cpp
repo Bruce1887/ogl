@@ -6,7 +6,7 @@ void EnemySpawner::updateAll(float dt, Player &player)
 
 	// Handle spawning new enemies at intervals
 	m_spawnTimer += dt;
-	if (m_spawnTimer > m_spawnInterval)
+	if (m_spawnTimer > m_spawnerConfig.m_spawnInterval)
 	{
 		m_spawnTimer = 0.0f;
 		spawnNew(playerPosition);
@@ -29,7 +29,7 @@ void EnemySpawner::updateAll(float dt, Player &player)
 		}
 
 		// Despawn enemies that are too far from the player
-		if (glm::length(enemy_data.m_position - playerPosition) > m_despawnThreshold)
+		if (glm::length(enemy_data.m_position - playerPosition) > m_spawnerConfig.m_despawnThreshold)
 		{
 			// DEBUG_PRINT("Despawning enemy at distance " << glm::length(data.m_position - playerPosition));
 			m_enemyDataList.erase(m_enemyDataList.begin() + i);
@@ -138,7 +138,7 @@ void EnemySpawner::updateAll(float dt, Player &player)
 
 void EnemySpawner::spawnNew(glm::vec3 nearPosition)
 {
-	if (m_enemyDataList.size() >= m_maxEnemies)
+	if (m_enemyDataList.size() >= m_spawnerConfig.m_maxEnemies || !m_active)
 	{
 		// DEBUG_PRINT("Enemycount: " << m_maxEnemies << ". Max enemies reached, cannot spawn more.");
 		return;
@@ -146,7 +146,7 @@ void EnemySpawner::spawnNew(glm::vec3 nearPosition)
 
 	// Random angle and distance
 	float angle = static_cast<float>(rand()) / RAND_MAX * 2.0f * 3.14159265f;
-	float distance = m_minSpawnDistance + static_cast<float>(rand()) / RAND_MAX * (m_maxSpawnDistance - m_minSpawnDistance);
+	float distance = m_spawnerConfig.m_minSpawnDistance + static_cast<float>(rand()) / RAND_MAX * (m_spawnerConfig.m_maxSpawnDistance - m_spawnerConfig.m_minSpawnDistance);
 
 	// Calculate spawn position
 	glm::vec3 spawnPos = nearPosition + glm::vec3(cos(angle), 0.0f, sin(angle)) * distance;

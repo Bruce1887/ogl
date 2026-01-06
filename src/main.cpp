@@ -138,9 +138,9 @@ int main(int, char **)
                 uiManager.handleMouseMove(cursorX, cursorY);
 
                 static bool lastLeftMouse = false;
-                bool leftMouseDown = false, rightMouseDown = false;                
+                bool leftMouseDown = false, rightMouseDown = false;
                 g_InputManager->mouseButtonInput.fetchButtons(leftMouseDown, rightMouseDown);
-                
+
                 if (leftMouseDown && !lastLeftMouse)
                 {
                     uiManager.handleMouseClick(cursorX, cursorY, true);
@@ -186,14 +186,9 @@ int main(int, char **)
                 uiManager.getCurrentState() == ui::GameState::PLAYING &&
                 !uiManager.isPaused())
             {
-
-                auto *chunkManager = worldManager->getChunkManager();
-                if (chunkManager)
-                {
-                    DEBUG_PRINT("Chunks: " << chunkManager->m_chunks.size()
-                                           << " | FPS: " << std::fixed << std::setprecision(1)
-                                           << (1.0f / dt));
-                }
+                DEBUG_PRINT("Chunks: " << worldManager->getChunkManager()->m_chunks.size()
+                                       << " | FPS: " << std::fixed << std::setprecision(1)
+                                       << (1.0f / dt) << ", Score: " << worldManager->getPlayer()->getScore());
             }
             frameCount++;
             glfwSwapBuffers(g_window);

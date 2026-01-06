@@ -89,8 +89,7 @@ public:
         m_treeRenderer = std::make_unique<InstancedRenderer>();
         // std::unique_ptr<Model> treeModel = m_generator->m_terrainRenderables.gran->copyFrom(m_generator->m_terrainRenderables.gran.get());
 
-        std::unique_ptr<Model> treeModel = std::make_unique<Model>((MODELS_DIR / "gran" / "gran.obj")); // gran som trädet gran
-        DEBUG_PRINT("treemodel ptr: " << treeModel.get());
+        std::unique_ptr<Model> treeModel = std::make_unique<Model>((MODELS_DIR / "gran" / "gran.obj")); // gran som trädet gran        
 
         m_treeRenderer->init(std::move(treeModel));
     };

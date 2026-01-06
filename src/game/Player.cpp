@@ -124,11 +124,11 @@ int Player::attack(std::vector<EnemyData *> &enemies)
             enemiesHit++;
 
             if (e_data->isDead())
-                m_scoreKeeper.addPoints(1); // Award points for kill
+                m_scoreKeeper.addPoints(e_data->killScore); // Award points for kill
         }
     }
 
-    DEBUG_PRINT("player score: " << m_scoreKeeper.getScore());
+    // DEBUG_PRINT("player score: " << m_scoreKeeper.getScore());
     return enemiesHit;
 }
 

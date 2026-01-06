@@ -23,7 +23,7 @@ void InstancedRenderer::init(std::unique_ptr<Model> model)
     m_instancedShader = std::make_shared<Shader>();
     m_instancedShader->addShader("Instanced.vert", ShaderType::VERTEX);
 
-    DEBUG_PRINT("modelpath " << m_sourceModel->m_modelPath << " model has texture diffuse: " << m_sourceModel->getModelData()->m_hasTextureDiffuse);
+    // DEBUG_PRINT("modelpath " << m_sourceModel->m_modelPath << " model has texture diffuse: " << m_sourceModel->getModelData()->m_hasTextureDiffuse);
     if (m_sourceModel->getModelData()->m_hasTextureDiffuse)
         m_instancedShader->addShader("PhongMTL_FOG_diffTEX.frag", ShaderType::FRAGMENT);
     else

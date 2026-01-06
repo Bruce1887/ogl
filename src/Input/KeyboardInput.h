@@ -61,11 +61,10 @@ public:
 		return m_value;
 	}
 
-
 	bool readAndClear()
 	{
 		m_hasInput = false;
-		return std::exchange(m_value, false); 
+		return std::exchange(m_value, false);
 	}
 };
 
@@ -78,10 +77,14 @@ public:
 	// All other key states can be added here as needed. i.e. if you want to register a key press for "K" key, add it here.
 	inline static std::array keyStates = {
 		KeyState{GLFW_KEY_ESCAPE},
-        KeyState{GLFW_KEY_BACKSPACE},
-        KeyState{GLFW_KEY_ENTER},
-        KeyState{OOGABOOGA_SPECIAL_ATTACK_KEY},
-        KeyState{OOGABOOGA_ATTACK_KEY},};
+		KeyState{GLFW_KEY_BACKSPACE},
+		KeyState{GLFW_KEY_ENTER},
+		KeyState{OOGABOOGA_ATTACK_KEY},
+		KeyState{OOGABOOGA_SPECIAL_ATTACK_KEY},
+#ifdef DEBUG
+		KeyState{OOGABOOGA_DEBUG_WILDCARD_KEY},
+#endif
+	};
 
 	KeyState &getKeyState(int keyCode);
 };

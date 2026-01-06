@@ -26,7 +26,7 @@ struct Vertex
 
 ModelData::~ModelData()
 {
-    DEBUG_PRINT("Destroying ModelData with " << m_meshRenderables.size() << " mesh renderables.");
+    //DEBUG_PRINT("Destroying ModelData with " << m_meshRenderables.size() << " mesh renderables.");
 }
 
 Model::Model(const std::filesystem::path &path)
@@ -44,7 +44,7 @@ Model::Model(const std::filesystem::path &path)
         return;
     }
 
-    DEBUG_PRINT("Processing model at path: " << path << " with " << ai_scene->mNumMeshes << " meshes.");
+    // DEBUG_PRINT("Processing model at path: " << path << " with " << ai_scene->mNumMeshes << " meshes.");
 
     m_modelData = std::make_shared<ModelData>();
 
@@ -194,7 +194,7 @@ Model::Model(const std::filesystem::path &path)
         m_modelData->addMeshRenderable(std::shared_ptr<MeshRenderable>(mr));
     }
 
-    DEBUG_PRINT("Finished processing model.");
+    // DEBUG_PRINT("Finished processing model.");
 }
 
 Model::Model(std::shared_ptr<ModelData> modelData)

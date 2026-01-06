@@ -82,8 +82,8 @@ std::shared_ptr<Texture> Texture::CreateCubemap(const std::vector<std::filesyste
 
 Texture::~Texture()
 {
-    std::string type = (m_target == TEXTURE_2D) ? "2D Texture" : "Cubemap Texture";
-    DEBUG_PRINT("Deleting " << type << " ID " << m_rendererID << " with path: " << m_filePath);
+    // std::string type = (m_target == TEXTURE_2D) ? "2D Texture" : "Cubemap Texture";
+    // DEBUG_PRINT("Deleting " << type << " ID " << m_rendererID << " with path: " << m_filePath);
     GLCALL(glDeleteTextures(1, &m_rendererID));
 }
 
