@@ -2,8 +2,10 @@
 #include "game/Audio.h"
 
 RenderingContext *rContext = nullptr;
-GLsizei WINDOW_X = 1024;
-GLsizei WINDOW_Y = 768;
+//GLsizei WINDOW_X = 1024;
+//GLsizei WINDOW_Y = 768;
+GLsizei WINDOW_X = 1600;
+GLsizei WINDOW_Y = 1000;
 GLFWwindow *g_window = nullptr;
 GLFWmonitor *g_monitor = nullptr;
 InputManager *g_InputManager = nullptr;

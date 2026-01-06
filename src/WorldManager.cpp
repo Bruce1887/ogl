@@ -160,7 +160,7 @@ bool WorldManager::initializeEnemySpawners()
     mangeEnemyData.m_attackCooldown = 6.0f;
     mangeEnemyData.m_moveSpeed = 4.0f;
 
-    std::unique_ptr<EnemySpawner> mangeSpawner = std::make_unique<EnemySpawner>(mangeEnemyData, 0, 1); // Starts with 0, unlocks at wave 2
+    std::unique_ptr<EnemySpawner> mangeSpawner = std::make_unique<EnemySpawner>(mangeEnemyData, 0, 1); // Starts with 0, unlocks at wave 3
     mangeSpawner->setMinHeightFunction([this](float x, float z)
                                        { return m_chunkManager->getPreciseHeightAt(x, z); });
     // Add animation frames
@@ -184,8 +184,8 @@ bool WorldManager::initializeEnemySpawners()
     abbeEnemyData.m_health = 150.0f;
     abbeEnemyData.m_attackDamage = 15.0f;
     abbeEnemyData.m_attackCooldown = 4.0f;
-    abbeEnemyData.m_moveSpeed = 8.0f;
-    std::unique_ptr<EnemySpawner> abbeSpawner = std::make_unique<EnemySpawner>(abbeEnemyData, 0, 1); // Starts with 0, unlocks at wave 3
+    abbeEnemyData.m_moveSpeed = 12.0f;
+    std::unique_ptr<EnemySpawner> abbeSpawner = std::make_unique<EnemySpawner>(abbeEnemyData, 0, 1); // Starts with 0, unlocks at wave 5
     abbeSpawner->setMinHeightFunction([this](float x, float z)
                                       { return m_chunkManager->getPreciseHeightAt(x, z); });
     // Add animation frames
@@ -417,7 +417,7 @@ void WorldManager::advanceWave()
         DEBUG_PRINT("Mange enemies unlocked! Count: " << mangeCount);
     }
     
-    // Unlock Abbe enemies at wave 3
+    // Unlock Abbe enemies at wave 5
     if (m_currentWave >= 5 && m_enemySpawners.size() > 2)
     {
         int abbeCount = 3 + ((m_currentWave - 3) * 5);  // 3 at wave 3, 8 at wave 4, 13 at wave 5, etc.
