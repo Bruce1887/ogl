@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <iostream>
 #include <optional>
+#include <vector>
 #include <glm/glm.hpp>
 
 #define MUSIC_SOUND_SOURCES 1 // num sources reserved for music
