@@ -81,17 +81,5 @@ public:
 		KeyState{GLFW_KEY_ESCAPE},
 		KeyState{OOGABOOGA_ATTACK_KEY},};
 
-	KeyState &getKeyState(int keyCode)
-	{
-		for (KeyState &ks : keyStates)
-		{
-			if (ks.key() == keyCode)
-			{
-				return ks;
-			}
-		}
-#ifdef DEBUG
-		assert(false && "KeyState for given keyCode not found!");
-#endif
-	}
+	KeyState &getKeyState(int keyCode);
 };

@@ -8,7 +8,7 @@ std::shared_ptr<Texture> Texture::CreateTexture2D(const std::filesystem::path &p
     tex->m_filePath = path.string();
 
     stbi_set_flip_vertically_on_load(1);
-    unsigned char* localBuffer = stbi_load(path.c_str(), &tex->m_width, &tex->m_height, &tex->m_BPP, 4);
+    unsigned char* localBuffer = stbi_load(path.string().c_str(), &tex->m_width, &tex->m_height, &tex->m_BPP, 4);
 
     assert(localBuffer && "Failed to load texture image!");
 

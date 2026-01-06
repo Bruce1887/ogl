@@ -25,6 +25,8 @@ class SoundPlayer
 private:
 	ALuint m_musicSourcesPool[MUSIC_SOUND_SOURCES];
 	ALuint m_SFXSourcesPool[SFX_SOUND_SOURCES];
+	std::vector<ALuint> m_buffers;  // Keep track of allocated buffers for cleanup
+
 	uint32_t m_nextRoundRobinIndex = 0; // Tracks the "oldest" source for stealing
 
 	SoundPlayer()
@@ -44,8 +46,14 @@ private:
 
 	~SoundPlayer()
 	{
+		std::cout << "Shutting down SoundPlayer and deleting sources." << std::endl;
 		alDeleteSources(SFX_SOUND_SOURCES, m_SFXSourcesPool);
 		alDeleteSources(MUSIC_SOUND_SOURCES, m_musicSourcesPool);
+		for (ALuint buffer : m_buffers)
+		{
+			alDeleteBuffers(1, &buffer);
+		}
+		m_buffers.clear();
 	}
 
 	// Tries to find a source that is not currently playing.
@@ -99,6 +107,8 @@ public:
 		return instance;
 	}
 
+	ALuint LoadWav(std::filesystem::path path);
+	
 	/**
 	 * @brief Plays background music from the given buffer.
 	 *
@@ -160,7 +170,6 @@ public:
 
 bool Audio_Init();
 void Audio_Shutdown();
-ALuint LoadWav(std::filesystem::path path);
 
 // The different sounds an entity can have
 struct EntitySounds

@@ -9,7 +9,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # --- Dependencies ---
 find_package(OpenGL REQUIRED)
-find_package(Freetype REQUIRED)
+
+add_subdirectory(src/vendor/freetype)
+set(FT_DISABLE_HARFBUZZ ON CACHE BOOL "" FORCE)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "debug")
     add_compile_definitions(DEBUG)
@@ -60,7 +62,15 @@ target_include_directories(stb_image SYSTEM PRIVATE src/vendor/stb_image)
 # --- Common static library (compiled once) ---
 add_library(oogabooga_common STATIC ${COMMON_SOURCES})
 target_include_directories(oogabooga_common PUBLIC src)
-target_link_libraries(oogabooga_common PUBLIC glad stb_image glfw OpenGL::GL Freetype::Freetype)
+
+target_link_libraries(oogabooga_common PUBLIC
+    glad
+    stb_image
+    glfw
+    OpenGL::GL
+    freetype
+)
+
 
 # --- Assimp ---
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)

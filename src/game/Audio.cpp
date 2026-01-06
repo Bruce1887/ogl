@@ -44,7 +44,7 @@ static ALenum GetFormat(int channels, int bits)
     return 0;
 }
 
-ALuint LoadWav(std::filesystem::path path)
+ALuint SoundPlayer::LoadWav(std::filesystem::path path)
 {
     std::ifstream f(path.c_str(), std::ios::binary); // TODO: might screw up on non-ASCII paths
     if (!f) return 0;
@@ -89,5 +89,7 @@ ALuint LoadWav(std::filesystem::path path)
     alGenBuffers(1, &buffer);
     alBufferData(buffer, GetFormat(channels, bits),
                  data.data(), data.size(), sampleRate);
+    
+    m_buffers.push_back(buffer);
     return buffer;
 }

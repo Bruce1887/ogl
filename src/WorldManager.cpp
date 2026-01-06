@@ -21,7 +21,8 @@ bool WorldManager::initialize()
         return false;
     }
 
-    SoundPlayer::getInstance().PlayMusic(LoadWav(AUDIO_DIR / "piraten.wav"), true);
+    SoundPlayer& sp = SoundPlayer::getInstance();
+    sp.PlayMusic(sp.LoadWav(AUDIO_DIR / "piraten.wav"), true);
 
     return true;
 }
@@ -121,18 +122,19 @@ bool WorldManager::initializeEnemySpawners()
 
     // Setup Cow
     EnemyData cowEnemyData; // default enemy data
-    std::unique_ptr<EnemySpawner> cowSpawner = std::make_unique<EnemySpawner>(cowEnemyData,20,1);
+    std::unique_ptr<EnemySpawner> cowSpawner = std::make_unique<EnemySpawner>(cowEnemyData,2000,1);
     cowSpawner->setMinHeightFunction([this](float x, float z)
                                      { return m_chunkManager->getPreciseHeightAt(x, z); });
     // Add animation frames
     cowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow.obj", AnimationState::IDLE, 1.0f));
     cowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow_walk1.obj", AnimationState::WALKING, 0.5f));
     cowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow_walk2.obj", AnimationState::WALKING, 0.5f));
-    cowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbe_trim_18736.obj", AnimationState::ATTACK, cowEnemyData.m_attackCooldown));
+    cowSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "cow" / "cow.obj", AnimationState::ATTACK, 1.0f));
+    
     // set fog uniforms
     cowSpawner->m_animatedInstanceRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
     // set sounds
-    EntitySounds cowSounds{.m_attackSound = LoadWav(AUDIO_DIR / "cow_moo.wav")};
+    EntitySounds cowSounds{.m_attackSound = SoundPlayer::getInstance().LoadWav(AUDIO_DIR / "cow_moo.wav")};
     cowSpawner->setEntitySounds(cowSounds);
     // add to world manager
     m_enemySpawners.push_back(std::move(cowSpawner));
@@ -146,7 +148,7 @@ bool WorldManager::initializeEnemySpawners()
     mangeEnemyData.m_attackCooldown = 6.0f;
     mangeEnemyData.m_moveSpeed = 4.0f;
 
-    std::unique_ptr<EnemySpawner> mangeSpawner = std::make_unique<EnemySpawner>(mangeEnemyData,1,1);
+    std::unique_ptr<EnemySpawner> mangeSpawner = std::make_unique<EnemySpawner>(mangeEnemyData,100,5);
     mangeSpawner->setMinHeightFunction([this](float x, float z)
                                        { return m_chunkManager->getPreciseHeightAt(x, z); });
     // Add animation frames
@@ -157,13 +159,37 @@ bool WorldManager::initializeEnemySpawners()
     mangeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "MangeMob" / "MangeAttack2.obj", AnimationState::ATTACK, 0.3));
 
     // set sounds
-    EntitySounds mangeSounds{.m_attackSound = LoadWav(AUDIO_DIR / "gun_explosion.wav")};
+    EntitySounds mangeSounds{.m_attackSound = SoundPlayer::getInstance().LoadWav(AUDIO_DIR / "gun_explosion.wav")};
     mangeSpawner->setEntitySounds(mangeSounds);
     // set fog uniforms
     mangeSpawner->m_animatedInstanceRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
-
-
     m_enemySpawners.push_back(std::move(mangeSpawner));
+
+
+    // Setup Abbe
+
+    EnemyData abbeEnemyData; // default enemy data
+    abbeEnemyData.m_maxHealth = 150.0f;
+    abbeEnemyData.m_health = 150.0f;
+    abbeEnemyData.m_attackDamage = 15.0f;
+    abbeEnemyData.m_attackCooldown = 4.0f;
+    abbeEnemyData.m_moveSpeed = 8.0f;
+    std::unique_ptr<EnemySpawner> abbeSpawner = std::make_unique<EnemySpawner>(abbeEnemyData,150,3);
+    abbeSpawner->setMinHeightFunction([this](float x, float z)
+                                     { return m_chunkManager->getPreciseHeightAt(x, z); });
+    // Add animation frames
+    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeIdle.obj", AnimationState::IDLE, 0.5f));
+    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeRun1.obj", AnimationState::WALKING, 0.2f));
+    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeRun2.obj", AnimationState::WALKING, 0.2f));
+    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeAttack1.obj", AnimationState::ATTACK, 0.1f));
+    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeAttack2.obj", AnimationState::ATTACK, 0.1f));
+    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeAttack3.obj", AnimationState::ATTACK, 0.1f));
+    abbeSpawner->m_animatedInstanceRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
+    // set sounds
+    EntitySounds abbeSounds{.m_attackSound = SoundPlayer::getInstance().LoadWav(AUDIO_DIR / "swordAttack.wav")};
+    abbeSpawner->setEntitySounds(abbeSounds);
+    m_enemySpawners.push_back(std::move(abbeSpawner));
+
     return true;
 }
 

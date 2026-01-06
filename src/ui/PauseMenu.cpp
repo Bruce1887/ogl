@@ -49,7 +49,7 @@ namespace ui
         try
         {
             m_textRenderer = std::make_unique<TextRenderer>(screenWidth, screenHeight);
-            m_textRenderer->LoadFont(FONTS_DIR / "DejaVuSans.ttf", MENU_FONT_SIZE);
+            m_textRenderer->LoadFont((FONTS_DIR / "DejaVuSans.ttf").string().c_str(), MENU_FONT_SIZE);
             DEBUG_PRINT("PauseMenu text renderer initialized successfully");
         }
         catch (const std::exception &e)
