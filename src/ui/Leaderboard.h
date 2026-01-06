@@ -43,7 +43,8 @@ struct LeaderboardButton
 struct LeaderboardEntry
 {
     std::string playerName;
-    int score;
+    int kills;
+    std::string time;  // MM:SS format
     int rank;
 };
 
@@ -66,7 +67,7 @@ public:
     void updateScreenSize(int width, int height);
 
     // Add/populate leaderboard entries
-    void addEntry(const std::string& name, int score);
+    void addEntry(const std::string& name, int kills, const std::string& time);
     void clearEntries();
 
     // Set skybox for background rendering

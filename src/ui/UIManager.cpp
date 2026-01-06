@@ -2,6 +2,7 @@
 #include "Skybox.h"
 #include <iostream>
 #include "game/Audio.h"
+#include "game/Database.h"
 #include "Common.h"
 
 namespace ui
@@ -181,24 +182,12 @@ void UIManager::render(const glm::mat4& view, const glm::mat4& projection)
                 m_leaderboard = std::make_unique<Leaderboard>(m_screenWidth, m_screenHeight);
                 m_leaderboard->setSkybox(m_menuSkybox.get(), m_menuSkyboxShader.get());
                 
-                // Add sample entries
-                m_leaderboard->addEntry("Player One", 5500);
-                m_leaderboard->addEntry("Alice", 7200);
-                m_leaderboard->addEntry("Bob", 4800);
-                m_leaderboard->addEntry("Charlie", 9100);
-                m_leaderboard->addEntry("Diana", 6300);
-                m_leaderboard->addEntry("Eve", 8200);
-                m_leaderboard->addEntry("Frank", 3500);
-                m_leaderboard->addEntry("Grace", 7800);
-                m_leaderboard->addEntry("Henry", 5200);
-                m_leaderboard->addEntry("Ivy", 6900);
-                m_leaderboard->addEntry("Jack", 4100);
-                
                 m_leaderboard->onBackClicked = [this]() {
                     DEBUG_PRINT("Back to menu clicked" );
                     transitionTo(GameState::MAIN_MENU);
                 };
             }
+            
             if (m_leaderboard)
             {
                 m_leaderboard->render(view, projection, nullptr);
@@ -412,6 +401,35 @@ void UIManager::transitionTo(GameState newState)
 
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
+    }
+    
+    // Fetch leaderboard data when entering leaderboard state
+    if (newState == GameState::LEADERBOARD) {
+        // Ensure leaderboard exists
+        if (!m_leaderboard) {
+            m_leaderboard = std::make_unique<Leaderboard>(m_screenWidth, m_screenHeight);
+            m_leaderboard->setSkybox(m_menuSkybox.get(), m_menuSkyboxShader.get());
+            m_leaderboard->onBackClicked = [this]() {
+                DEBUG_PRINT("Back to menu clicked");
+                transitionTo(GameState::MAIN_MENU);
+            };
+        }
+        
+        // Fetch fresh data from database
+        m_leaderboard->clearEntries();
+        auto entries = Database::FetchTop10();
+        for (const auto& entry : entries) {
+            int totalSeconds = static_cast<int>(entry.time);
+            int minutes = totalSeconds / 60;
+            int seconds = totalSeconds % 60;
+            char timeStr[16];
+            snprintf(timeStr, sizeof(timeStr), "%02d:%02d", minutes, seconds);
+            m_leaderboard->addEntry(entry.name, entry.kills, timeStr);
+        }
+        
+        if (entries.empty()) {
+            m_leaderboard->addEntry("No scores yet!", 0, "--:--");
+        }
     }
 }
 

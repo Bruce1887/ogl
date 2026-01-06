@@ -6,6 +6,7 @@
 #include "VertexBufferLayout.h"
 #include "TextRenderer.h"
 #include "Skybox.h"
+#include "Common.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
 #include <iostream>
@@ -42,7 +43,7 @@ Leaderboard::Leaderboard(int screenWidth, int screenHeight)
     
     try {
         m_textRenderer = std::make_unique<TextRenderer>(screenWidth, screenHeight);
-        m_textRenderer->LoadFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 48);
+        m_textRenderer->LoadFont((FONTS_DIR / "DejaVuSans.ttf").string().c_str(), 48);
         DEBUG_PRINT("Leaderboard text renderer initialized successfully");
     } catch (const std::exception& e) {
         DEBUG_PRINT("Exception initializing TextRenderer: " << e.what());
@@ -109,17 +110,19 @@ void Leaderboard::render(glm::mat4 view, glm::mat4 projection, PhongLightConfig*
              1.5f,
              glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
-    // Column layout: Rank # on far left, player name next, score on right (keep at original position)
+    // Column layout: Rank # on far left, player name next, kills and time on right
     float rankX = panelX + 20.0f;
     float nameX = panelX + 70.0f;
-    float scoreX = panelX + panelWidth - 110.0f;
+    float killsX = panelX + panelWidth - 180.0f;
+    float timeX = panelX + panelWidth - 80.0f;
     float entryY = panelY_original + 80.0f;
     float entrySpacing = 35.0f;
 
     // Draw column headers
     DrawText("#", rankX + 10.0f, entryY, 0.8f, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f));
     DrawText("Player", nameX + 60.0f, entryY, 0.8f, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f));
-    DrawText("Score", scoreX, entryY, 0.8f, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f));
+    DrawText("Kills", killsX, entryY, 0.8f, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f));
+    DrawText("Time", timeX, entryY, 0.8f, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f));
 
     // Draw leaderboard entries (top 10)
     entryY += entrySpacing + 10.0f;
@@ -128,22 +131,25 @@ void Leaderboard::render(glm::mat4 view, glm::mat4 projection, PhongLightConfig*
     {
         const auto& entry = m_entries[i];
         std::string rankStr = std::to_string(entry.rank);
-        std::string scoreStr = std::to_string(entry.score);
+        std::string killsStr = std::to_string(entry.kills);
 
         // Draw rank number (left-aligned)
-        float rankWidth = m_textRenderer->GetTextWidth(rankStr, 0.7f);
+        float rankWidth = m_textRenderer ? m_textRenderer->GetTextWidth(rankStr, 0.7f) : 20.0f;
         DrawText(rankStr, 
                 rankX + rankWidth * 0.5f,
                 entryY, 0.7f, glm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
                 
         // Draw player name (left-aligned)
-        float nameWidth = m_textRenderer->GetTextWidth(entry.playerName, 0.7f);
+        float nameWidth = m_textRenderer ? m_textRenderer->GetTextWidth(entry.playerName, 0.7f) : 100.0f;
         DrawText(entry.playerName, 
                 nameX + nameWidth * 0.5f,
                 entryY, 0.7f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
         
-        // Draw score (right-aligned)
-        DrawText(scoreStr, scoreX, entryY, 0.7f, glm::vec4(1.0f, 1.0f, 0.5f, 1.0f));
+        // Draw kills
+        DrawText(killsStr, killsX, entryY, 0.7f, glm::vec4(1.0f, 0.5f, 0.5f, 1.0f));
+        
+        // Draw time
+        DrawText(entry.time, timeX, entryY, 0.7f, glm::vec4(0.5f, 1.0f, 0.5f, 1.0f));
 
         entryY += entrySpacing;
     }
@@ -199,15 +205,15 @@ void Leaderboard::updateScreenSize(int width, int height)
     InitializeButtons();
 }
 
-void Leaderboard::addEntry(const std::string& name, int score)
+void Leaderboard::addEntry(const std::string& name, int kills, const std::string& time)
 {
-    LeaderboardEntry entry{name, score, (int)m_entries.size() + 1};
+    LeaderboardEntry entry{name, kills, time, (int)m_entries.size() + 1};
     m_entries.push_back(entry);
     
-    // Sort by score descending
+    // Sort by kills descending
     std::sort(m_entries.begin(), m_entries.end(), 
         [](const LeaderboardEntry& a, const LeaderboardEntry& b) { 
-            return a.score > b.score; 
+            return a.kills > b.kills; 
         });
     
     // Update ranks
