@@ -1,6 +1,8 @@
 #include "UIManager.h"
 #include "Skybox.h"
 #include <iostream>
+#include "game/Audio.h"
+#include "Common.h"
 
 namespace ui
 {
@@ -49,6 +51,7 @@ void UIManager::initializeGameUI(Player* player)
     m_pauseMenu->onResumeClicked = [this]() {
         DEBUG_PRINT("Resume clicked" );
         m_isPaused = false;
+        SoundPlayer::getInstance().ResumeMusic();
         if (onResumeGame) {
             onResumeGame();
         }
@@ -59,6 +62,10 @@ void UIManager::initializeGameUI(Player* player)
     m_pauseMenu->onQuitClicked = [this]() {
         DEBUG_PRINT("Quit to menu clicked" );
         m_isPaused = false;
+        SoundPlayer::getInstance().StopAll();
+        if (onQuitToMenu) {
+            onQuitToMenu();
+        }
         transitionTo(GameState::MAIN_MENU);
     };
 }
@@ -79,10 +86,10 @@ void UIManager::update(float deltaTime)
     switch (m_currentState)
     {
         case GameState::LOADING:
-            // Call the startup callback immediately to initialize the world
-            if (onStartGame) {
+            // Call the startup callback once per loading transition
+            if (onStartGame && !m_loadingStarted) {
+                m_loadingStarted = true;
                 onStartGame();
-                onStartGame = nullptr;  // Only call once
             }
             // Transition to playing once game objects are initialized
             if (m_player && m_gameHUD)
@@ -93,11 +100,62 @@ void UIManager::update(float deltaTime)
             break;
 
         case GameState::PLAYING:
-            // Game is running
+            // Check for player death
+            checkPlayerDeath();
+            break;
+
+        case GameState::DEAD:
+            // Update death screen animation
+            if (m_deathScreen)
+            {
+                m_deathScreen->update(deltaTime);
+            }
             break;
 
         default:
             break;
+    }
+}
+
+void UIManager::checkPlayerDeath()
+{
+    if (m_player && m_player->m_playerData.m_health <= 0.0f)
+    {
+        DEBUG_PRINT("Player died!");
+        
+        // Create death screen if not exists
+        if (!m_deathScreen)
+        {
+            m_deathScreen = std::make_unique<DeathScreen>(m_screenWidth, m_screenHeight);
+            m_deathScreen->onSubmitScore = [this](const std::string& playerName, int score) {
+                DEBUG_PRINT("Score submitted: " << playerName << " - " << score);
+                if (onScoreSubmit) {
+                    onScoreSubmit(playerName, score);
+                }
+                if (onQuitToMenu) {
+                    onQuitToMenu();
+                }
+                transitionTo(GameState::MAIN_MENU);
+            };
+            m_deathScreen->onContinueClicked = [this]() {
+                DEBUG_PRINT("Continue clicked after death (skipped submission)");
+                if (onQuitToMenu) {
+                    onQuitToMenu();
+                }
+                transitionTo(GameState::MAIN_MENU);
+            };
+        }
+        
+        // Set the player's score on the death screen
+        if (m_player) {
+            m_deathScreen->setScore(m_player->getScore());
+        }
+        
+        if (onPlayerDied) {
+            onPlayerDied();
+        }
+        
+        transitionTo(GameState::DEAD);
     }
 }
 
@@ -106,6 +164,10 @@ void UIManager::render(const glm::mat4& view, const glm::mat4& projection)
     switch (m_currentState)
     {
         case GameState::MAIN_MENU:{
+            if (m_menuSkybox && m_menuSkyboxShader)
+            {
+                m_menuSkybox->render(view, projection, nullptr);
+            }
             if (m_mainMenu)
             {
                 m_mainMenu->render(view, projection, nullptr);
@@ -164,6 +226,14 @@ void UIManager::render(const glm::mat4& view, const glm::mat4& projection)
 
             break;
         }
+        case GameState::DEAD:{
+            // Render death screen overlay (world is still visible behind)
+            if (m_deathScreen)
+            {
+                m_deathScreen->render(view, projection, nullptr);
+            }
+            break;
+        }
         default:
             break;
     }
@@ -188,6 +258,12 @@ void UIManager::handleMouseMove(double mouseX, double mouseY)
         case GameState::PLAYING:
             if (m_isPaused && m_pauseMenu) {
                 m_pauseMenu->handleMouseMove(mouseX, mouseY);
+            }
+            break;
+            
+        case GameState::DEAD:
+            if (m_deathScreen) {
+                m_deathScreen->handleMouseMove(mouseX, mouseY);
             }
             break;
             
@@ -218,6 +294,12 @@ void UIManager::handleMouseClick(double mouseX, double mouseY, bool pressed)
             }
             break;
             
+        case GameState::DEAD:
+            if (m_deathScreen) {
+                m_deathScreen->handleMouseClick(mouseX, mouseY, pressed);
+            }
+            break;
+            
         default:
             break;
     }
@@ -233,6 +315,39 @@ void UIManager::handleKeyPress(int key, int action)
             togglePause();
         }
     }
+
+    // Forward key input to death screen for backspace/enter handling
+    if (m_currentState == GameState::DEAD && m_deathScreen)
+    {
+        m_deathScreen->handleKeyInput(key, action);
+    }
+}
+
+void UIManager::handleCharInput(unsigned int codepoint)
+{
+    // Forward character input to death screen for text entry
+    if (m_currentState == GameState::DEAD && m_deathScreen)
+    {
+        m_deathScreen->handleCharInput(codepoint);
+    }
+}
+
+void UIManager::pollKeyboardInput()
+{
+    // Handle backspace and enter for death screen text input
+    if (m_currentState == GameState::DEAD)
+    {
+        bool backspacePressed = g_InputManager->keyboardInput.getKeyState(GLFW_KEY_BACKSPACE).readAndClear();
+        if (backspacePressed)
+        {
+            handleKeyPress(GLFW_KEY_BACKSPACE, GLFW_PRESS);
+        }
+        bool enterPressed = g_InputManager->keyboardInput.getKeyState(GLFW_KEY_ENTER).readAndClear();
+        if (enterPressed)
+        {
+            handleKeyPress(GLFW_KEY_ENTER, GLFW_PRESS);
+        }
+    }
 }
 
 void UIManager::togglePause()
@@ -243,8 +358,10 @@ void UIManager::togglePause()
     m_isPaused = !m_isPaused;
     if (m_isPaused) {
         DEBUG_PRINT("Game paused" );
+        SoundPlayer::getInstance().PauseMusic();
     } else {
         DEBUG_PRINT("Game resumed" );
+        SoundPlayer::getInstance().ResumeMusic();
         if (onResumeGame) {
             onResumeGame();
         }
@@ -257,6 +374,7 @@ bool UIManager::shouldShowCursor() const
     return m_currentState == GameState::MAIN_MENU ||
            m_currentState == GameState::LEADERBOARD ||
            m_currentState == GameState::SETTINGS ||
+           m_currentState == GameState::DEAD ||
            (m_currentState == GameState::PLAYING && m_isPaused);
 }
 
@@ -273,6 +391,27 @@ void UIManager::transitionTo(GameState newState)
     // Reset pause state when leaving PLAYING
     if (newState != GameState::PLAYING) {
         m_isPaused = false;
+    }
+
+    if (newState == GameState::PLAYING)
+    {
+        SoundPlayer::getInstance().ResumeAll();
+    }
+    else
+    {
+        SoundPlayer::getInstance().PauseAll();
+    }
+    
+    // Reset game state when returning to main menu
+    if (newState == GameState::MAIN_MENU) {
+        m_loadingStarted = false;
+        m_player = nullptr;
+        m_gameHUD.reset();
+        m_pauseMenu.reset();
+        m_deathScreen.reset();
+
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_CULL_FACE);
     }
 }
 

@@ -79,6 +79,8 @@ public:
 	// All other key states can be added here as needed. i.e. if you want to register a key press for "K" key, add it here.
 	inline static std::array keyStates = {
 		KeyState{GLFW_KEY_ESCAPE},
+		KeyState{GLFW_KEY_BACKSPACE},
+		KeyState{GLFW_KEY_ENTER},
 		KeyState{OOGABOOGA_ATTACK_KEY},};
 
 	KeyState &getKeyState(int keyCode)

@@ -25,6 +25,7 @@ class SoundPlayer
 private:
 	ALuint m_musicSourcesPool[MUSIC_SOUND_SOURCES];
 	ALuint m_SFXSourcesPool[SFX_SOUND_SOURCES];
+	ALuint m_activeMusicSource = 0;
 	uint32_t m_nextRoundRobinIndex = 0; // Tracks the "oldest" source for stealing
 
 	SoundPlayer()
@@ -33,7 +34,7 @@ private:
 		alGetError();
 
 		alGenSources(MUSIC_SOUND_SOURCES, m_musicSourcesPool);
-		alGenSources(SFX_SOUND_SOURCES, m_SFXSourcesPool);
+		alGenSources(SFX_SOUND_SOURCES, m_SFXSourcesPool);		
 
 		ALenum err = alGetError();
 		if (err != AL_NO_ERROR)
@@ -50,9 +51,9 @@ private:
 
 	// Tries to find a source that is not currently playing.
 	// If all are playing, returns 0 (indicating none found).
-	ALuint findFreeSource(ALuint *sources)
+	ALuint findFreeSource(ALuint* sources, uint32_t poolSize)
 	{
-		for (int i = 0; i < SFX_SOUND_SOURCES; i++)
+		for (int i = 0; i < poolSize; i++)
 		{
 			ALuint source = sources[i];
 			ALint state;
@@ -68,28 +69,33 @@ private:
 	}
 
 	// Forcefully gets the next source in line, overwriting whatever is playing there.
-	ALuint stealNextSource(ALuint *sources)
+	ALuint stealNextSource(ALuint* sources, uint32_t poolSize)
 	{
 		ALuint source = sources[m_nextRoundRobinIndex];
 
-		m_nextRoundRobinIndex = ((m_nextRoundRobinIndex + 1) % SFX_SOUND_SOURCES);
+		m_nextRoundRobinIndex = ((m_nextRoundRobinIndex + 1) % poolSize);
 		return source;
 	}
 
-	ALuint getFreeOrStealSource(ALuint *sources)
+	ALuint getFreeOrStealSource(ALuint *sources, uint32_t poolSize)
 	{
-		ALuint source = findFreeSource(sources);
+		ALuint source = findFreeSource(sources, poolSize);
 		if (source != 0)
 		{
 			return source;
 		}
 		else
 		{
-			return stealNextSource(m_SFXSourcesPool);
+			return stealNextSource(sources, poolSize);
 		}
 	}
 
 public:
+	void PauseAll();
+	void ResumeAll();
+	void StopAll();	
+	void PauseMusic();
+	void ResumeMusic();
 	SoundPlayer(const SoundPlayer &) = delete;
 	SoundPlayer &operator=(const SoundPlayer &) = delete;
 
@@ -107,12 +113,15 @@ public:
 	 */
 	void PlayMusic(ALuint buffer, bool loop = true)
 	{
-		ALuint source = getFreeOrStealSource(m_musicSourcesPool);
+		ALuint source = m_musicSourcesPool[0];
 
+		alSourceStop(source);                 // hard reset
+		alSourcei(source, AL_BUFFER, 0);      // clear previous
 		alSourcei(source, AL_BUFFER, buffer);
-		// alSourcef(source, AL_GAIN, 0.5f); // Music is usually quieter
 		alSourcei(source, AL_LOOPING, loop ? AL_TRUE : AL_FALSE);
 		alSourcePlay(source);
+
+		m_activeMusicSource = source;
 #ifdef DEBUG
 		ALenum err = alGetError();
 		if (err != AL_NO_ERROR)
@@ -133,10 +142,10 @@ public:
 	{
 		ALuint source = 0;
 		if (force_play)
-			source = getFreeOrStealSource(m_SFXSourcesPool);
+			source = getFreeOrStealSource(m_SFXSourcesPool, SFX_SOUND_SOURCES);
 		else
 		{
-			source = findFreeSource(m_SFXSourcesPool);
+			source = findFreeSource(m_SFXSourcesPool, SFX_SOUND_SOURCES);
 			if (source == 0)
 				return;
 		}
