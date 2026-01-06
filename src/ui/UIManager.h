@@ -5,6 +5,7 @@
 #include "ui/PauseMenu.h"
 #include "ui/Leaderboard.h"
 #include "ui/HUDEntityImpl.h"
+#include "ui/DeathScreen.h"
 #include "game/Player.h"
 #include "game/GameClock.h"
 #include <memory>
@@ -47,12 +48,17 @@ namespace ui
         void handleMouseMove(double mouseX, double mouseY);
         void handleMouseClick(double mouseX, double mouseY, bool pressed);
         void handleKeyPress(int key, int action);
+        void handleCharInput(unsigned int codepoint);
+        void pollKeyboardInput();  // Call each frame to handle special keys (backspace, enter) for text input
 
         // State queries and transitions
         GameState getCurrentState() const { return m_currentState; }
         bool isPaused() const { return m_isPaused; }
         void transitionTo(GameState newState);
         void togglePause();
+        
+        // Check if player is dead and trigger death screen
+        void checkPlayerDeath();
 
         // Screen size updates
         void updateScreenSize(int width, int height);
@@ -63,11 +69,15 @@ namespace ui
         // Callbacks for menu actions
         std::function<void()> onStartGame;  // Called when "Play" is clicked
         std::function<void()> onQuitGame;   // Called when "Quit" is clicked
+        std::function<void()> onQuitToMenu; // Called when quitting to main menu from pause
         std::function<void()> onResumeGame; // Called when resuming from pause
+        std::function<void()> onPlayerDied; // Called when player dies
+        std::function<void(const std::string& playerName, int score)> onScoreSubmit; // Called when score is submitted
 
     private:
         GameState m_currentState;
         bool m_isPaused;
+        bool m_loadingStarted = false;  // Track if loading callback was called
         int m_screenWidth;
         int m_screenHeight;
 
@@ -76,6 +86,7 @@ namespace ui
         std::unique_ptr<PauseMenu> m_pauseMenu;
         std::unique_ptr<Leaderboard> m_leaderboard;
         std::unique_ptr<HUDEntityImpl> m_gameHUD;
+        std::unique_ptr<DeathScreen> m_deathScreen;
 
         // References to game objects
         Player *m_player = nullptr;

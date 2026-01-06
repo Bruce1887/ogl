@@ -91,3 +91,74 @@ ALuint LoadWav(std::filesystem::path path)
                  data.data(), data.size(), sampleRate);
     return buffer;
 }
+
+void SoundPlayer::PauseAll()
+{
+    for (int i = 0; i < MUSIC_SOUND_SOURCES; i++)
+    {
+        ALint state;
+        alGetSourcei(m_musicSourcesPool[i], AL_SOURCE_STATE, &state);
+        if (state == AL_PLAYING)
+            alSourcePause(m_musicSourcesPool[i]);
+    }
+
+    for (int i = 0; i < SFX_SOUND_SOURCES; i++)
+    {
+        ALint state;
+        alGetSourcei(m_SFXSourcesPool[i], AL_SOURCE_STATE, &state);
+        if (state == AL_PLAYING)
+            alSourcePause(m_SFXSourcesPool[i]);
+    }
+}
+
+void SoundPlayer::ResumeAll()
+{
+    
+    for (int i = 0; i < MUSIC_SOUND_SOURCES; i++)
+    {
+        ALint state;
+        alGetSourcei(m_musicSourcesPool[i], AL_SOURCE_STATE, &state);
+        ALint buffer;
+        alGetSourcei(m_musicSourcesPool[i], AL_BUFFER, &buffer);
+        if (state == AL_PAUSED)
+            alSourcePlay(m_musicSourcesPool[i]);
+    }
+
+    for (int i = 0; i < SFX_SOUND_SOURCES; i++)
+    {
+        ALint state;
+        alGetSourcei(m_SFXSourcesPool[i], AL_SOURCE_STATE, &state);
+        ALint buffer;
+        alGetSourcei(m_SFXSourcesPool[i], AL_BUFFER, &buffer);
+        if (state == AL_PAUSED)
+            alSourcePlay(m_SFXSourcesPool[i]);
+    }
+}
+
+void SoundPlayer::StopAll()
+{
+    for (int i = 0; i < MUSIC_SOUND_SOURCES; i++)
+        alSourceStop(m_musicSourcesPool[i]);
+
+    for (int i = 0; i < SFX_SOUND_SOURCES; i++)
+        alSourceStop(m_SFXSourcesPool[i]);
+}
+void SoundPlayer::PauseMusic()
+{
+    if (!m_activeMusicSource) return;
+
+    ALint state;
+    alGetSourcei(m_activeMusicSource, AL_SOURCE_STATE, &state);
+    if (state == AL_PLAYING)
+        alSourcePause(m_activeMusicSource);
+}
+
+void SoundPlayer::ResumeMusic()
+{
+    if (!m_activeMusicSource) return;
+
+    ALint state;
+    alGetSourcei(m_activeMusicSource, AL_SOURCE_STATE, &state);
+    if (state == AL_PAUSED)
+        alSourcePlay(m_activeMusicSource);
+}

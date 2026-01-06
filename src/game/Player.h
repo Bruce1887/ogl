@@ -63,6 +63,10 @@ public:
     int specialAttack(std::vector<EnemyData*>& enemies);
 
     void render(glm::mat4 view, glm::mat4 proj, PhongLightConfig* light);
+
+    // Score access
+    unsigned int getScore() const { return m_scoreKeeper.getScore(); }
+    void addScore(unsigned int points) { m_scoreKeeper.addPoints(points); }
     
     // Get player's current score (enemies killed)
     int getScore() const { return m_scoreKeeper.getScore(); }

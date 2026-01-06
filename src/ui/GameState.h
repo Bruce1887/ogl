@@ -12,6 +12,7 @@ enum class GameState
     LOADING,        // Loading screen while world generates
     PLAYING,        // Active gameplay
     PAUSED,         // Game paused (ESC menu)
+    DEAD,           // Player died - show death screen
     QUITTING        // Shutting down
 };
 

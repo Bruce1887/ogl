@@ -11,18 +11,28 @@
 #include "ui/UIManager.h"
 #include "ui/GameState.h"
 #include "Terrain/TerrainChunk.h"
+#include "game/Player.h"
+#include "game/Enemy.h"
+#include "ThirdPersonCamera.h"
 
 int main(int, char **)
 {
     // Initialize OpenGL and window
     if (oogaboogaInit(__FILE__))
-        goto out;
+    {
+        printf("OpenGL initialization failed\n");
+        return 1;
+    }
     {
         // Create UI Manager
         ui::UIManager uiManager(WINDOW_X, WINDOW_Y);
+        uiManager.onQuitGame = []() {
+            DEBUG_PRINT("Quit button pressed - closing window...");
+            glfwSetWindowShouldClose(g_window, GLFW_TRUE);
+        };
 
-        DEBUG_PRINT("TEMPORARY: Starting in LOADING state just to make things easier for testing...");
-        uiManager.transitionTo(ui::GameState::LOADING); // TEMP: Start loading game immediately
+        DEBUG_PRINT("Starting in MAIN_MENU state...");
+        uiManager.transitionTo(ui::GameState::MAIN_MENU); 
 
         // World manager (nullptr until game starts)
         std::unique_ptr<WorldManager> worldManager;
@@ -53,11 +63,13 @@ int main(int, char **)
             // Cursor mode is handled automatically by UIManager
         };
 
-        // UI callback: Quit game
-        uiManager.onQuitGame = [&]()
+        // UI callback: Quit to main menu (pause menu)
+        uiManager.onQuitToMenu = [&]()
         {
-            glfwSetWindowShouldClose(g_window, GLFW_TRUE);
+            worldManager.reset();
         };
+
+        // Cleanup of worldManager when leaving PLAYING handled in main loop
 
         // Frame timing
         FrameTimer frameTimer;
@@ -67,7 +79,14 @@ int main(int, char **)
         glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         bool lastShouldShowCursor = true;
 
-
+        // Set up character callback for text input (death screen name entry)
+        glfwSetWindowUserPointer(g_window, &uiManager);
+        glfwSetCharCallback(g_window, [](GLFWwindow* window, unsigned int codepoint) {
+            auto* ui = static_cast<ui::UIManager*>(glfwGetWindowUserPointer(window));
+            if (ui) {
+                ui->handleCharInput(codepoint);
+            }
+        });
 
         // Main game loop
         while (!glfwWindowShouldClose(g_window))
@@ -93,6 +112,10 @@ int main(int, char **)
             {
                 uiManager.handleKeyPress(GLFW_KEY_ESCAPE, GLFW_PRESS);
             }
+
+            // Poll for special keys (backspace, enter) for text input
+            uiManager.pollKeyboardInput();
+
             // Handle mouse input for UI when cursor is visible
             if (shouldShowCursor)
             {
@@ -100,26 +123,26 @@ int main(int, char **)
                 g_InputManager->mouseMoveInput.fetchLastPosition(cursorX, cursorY);
                 uiManager.handleMouseMove(cursorX, cursorY);
 
+                static bool lastLeftMouse = false;
                 bool leftMouse, rightMouse;
                 g_InputManager->mouseButtonInput.fetchButtons(leftMouse, rightMouse);
 
-                // Forward mouse press
-                if (leftMouse)
+                if (leftMouse && !lastLeftMouse)
+                {
+                    uiManager.handleMouseClick(cursorX, cursorY, true);
+                }
+
+                // mouse released
+                if (!leftMouse && lastLeftMouse)
                 {
                     uiManager.handleMouseClick(cursorX, cursorY, false);
                 }
-                /*
-                // Forward mouse release
-                else if (!leftMouse && rightMouse)
-                {
-                    uiManager.handleMouseClick(g_inputState.cursorX, g_inputState.cursorY, false);
-                }
-                g_inputState.mouseButtonWasPressed = mousePressed;
-                */
+
+                lastLeftMouse = leftMouse;
             }
 
             // Update UI
-            uiManager.update(dt);
+            uiManager.update(dt); 
 
             // Update game world if playing and not paused
             if (uiManager.getCurrentState() == ui::GameState::PLAYING &&
@@ -130,14 +153,17 @@ int main(int, char **)
             }
 
             // === RENDERING ===
-            // Clear screen
+            // Clear screen with a visible color (not just black)
+            glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            // Render world if playing (even when paused, show world behind menu)
-            if (uiManager.getCurrentState() == ui::GameState::PLAYING && worldManager)
+            // Render world if playing or dead (show world behind death screen)
+            ui::GameState currentState = uiManager.getCurrentState();
+            if ((currentState == ui::GameState::PLAYING || currentState == ui::GameState::DEAD) && worldManager)
             {
                 worldManager->render();
             }
+
             uiManager.render(glm::mat4(1.0f), glm::mat4(1.0f));
 
             // Print stats periodically
@@ -160,7 +186,6 @@ int main(int, char **)
         }
     }
 
-out:
     DEBUG_PRINT("Exiting program...");
     oogaboogaExit();
     return 0;
