@@ -1,6 +1,5 @@
 #include "WorldManager.h"
 #include "game/Audio.h"
-#include "game/Leaderboard.h"
 
 bool WorldManager::initialize()
 {
@@ -227,17 +226,14 @@ void WorldManager::update(float dt, InputManager *input)
     {
         m_player->update(dt, input, m_chunkManager.get());
         
-        // Check for player death
+        // Check for player death (UI handles the death screen and score submission)
         if (m_player->m_playerData.m_health <= 0.0f && !m_scorePosted)
         {
             m_isGameOver = true;
             m_scorePosted = true;
             
-            // Post score to leaderboard
             float timeSurvived = m_gameClock ? m_gameClock->GetTotalElapsedSeconds() : 0.0f;
             int enemiesKilled = m_player->getScore();
-            
-            Leaderboard::PostScore("Test", timeSurvived, enemiesKilled);
             
             DEBUG_PRINT("=== GAME OVER ===");
             DEBUG_PRINT("Time survived: " << timeSurvived << " seconds");

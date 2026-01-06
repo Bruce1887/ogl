@@ -68,9 +68,6 @@ public:
     unsigned int getScore() const { return m_scoreKeeper.getScore(); }
     void addScore(unsigned int points) { m_scoreKeeper.addPoints(points); }
     
-    // Get player's current score (enemies killed)
-    int getScore() const { return m_scoreKeeper.getScore(); }
-    
 private:
 
     ScoreKeeper m_scoreKeeper;

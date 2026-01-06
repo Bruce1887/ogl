@@ -10,6 +10,7 @@
 #include "WorldManager.h"
 #include "ui/UIManager.h"
 #include "ui/GameState.h"
+#include "game/Database.h"
 #include "Terrain/TerrainChunk.h"
 #include "game/Player.h"
 #include "game/Enemy.h"
@@ -67,6 +68,18 @@ int main(int, char **)
         uiManager.onQuitToMenu = [&]()
         {
             worldManager.reset();
+        };
+
+        // UI callback: Score submitted from death screen
+        uiManager.onScoreSubmit = [&](const std::string& playerName, int score)
+        {
+            float timeSurvived = 0.0f;
+            if (worldManager && worldManager->getGameClock())
+            {
+                timeSurvived = worldManager->getGameClock()->GetTotalElapsedSeconds();
+            }
+            DEBUG_PRINT("Posting score to database: " << playerName << " - Score: " << score << " - Time: " << timeSurvived);
+            Database::PostScore(playerName, timeSurvived, score);
         };
 
         // Cleanup of worldManager when leaving PLAYING handled in main loop
