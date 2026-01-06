@@ -1,6 +1,9 @@
-cmake_minimum_required(VERSION 3.5.0)
+cmake_minimum_required(VERSION 3.10)
 project(oogabooga VERSION 0.1.0)
 cmake_policy(SET CMP0072 NEW)
+
+# Allow older submodules (like freetype) to configure
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
 # --- C++ Standard ---
 set(CMAKE_CXX_STANDARD 20)

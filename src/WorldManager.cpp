@@ -185,7 +185,7 @@ bool WorldManager::initializeEnemySpawners()
     abbeEnemyData.m_attackDamage = 15.0f;
     abbeEnemyData.m_attackCooldown = 4.0f;
     abbeEnemyData.m_moveSpeed = 8.0f;
-    std::unique_ptr<EnemySpawner> abbeSpawner = std::make_unique<EnemySpawner>(abbeEnemyData, 150, 3);
+    std::unique_ptr<EnemySpawner> abbeSpawner = std::make_unique<EnemySpawner>(abbeEnemyData, 0, 1); // Starts with 0, unlocks at wave 3
     abbeSpawner->setMinHeightFunction([this](float x, float z)
                                       { return m_chunkManager->getPreciseHeightAt(x, z); });
     // Add animation frames
@@ -414,12 +414,20 @@ void WorldManager::advanceWave()
         DEBUG_PRINT("Cows max count increased to: " << newCowCount);
     }
     
-    // Unlock Mange enemies at wave 2
-    if (m_currentWave >= 2 && m_enemySpawners.size() > 1)
+    // Unlock Mange enemies at wave 3
+    if (m_currentWave >= 3 && m_enemySpawners.size() > 1)
     {
-        int mangeCount = 2 + ((m_currentWave - 2) * 2);  // 2 at wave 2, 4 at wave 3, 6 at wave 4, etc.
+        int mangeCount = 2 + ((m_currentWave - 3) * 2);  // 2 at wave 3, 4 at wave 4, 6 at wave 5, etc.
         m_enemySpawners[1]->setMaxEnemies(mangeCount);
         DEBUG_PRINT("Mange enemies unlocked! Count: " << mangeCount);
+    }
+    
+    // Unlock Abbe enemies at wave 3
+    if (m_currentWave >= 5 && m_enemySpawners.size() > 2)
+    {
+        int abbeCount = 3 + ((m_currentWave - 3) * 5);  // 3 at wave 3, 8 at wave 4, 13 at wave 5, etc.
+        m_enemySpawners[2]->setMaxEnemies(abbeCount);
+        DEBUG_PRINT("Abbe enemies unlocked! Count: " << abbeCount);
     }
     
     // Future: Add more enemy types at higher waves
