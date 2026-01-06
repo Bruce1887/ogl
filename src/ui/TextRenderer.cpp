@@ -3,6 +3,7 @@
 #include FT_FREETYPE_H
 
 TextRenderer::TextRenderer(int width, int height)
+    : m_screenWidth(width), m_screenHeight(height)
 {
     m_shader = std::make_shared<Shader>();
     m_shader->addShader("text.vert", ShaderType::VERTEX);
@@ -22,6 +23,15 @@ TextRenderer::TextRenderer(int width, int height)
 
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4*sizeof(float), 0);
     glEnableVertexAttribArray(0);
+}
+
+void TextRenderer::UpdateScreenSize(int width, int height)
+{
+    m_screenWidth = width;
+    m_screenHeight = height;
+    m_shader->bind();
+    glm::mat4 proj = glm::ortho(0.0f, (float)width, (float)height, 0.0f);
+    m_shader->setUniform("projection", proj);
 }
 
 void TextRenderer::LoadFont(const std::string& path, unsigned int size)

@@ -7,9 +7,12 @@
 #include "VertexBuffer.h"
 #include "VertexBufferLayout.h"
 #include "MeshRenderable.h"
+#include "TextRenderer.h"
 
 #include <memory>
 #include <string>
+#include <sstream>
+#include <iomanip>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -26,9 +29,28 @@ HUDEntityImpl::HUDEntityImpl(Player* player, int screenWidth, int screenHeight)
     m_shaderRef->bind();
 
     SetupQuadRendering();
+    
+    // Initialize text renderer
+    try {
+        m_textRenderer = std::make_unique<TextRenderer>(screenWidth, screenHeight);
+        m_textRenderer->LoadFont((FONTS_DIR / "DejaVuSans.ttf").string().c_str(), MENU_FONT_SIZE);
+    } catch (const std::exception& e) {
+        DEBUG_PRINT("Failed to initialize HUD text renderer: " << e.what());
+        m_textRenderer = nullptr;
+    }
 }
 
 HUDEntityImpl::~HUDEntityImpl() = default; // Smart pointers handle cleanup
+
+void HUDEntityImpl::updateScreenSize(int width, int height)
+{
+    m_screenWidth = width;
+    m_screenHeight = height;
+    
+    if (m_textRenderer) {
+        m_textRenderer->UpdateScreenSize(width, height);
+    }
+}
 
 void HUDEntityImpl::render(const glm::mat4 view, const glm::mat4 projection, const PhongLightConfig *phongLight) {
     glDisable(GL_DEPTH_TEST);
@@ -47,7 +69,8 @@ void HUDEntityImpl::render(const glm::mat4 view, const glm::mat4 projection, con
     m_shaderRef->setUniform("u_Projection", ortho);
 
     DrawVitalsBars();
-    // DrawClockDisplay();
+    DrawTimer();
+    DrawKillsAndWave();
 
     glDisable(GL_BLEND);  // Disable blending after HUD
     glDepthMask(GL_TRUE); // Re-enable depth writing
@@ -59,33 +82,92 @@ void HUDEntityImpl::DrawVitalsBars() {
     float health = m_player ? m_player->m_playerData.m_health : 0.0f;
     float maxHealth = m_player ? m_player->m_playerData.m_maxHealth : 100.0f;
 
-    float x_start = 50.0f;
-    float y_start = 50.0f;
-    float bar_width = 200.0f;
-    float bar_height = 20.0f;
+    float sw = (float)m_screenWidth;
+    float sh = (float)m_screenHeight;
+
+    // Use scaled UIConfig for consistent HUD positioning at any resolution
+    float x_start = UIConfig::hudMargin(sw, sh);
+    float y_start = UIConfig::hudMargin(sw, sh);
+    float bar_width = UIConfig::hudBarWidth(sw, sh);
+    float bar_height = UIConfig::hudBarHeight(sw, sh);
 
     // Health Bar (background at z=-0.1, foreground at z=0.0 to layer properly)
     DrawRect(x_start, y_start, bar_width, bar_height, {0.3f, 0.0f, 0.0f, 1.0f}, -0.1f);
     DrawRect(x_start, y_start, bar_width * (health / maxHealth), bar_height, {0.8f, 0.1f, 0.1f, 1.0f}, 0.0f);
 }
 
-/*
-void HUDEntityImpl::DrawClockDisplay() {
-    float time = m_clock ? m_clock->GetTimeOfDayHours() : 0.0f;
-
-    int hours = static_cast<int>(time);
-    int minutes = static_cast<int>((time - hours) * 60.0f);
-
-    std::string timeStr = std::to_string(hours) + ":" + (minutes < 10 ? "0" : "") + std::to_string(minutes);
-
-    glm::vec4 clockColor = (time > 6.0f && time < 18.0f) ?
-                           glm::vec4(1.0f, 1.0f, 0.5f, 1.0f) :
-                           glm::vec4(0.5f, 0.5f, 1.0f, 1.0f);
-
-    // TODO: Draw text using your text rendering system
-    // DrawText(timeStr, m_screenWidth - 150.0f, m_screenHeight - 50.0f, clockColor);
+void HUDEntityImpl::DrawTimer() {
+    if (!m_textRenderer || !m_gameClock) return;
+    
+    float sw = (float)m_screenWidth;
+    float sh = (float)m_screenHeight;
+    float scale = UIConfig::scaleUniform(sw, sh);
+    
+    // Get elapsed time
+    int totalSeconds = static_cast<int>(m_gameClock->GetTotalElapsedSeconds());
+    int minutes = totalSeconds / 60;
+    int seconds = totalSeconds % 60;
+    
+    // Format as MM:SS or just SS if under a minute
+    std::ostringstream oss;
+    if (minutes > 0) {
+        oss << minutes << ":" << std::setfill('0') << std::setw(2) << seconds;
+    } else {
+        oss << seconds;
+    }
+    std::string timeStr = oss.str();
+    
+    // Draw centered at top
+    float textScale = 1.2f * scale;
+    float textWidth = m_textRenderer->GetTextWidth(timeStr, textScale);
+    float x = (sw - textWidth) * 0.5f;
+    float y = UIConfig::hudMargin(sw, sh) + 20.0f * scale;
+    
+    // Draw with a slight shadow for visibility
+    m_textRenderer->RenderText(timeStr, x + 2*scale, y + 2*scale, textScale, glm::vec3(0.0f, 0.0f, 0.0f));
+    m_textRenderer->RenderText(timeStr, x, y, textScale, glm::vec3(1.0f, 1.0f, 1.0f));
 }
-*/
+
+void HUDEntityImpl::DrawKillsAndWave() {
+    if (!m_textRenderer || !m_player) return;
+    
+    float sw = (float)m_screenWidth;
+    float sh = (float)m_screenHeight;
+    float scale = UIConfig::scaleUniform(sw, sh);
+    float margin = UIConfig::hudMargin(sw, sh);
+    
+    float textScale = 0.8f * scale;
+    float lineHeight = 35.0f * scale;
+    
+    // Get kills (score) from player
+    int kills = m_player->getScore();
+    
+    // Wave text
+    std::string waveStr = "Wave: " + std::to_string(m_currentWave);
+    float waveWidth = m_textRenderer->GetTextWidth(waveStr, textScale);
+    float waveX = sw - margin - waveWidth;
+    float waveY = margin + 20.0f * scale;
+    
+    // Kill text
+    std::string killStr = "Kills: " + std::to_string(kills);
+    float killWidth = m_textRenderer->GetTextWidth(killStr, textScale);
+    float killX = sw - margin - killWidth;
+    float killY = waveY + lineHeight;
+    
+    // Draw wave with shadow
+    m_textRenderer->RenderText(waveStr, waveX + 2*scale, waveY + 2*scale, textScale, glm::vec3(0.0f, 0.0f, 0.0f));
+    m_textRenderer->RenderText(waveStr, waveX, waveY, textScale, glm::vec3(1.0f, 0.9f, 0.3f));  // Yellow
+    
+    // Draw kills with shadow
+    m_textRenderer->RenderText(killStr, killX + 2*scale, killY + 2*scale, textScale, glm::vec3(0.0f, 0.0f, 0.0f));
+    m_textRenderer->RenderText(killStr, killX, killY, textScale, glm::vec3(1.0f, 0.4f, 0.4f));  // Red
+}
+
+void HUDEntityImpl::DrawText(const std::string& text, float x, float y, float scale, const glm::vec3& color) {
+    if (m_textRenderer) {
+        m_textRenderer->RenderText(text, x, y, scale, color);
+    }
+}
 
 void HUDEntityImpl::DrawRect(float x, float y, float width, float height, const glm::vec4& color, float zOffset) {
     glm::mat4 model = glm::mat4(1.0f);

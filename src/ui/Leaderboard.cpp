@@ -95,9 +95,11 @@ void Leaderboard::render(glm::mat4 view, glm::mat4 projection, PhongLightConfig*
     DrawRect(0.0f, 0.0f, (float)m_screenWidth, (float)m_screenHeight, 
              {0.05f, 0.05f, 0.1f, 0.5f}, -0.5f);
 
-    // Draw leaderboard panel
-    float panelWidth = 600.0f;
-    float panelHeight = 500.0f;
+    // Draw leaderboard panel - scaled UIConfig dimensions
+    float sw = (float)m_screenWidth;
+    float sh = (float)m_screenHeight;
+    float panelWidth = UIConfig::panelWidthLarge(sw, sh);
+    float panelHeight = UIConfig::panelHeightLarge(sw, sh);
     float panelX = (m_screenWidth - panelWidth) * 0.5f;
     float panelY_original = (m_screenHeight - panelHeight) * 0.5f;
     float panelY = panelY_original - 30.0f;
@@ -202,6 +204,12 @@ void Leaderboard::updateScreenSize(int width, int height)
 {
     m_screenWidth = width;
     m_screenHeight = height;
+
+    // Update text renderer projection
+    if (m_textRenderer) {
+        m_textRenderer->UpdateScreenSize(width, height);
+    }
+
     InitializeButtons();
 }
 
@@ -251,9 +259,12 @@ void Leaderboard::DrawButton(const LeaderboardButton& button)
     else if (button.isHovered)
         color = button.hoverColor;
 
+    // Scale factor for this screen size
+    float scale = UIConfig::scaleUniform((float)m_screenWidth, (float)m_screenHeight);
+
     DrawRect(button.x, button.y, button.width, button.height, color, 0.0f);
 
-    float borderWidth = 3.0f;
+    float borderWidth = 3.0f * scale;
     glm::vec4 borderColor = button.isHovered ? 
         glm::vec4(0.6f, 0.6f, 0.8f, 1.0f) : 
         glm::vec4(0.3f, 0.3f, 0.4f, 1.0f);
@@ -263,10 +274,11 @@ void Leaderboard::DrawButton(const LeaderboardButton& button)
     DrawRect(button.x, button.y, borderWidth, button.height, borderColor, 0.1f);
     DrawRect(button.x + button.width - borderWidth, button.y, borderWidth, button.height, borderColor, 0.1f);
 
+    // Text scale matches UI scale
     DrawText(button.label, 
              button.x + button.width * 0.5f,
              button.y + button.height * 0.5f,
-             1.0f, 
+             scale, 
              glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 }
 
@@ -275,6 +287,7 @@ void Leaderboard::DrawText(const std::string& text, float centerX, float centerY
     if (!m_textRenderer) return;
     float textWidth = m_textRenderer->GetTextWidth(text, scale);
     float x = centerX - textWidth * 0.5f;
+    // Vertical offset scales with text size
     float y = centerY + 14.0f * scale;
     m_textRenderer->RenderText(text, x, y, scale, glm::vec3(color));
 }
@@ -302,12 +315,16 @@ void Leaderboard::InitializeButtons()
 {
     m_buttons.clear();
 
-    float buttonWidth = 200.0f;
-    float buttonHeight = 60.0f;
-    float panelWidth = 600.0f;
-    float panelHeight = 500.0f;
-    float panelX = (m_screenWidth - panelWidth) * 0.5f;
-    float panelY = (m_screenHeight - panelHeight) * 0.5f;
+    float sw = (float)m_screenWidth;
+    float sh = (float)m_screenHeight;
+
+    // Button and panel dimensions - scaled based on screen size
+    float buttonWidth = UIConfig::submitButtonWidth(sw, sh);
+    float buttonHeight = UIConfig::buttonHeight(sw, sh);
+    float panelWidth = UIConfig::panelWidthLarge(sw, sh);
+    float panelHeight = UIConfig::panelHeightLarge(sw, sh);
+    float panelX = UIConfig::centerX(panelWidth, sw);
+    float panelY = UIConfig::centerY(panelHeight, sh);
 
     // Back button
     LeaderboardButton backBtn;

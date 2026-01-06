@@ -21,6 +21,15 @@ public:
         return deltaTime;
     }
 
+    /**
+     * @brief Reset the frame timer so the next getDeltaTime returns a small value.
+     * Call this after long operations (like loading) to prevent huge delta times.
+     */
+    void reset()
+    {
+        m_lastFrameTime = getCurrentTime();
+    }
+
     float getCurrentTime() const
     {
         return static_cast<float>(glfwGetTime());
