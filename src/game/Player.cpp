@@ -71,6 +71,10 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
     // Update attack cooldown timer
     if (m_playerData.m_attackTimer > 0.0f)
         m_playerData.m_attackTimer -= dt;
+    
+    // Update special attack cooldown timer
+    if (m_playerData.m_specialAttackTimer > 0.0f)
+        m_playerData.m_specialAttackTimer -= dt;
 
 
 }
@@ -109,4 +113,45 @@ int Player::attack(std::vector<EnemyData*> &enemies)
 
     DEBUG_PRINT("player score: " << m_scoreKeeper.getScore());
     return enemiesHit;
+}
+
+int Player::specialAttack(std::vector<EnemyData*> &enemies)
+{
+    // Check cooldown
+    if (m_playerData.m_specialAttackTimer > 0.0f)
+    {
+        DEBUG_PRINT("Special attack on cooldown: " << m_playerData.m_specialAttackTimer << "s remaining");
+        return 0;
+    }
+
+    // Reset cooldown
+    m_playerData.m_specialAttackTimer = m_playerData.m_specialAttackCooldown;
+
+    int enemiesKilled = 0;
+
+    DEBUG_PRINT("=== SPECIAL ATTACK ACTIVATED ===");
+
+    // Insta-kill all enemies within special attack range
+    for (EnemyData* e_data : enemies)
+    {
+        if (e_data->isDead())
+            continue;
+
+        // Calculate distance to enemy (XZ plane only)
+        glm::vec3 toEnemy = e_data->m_position - m_playerData.m_position;
+        toEnemy.y = 0.0f;
+        float distance = glm::length(toEnemy);
+
+        if (distance <= m_playerData.m_specialAttackRange)
+        {
+            // Insta-kill by dealing massive damage
+            e_data->takeDamage(e_data->m_maxHealth * 100.0f);
+            enemiesKilled++;
+            m_scoreKeeper.addPoints(1);
+        }
+    }
+
+    DEBUG_PRINT("Special attack killed " << enemiesKilled << " enemies!");
+    DEBUG_PRINT("player score: " << m_scoreKeeper.getScore());
+    return enemiesKilled;
 }

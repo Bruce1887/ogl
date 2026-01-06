@@ -1,144 +1,79 @@
 #pragma once
 
-// Serverstyrd
-
 #include <cstdint>
 #include <cmath>
+#include <string>
 
-
-// The GameClock is the server-authoritative timekeeper.
-// It tracks time-of-day (hours 0..24), the current day phase (DAWN/DAY/DUSK/NIGHT)
-// and exposes helpers for ticking time and producing a light intensity value to
-// sync to clients (for rendering).
+// Simple game clock for tracking elapsed game time.
+// Tracks time-of-day in hours (0-24) and total elapsed time.
 class GameClock
 {
 public:
-    // High-level day phases used by game logic / lighting
-    enum class Phase : uint8_t
-    {
-        DAWN,
-        DAY,
-        DUSK,
-        NIGHT
-    };
-
     // Construct a clock.
     // dayLengthSeconds: real seconds that correspond to one full in-game day (24 hours).
     // startTimeHours: initial time-of-day in hours [0.0, 24.0).
     explicit GameClock(float dayLengthSeconds = 1200.0f, float startTimeHours = 12.0f)
-        : CurrentTimeOfDay(normalizeHours(startTimeHours)),
-          DayLengthSeconds(dayLengthSeconds),
-          CurrentGamePhase(Phase::DAY)
+        : m_currentTimeOfDay(normalizeHours(startTimeHours)),
+          m_dayLengthSeconds(dayLengthSeconds),
+          m_totalElapsedSeconds(0.0f)
     {
-        updatePhase();
     }
 
-    // Advance the clock by deltaTime seconds (call from server game loop).
-    // Converts real seconds to in-game hours based on DayLengthSeconds.
+    // Advance the clock by deltaTime seconds.
+    // Converts real seconds to in-game hours based on dayLengthSeconds.
     void Update(float deltaTimeSeconds)
     {
-        if (DayLengthSeconds <= 0.0f) return; // guard against division by zero
-        // convert deltaTime (s) -> hours. 24 hours correspond to DayLengthSeconds seconds.
-        float hoursAdvance = (24.0f * deltaTimeSeconds) / DayLengthSeconds;
-        CurrentTimeOfDay = normalizeHours(CurrentTimeOfDay + hoursAdvance);
-        updatePhase();
+        if (m_dayLengthSeconds <= 0.0f) return;
+        
+        m_totalElapsedSeconds += deltaTimeSeconds;
+        
+        // Convert deltaTime (s) -> hours. 24 hours correspond to dayLengthSeconds seconds.
+        float hoursAdvance = (24.0f * deltaTimeSeconds) / m_dayLengthSeconds;
+        m_currentTimeOfDay = normalizeHours(m_currentTimeOfDay + hoursAdvance);
     }
 
-    // Returns true when the clock is currently in the NIGHT phase.
-    bool IsNight() const { return CurrentGamePhase == Phase::NIGHT; }
-
-    // Returns a light intensity in [0,1] suitable for client-side lighting.
-    // Intensity is 0 at full night, 1 at full day, and smoothly blends during dawn/dusk.
-    float GetLightIntensity() const
+    // Current time of day in hours [0, 24)
+    float GetTimeOfDayHours() const { return m_currentTimeOfDay; }
+    
+    // Normalized time [0, 1) where 0 == 0:00 and 1 == 24:00
+    float GetNormalizedTime() const { return m_currentTimeOfDay / 24.0f; }
+    
+    // Total real seconds elapsed since clock started
+    float GetTotalElapsedSeconds() const { return m_totalElapsedSeconds; }
+    
+    // Get elapsed time as minutes and seconds (for HUD display)
+    int GetElapsedMinutes() const { return static_cast<int>(m_totalElapsedSeconds) / 60; }
+    int GetElapsedSeconds() const { return static_cast<int>(m_totalElapsedSeconds) % 60; }
+    
+    // Get formatted time string "MM:SS" (for HUD/leaderboard)
+    std::string GetFormattedTime() const
     {
-        // Define phase boundaries (hours). Tweak to taste or expose as config.
-        constexpr float dawnStart = 6.0f;
-        constexpr float dawnEnd   = 8.0f;
-        constexpr float dayEnd    = 18.0f;
-        constexpr float duskEnd   = 20.0f;
-        // Night: [duskEnd .. dawnStart) wraps midnight.
-
-        // Day
-        if (CurrentTimeOfDay >= dawnEnd && CurrentTimeOfDay < dayEnd) {
-            return 1.0f;
-        }
-
-        // Dawn: ramp from 0 -> 1
-        if (CurrentTimeOfDay >= dawnStart && CurrentTimeOfDay < dawnEnd) {
-            float t = (CurrentTimeOfDay - dawnStart) / (dawnEnd - dawnStart);
-            return smoothStep(0.0f, 1.0f, t);
-        }
-
-        // Dusk: ramp from 1 -> 0
-        if (CurrentTimeOfDay >= dayEnd && CurrentTimeOfDay < duskEnd) {
-            float t = (CurrentTimeOfDay - dayEnd) / (duskEnd - dayEnd);
-            return smoothStep(1.0f, 0.0f, t);
-        }
-
-        // Night (including wrap-around region)
-        return 0.0f;
+        int mins = GetElapsedMinutes();
+        int secs = GetElapsedSeconds();
+        char buf[16];
+        snprintf(buf, sizeof(buf), "%02d:%02d", mins, secs);
+        return std::string(buf);
     }
+    
+    // How many real seconds equals one full 24-hour in-game day
+    float GetDayLengthSeconds() const { return m_dayLengthSeconds; }
 
-    // Accessors / mutators
-    // Current time of day in hours [0,24)
-    float GetTimeOfDayHours() const { return CurrentTimeOfDay; }
-    // Normalized time [0,1) where 0==0:00 and 1==24:00
-    float GetNormalizedTime() const { return CurrentTimeOfDay / 24.0f; }
-    Phase GetPhase() const { return CurrentGamePhase; }
-
-    // Force-set time of day (useful for admin commands / testing)
+    // Force-set time of day (useful for testing)
     void SetTimeOfDay(float hours)
     {
-        CurrentTimeOfDay = normalizeHours(hours);
-        updatePhase();
+        m_currentTimeOfDay = normalizeHours(hours);
     }
 
-    // Public data (read-only DayLengthSeconds; CurrentTimeOfDay & CurrentGamePhase are the canonical state)
-    float CurrentTimeOfDay;            // in-game hours [0,24)
-    const float DayLengthSeconds;     // how many real seconds equals one full 24-hour in-game day
-    Phase CurrentGamePhase;           // current phase (DAWN/DAY/DUSK/NIGHT)
-
 private:
-    // Normalize hours into [0,24)
+    float m_currentTimeOfDay;      // in-game hours [0, 24)
+    float m_dayLengthSeconds;      // real seconds per in-game day
+    float m_totalElapsedSeconds;   // total real time elapsed
+
+    // Normalize hours into [0, 24)
     static float normalizeHours(float h)
     {
         float r = std::fmod(h, 24.0f);
         if (r < 0.0f) r += 24.0f;
         return r;
-    }
-
-    // Simple smoothstep interpolation between a and b using t in [0,1]
-    static float smoothStep(float a, float b, float t)
-    {
-        if (t <= 0.0f) return a;
-        if (t >= 1.0f) return b;
-        // smoothstep polynomial
-        t = t * t * (3.0f - 2.0f * t);
-        return a + (b - a) * t;
-    }
-
-    // Update CurrentGamePhase from CurrentTimeOfDay
-    void updatePhase()
-    {
-        // Boundaries chosen to match GetLightIntensity logic
-        constexpr float dawnStart = 6.0f;
-        constexpr float dawnEnd   = 8.0f;
-        constexpr float dayEnd    = 18.0f;
-        constexpr float duskEnd   = 20.0f;
-
-        if (CurrentTimeOfDay >= dawnEnd && CurrentTimeOfDay < dayEnd) {
-            CurrentGamePhase = Phase::DAY;
-            return;
-        }
-        if (CurrentTimeOfDay >= dayEnd && CurrentTimeOfDay < duskEnd) {
-            CurrentGamePhase = Phase::DUSK;
-            return;
-        }
-        if (CurrentTimeOfDay >= dawnStart && CurrentTimeOfDay < dawnEnd) {
-            CurrentGamePhase = Phase::DAWN;
-            return;
-        }
-        // otherwise night (covers duskEnd..24 and 0..dawnStart)
-        CurrentGamePhase = Phase::NIGHT;
     }
 };
