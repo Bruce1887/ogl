@@ -72,7 +72,11 @@ namespace ui
         std::function<void()> onQuitToMenu; // Called when quitting to main menu from pause
         std::function<void()> onResumeGame; // Called when resuming from pause
         std::function<void()> onPlayerDied; // Called when player dies
+        std::function<void()> onGameplayStarted; // Called when transitioning to PLAYING (after loading)
         std::function<void(const std::string& playerName, int score)> onScoreSubmit; // Called when score is submitted
+
+        // Update HUD with game state (call each frame during gameplay)
+        void updateHUDState(GameClock* gameClock, int currentWave);
 
     private:
         GameState m_currentState;

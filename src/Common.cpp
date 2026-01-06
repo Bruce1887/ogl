@@ -18,9 +18,14 @@ void setupDefaultGLFWCallbacks()
     assert(rContext != nullptr);
     // assert (g_monitor != nullptr); // g_monitor may be null if not fullscreen
 
-    // set window-resize-callback (resize viewport)
+    // set window-resize-callback (resize viewport and update global window dimensions)
     glfwSetFramebufferSizeCallback(g_window, [](GLFWwindow * /*window*/, int width, int height)
-                                   { glViewport(0, 0, width, height); });
+                                   { 
+                                       glViewport(0, 0, width, height);
+                                       // Update global window dimensions for UI scaling
+                                       WINDOW_X = width;
+                                       WINDOW_Y = height;
+                                   });
 
     // set key-callback (for movement input)
     glfwSetKeyCallback(g_window, [](GLFWwindow *wdw, int key, int /*scancode*/, int action, int mods)

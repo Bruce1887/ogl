@@ -95,18 +95,22 @@ namespace ui
         DrawRect(0.0f, 0.0f, (float)m_screenWidth, (float)m_screenHeight,
                  {0.3f, 0.3f, 0.3f, 0.6f}, -0.5f);
 
-        // Draw pause menu panel (darker background)
-        float panelWidth = 500.0f;
-        float panelHeight = 350.0f;
-        float panelX = (m_screenWidth - panelWidth) * 0.5f;
-        float panelY = (m_screenHeight - panelHeight) * 0.5f;
+        // Draw pause menu panel (darker background) - scaled UIConfig dimensions
+        float sw = (float)m_screenWidth;
+        float sh = (float)m_screenHeight;
+        float scale = UIConfig::scaleUniform(sw, sh);
+        float panelWidth = UIConfig::panelWidthMedium(sw, sh);
+        float panelHeight = UIConfig::panelHeightMedium(sw, sh);
+        float panelX = UIConfig::centerX(panelWidth, sw);
+        float panelY = UIConfig::centerY(panelHeight, sh);
         DrawRect(panelX, panelY, panelWidth, panelHeight, {0.1f, 0.1f, 0.15f, 0.95f}, -0.2f);
 
-        // Draw title
+        // Draw title - at top of panel
+        float textScale = 1.5f * scale;
         DrawText("PAUSED",
-                 m_screenWidth * 0.5f,
-                 panelY + 50.0f,
-                 1.5f,
+                 sw * 0.5f,
+                 panelY + 40.0f * scale,
+                 textScale,
                  glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
         // Draw all buttons
@@ -157,6 +161,12 @@ namespace ui
     {
         m_screenWidth = width;
         m_screenHeight = height;
+
+        // Update text renderer projection
+        if (m_textRenderer) {
+            m_textRenderer->UpdateScreenSize(width, height);
+        }
+
         InitializeButtons();
     }
 
@@ -185,9 +195,12 @@ namespace ui
         else if (button.isHovered)
             color = button.hoverColor;
 
+        // Scale factor for this screen size
+        float scale = UIConfig::scaleUniform((float)m_screenWidth, (float)m_screenHeight);
+
         DrawRect(button.x, button.y, button.width, button.height, color, 0.0f);
 
-        float borderWidth = 3.0f;
+        float borderWidth = 3.0f * scale;
         glm::vec4 borderColor = button.isHovered ? glm::vec4(0.6f, 0.6f, 0.8f, 1.0f) : glm::vec4(0.3f, 0.3f, 0.4f, 1.0f);
 
         DrawRect(button.x, button.y, button.width, borderWidth, borderColor, 0.1f);
@@ -195,10 +208,11 @@ namespace ui
         DrawRect(button.x, button.y, borderWidth, button.height, borderColor, 0.1f);
         DrawRect(button.x + button.width - borderWidth, button.y, borderWidth, button.height, borderColor, 0.1f);
 
+        // Text scale matches UI scale
         DrawText(button.label,
                  button.x + button.width * 0.5f,
                  button.y + button.height * 0.5f,
-                 1.0f,
+                 scale,
                  glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
     }
 
@@ -211,8 +225,8 @@ namespace ui
 
         // Center horizontally
         float x = centerX - textWidth * 0.5f;
-        // For vertical centering, use centerY directly as baseline and nudge downward
-        float y = centerY + 14.0f * scale; // Slight downward offset for better centering
+        // Vertical offset scales with text size
+        float y = centerY + 14.0f * scale;
 
         m_textRenderer->RenderText(text, x, y, scale, glm::vec3(color));
     }
@@ -239,12 +253,22 @@ namespace ui
     {
         m_buttons.clear();
 
-        float buttonWidth = 350.0f;
-        float buttonHeight = 70.0f;
-        float buttonSpacing = 20.0f;
+        float sw = (float)m_screenWidth;
+        float sh = (float)m_screenHeight;
 
-        float startX = (m_screenWidth - buttonWidth) * 0.5f;
-        float startY = (m_screenHeight - 300.0f) * 0.5f + 65.0f;
+        // Button dimensions - scaled based on screen size
+        float buttonWidth = UIConfig::buttonWidth(sw, sh) * 1.4f;
+        float buttonHeight = UIConfig::buttonHeight(sw, sh) * 1.15f;
+        float buttonSpacing = UIConfig::buttonSpacing(sw, sh);
+
+        // Panel dimensions (must match render())
+        float panelHeight = UIConfig::panelHeightMedium(sw, sh);
+        float panelY = UIConfig::centerY(panelHeight, sh);
+        
+        // Start buttons below the title (title is at panelY + 40*scale, plus some margin)
+        float scale = UIConfig::scaleUniform(sw, sh);
+        float startX = UIConfig::centerX(buttonWidth, sw);
+        float startY = panelY + 100.0f * scale;  // Below title with margin
 
         // Resume button
         PauseButton resumeBtn;
