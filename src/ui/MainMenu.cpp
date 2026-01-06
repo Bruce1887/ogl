@@ -1,5 +1,6 @@
 #include "MainMenu.h"
 #include "../glad/glad.h"
+#include "../Common.h"
 #include "Shader.h"
 #include "Skybox.h"
 #include "VertexArray.h"
@@ -108,18 +109,22 @@ namespace ui
         DrawRect(0.0f, 0.0f, (float)m_screenWidth, (float)m_screenHeight,
                  {0.05f, 0.05f, 0.1f, 0.5f}, -0.5f);
 
-        // Draw title background
-        float titleWidth = 600.0f;
-        float titleHeight = 120.0f;
-        float titleX = (m_screenWidth - titleWidth) * 0.5f;
-        float titleY = 80.0f;
+        // Draw title background - using UIConfig positioning with scaling
+        float sw = (float)m_screenWidth;
+        float sh = (float)m_screenHeight;
+        float scale = UIConfig::scaleUniform(sw, sh);
+        float titleWidth = UIConfig::panelWidthLarge(sw, sh);
+        float titleHeight = 120.0f * scale;
+        float titleX = UIConfig::centerX(titleWidth, sw);
+        float titleY = sh * UIConfig::TITLE_Y_RATIO;
         DrawRect(titleX, titleY, titleWidth, titleHeight, {0.1f, 0.1f, 0.2f, 0.9f}, -0.2f);
 
-        // Draw game name
+        // Draw game name - scale text size with screen
+        float textScale = 2.0f * scale;
         DrawText("OogaBooga",
-                 m_screenWidth * 0.5f,
-                 titleY + 60.0f,
-                 2.0f,
+                 sw * 0.5f,
+                 titleY + titleHeight * 0.5f,
+                 textScale,
                  glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
         // Draw all buttons
@@ -197,6 +202,11 @@ namespace ui
         m_screenWidth = width;
         m_screenHeight = height;
 
+        // Update text renderer projection
+        if (m_textRenderer) {
+            m_textRenderer->UpdateScreenSize(width, height);
+        }
+
         // Recenter buttons
         InitializeButtons();
     }
@@ -227,11 +237,14 @@ namespace ui
         else if (button.isHovered)
             color = button.hoverColor;
 
+        // Scale factor for this screen size
+        float scale = UIConfig::scaleUniform((float)m_screenWidth, (float)m_screenHeight);
+
         // Draw button background
         DrawRect(button.x, button.y, button.width, button.height, color, 0.0f);
 
-        // Draw button border/highlight
-        float borderWidth = 3.0f;
+        // Draw button border/highlight - scaled
+        float borderWidth = 3.0f * scale;
         glm::vec4 borderColor = button.isHovered ? glm::vec4(0.6f, 0.6f, 0.8f, 1.0f) : glm::vec4(0.3f, 0.3f, 0.4f, 1.0f);
 
         // Top border
@@ -243,11 +256,11 @@ namespace ui
         // Right border
         DrawRect(button.x + button.width - borderWidth, button.y, borderWidth, button.height, borderColor, 0.1f);
 
-        // Draw button text centered in the button
+        // Draw button text centered in the button - scaled
         DrawText(button.label,
                  button.x + button.width * 0.5f,
                  button.y + button.height * 0.5f,
-                 1.0f,
+                 scale,
                  glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
     }
 
@@ -261,8 +274,8 @@ namespace ui
 
         // Center horizontally
         float x = centerX - textWidth * 0.5f;
-        // For vertical centering, use centerY directly as baseline and nudge downward
-        float y = centerY + 17.5f * scale; // Slight downward offset for better centering
+        // For vertical centering, offset scales with text size
+        float y = centerY + 17.5f * scale;
 
         m_textRenderer->RenderText(text, x, y, scale, glm::vec3(color));
     }
@@ -307,15 +320,18 @@ namespace ui
     {
         m_buttons.clear();
 
-        // Button dimensions
-        float buttonWidth = 400.0f;
-        float buttonHeight = 70.0f;
-        float buttonSpacing = 20.0f;
+        float sw = (float)m_screenWidth;
+        float sh = (float)m_screenHeight;
+
+        // Button dimensions - scaled based on screen size (main menu uses 1.6x wider buttons)
+        float buttonWidth = UIConfig::buttonWidth(sw, sh) * 1.6f;
+        float buttonHeight = UIConfig::buttonHeight(sw, sh) * 1.15f;
+        float buttonSpacing = UIConfig::buttonSpacing(sw, sh);
 
         // Center buttons horizontally
-        float startX = (m_screenWidth - buttonWidth) * 0.5f;
-        // Start buttons below the title area
-        float startY = 280.0f;
+        float startX = UIConfig::centerX(buttonWidth, sw);
+        // Start buttons below the title area (using ratio-based positioning)
+        float startY = sh * UIConfig::MENU_START_Y_RATIO;
 
         DEBUG_PRINT("Initializing buttons for screen " << m_screenWidth << "x" << m_screenHeight);
         DEBUG_PRINT("Button start position: (" << startX << ", " << startY << ")");

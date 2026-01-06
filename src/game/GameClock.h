@@ -58,6 +58,12 @@ public:
     // How many real seconds equals one full 24-hour in-game day
     float GetDayLengthSeconds() const { return m_dayLengthSeconds; }
 
+    // Reset elapsed time to zero (call when gameplay actually starts)
+    void ResetElapsedTime()
+    {
+        m_totalElapsedSeconds = 0.0f;
+    }
+
     // Force-set time of day (useful for testing)
     void SetTimeOfDay(float hours)
     {

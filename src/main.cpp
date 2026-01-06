@@ -39,6 +39,10 @@ int main(int, char **)
         // World manager (nullptr until game starts)
         std::unique_ptr<WorldManager> worldManager;
 
+        // Frame timing (declared early so callbacks can capture it)
+        FrameTimer frameTimer;
+        int frameCount = 0;
+
         // Setup menu skybox
         auto menuSkybox = std::make_unique<Skybox>();
         uiManager.setMenuSkybox(std::move(menuSkybox), nullptr);
@@ -65,6 +69,20 @@ int main(int, char **)
             // Cursor mode is handled automatically by UIManager
         };
 
+        // UI callback: Gameplay started (after loading is complete)
+        uiManager.onGameplayStarted = [&]()
+        {
+            // Reset frame timer so the loading time isn't counted as delta time
+            frameTimer.reset();
+            
+            // Reset game clock so timer starts from 0 when gameplay begins
+            if (worldManager && worldManager->getGameClock())
+            {
+                worldManager->getGameClock()->ResetElapsedTime();
+                DEBUG_PRINT("Game clock reset - timer starting from 0");
+            }
+        };
+
         // UI callback: Quit to main menu (pause menu)
         uiManager.onQuitToMenu = [&]()
         {
@@ -85,9 +103,9 @@ int main(int, char **)
 
         // Cleanup of worldManager when leaving PLAYING handled in main loop
 
-        // Frame timing
-        FrameTimer frameTimer;
-        int frameCount = 0;
+        // Track last window size to detect resizes
+        int lastWindowWidth = WINDOW_X;
+        int lastWindowHeight = WINDOW_Y;
 
         // Ensure cursor starts visible (in menu)
         glfwSetInputMode(g_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
@@ -108,6 +126,15 @@ int main(int, char **)
             float dt = frameTimer.getDeltaTime();
 
             glfwPollEvents();
+
+            // Check for window resize and update UI components
+            if (WINDOW_X != lastWindowWidth || WINDOW_Y != lastWindowHeight)
+            {
+                DEBUG_PRINT("Window resized to " << WINDOW_X << "x" << WINDOW_Y);
+                uiManager.updateScreenSize(WINDOW_X, WINDOW_Y);
+                lastWindowWidth = WINDOW_X;
+                lastWindowHeight = WINDOW_Y;
+            }
 
             // Update cursor mode based on UI state
             bool shouldShowCursor = uiManager.shouldShowCursor();
@@ -164,6 +191,12 @@ int main(int, char **)
                 worldManager)
             {
                 worldManager->update(dt, g_InputManager);
+                
+                // Update HUD with game clock and wave info
+                uiManager.updateHUDState(
+                    worldManager->getGameClock(),
+                    worldManager->getCurrentWave()
+                );
             }
 
             // === RENDERING ===

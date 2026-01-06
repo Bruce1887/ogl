@@ -19,9 +19,11 @@ public:
     void RenderText(const std::string& text, float x, float y, float scale, glm::vec3 color);
     float GetTextWidth(const std::string& text, float scale);
     float GetTextHeight(float scale) const;
+    void UpdateScreenSize(int width, int height);  // Update projection for new screen size
     
 private:
     std::map<char, Character> m_chars;
     unsigned int m_VAO, m_VBO;
     std::shared_ptr<Shader> m_shader;
+    int m_screenWidth, m_screenHeight;
 };

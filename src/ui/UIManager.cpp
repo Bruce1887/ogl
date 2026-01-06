@@ -97,6 +97,11 @@ void UIManager::update(float deltaTime)
             {
                 DEBUG_PRINT("World loaded! Starting gameplay" );
                 transitionTo(GameState::PLAYING);
+                
+                // Notify that gameplay has actually started (for timer reset, etc.)
+                if (onGameplayStarted) {
+                    onGameplayStarted();
+                }
             }
             break;
 
@@ -446,6 +451,20 @@ void UIManager::updateScreenSize(int width, int height)
     }
     if (m_leaderboard) {
         m_leaderboard->updateScreenSize(width, height);
+    }
+    if (m_deathScreen) {
+        m_deathScreen->updateScreenSize(width, height);
+    }
+    if (m_gameHUD) {
+        m_gameHUD->updateScreenSize(width, height);
+    }
+}
+
+void UIManager::updateHUDState(GameClock* gameClock, int currentWave)
+{
+    if (m_gameHUD) {
+        m_gameHUD->setGameClock(gameClock);
+        m_gameHUD->setCurrentWave(currentWave);
     }
 }
 
