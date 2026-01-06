@@ -60,7 +60,7 @@ private:
 	// If all are playing, returns 0 (indicating none found).
 	ALuint findFreeSource(ALuint* sources, uint32_t poolSize)
 	{
-		for (int i = 0; i < poolSize; i++)
+		for (uint32_t i = 0; i < poolSize; i++)
 		{
 			ALuint source = sources[i];
 			ALint state;

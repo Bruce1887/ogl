@@ -21,19 +21,20 @@ int main(int, char **)
     // Initialize OpenGL and window
     if (oogaboogaInit(__FILE__))
     {
-        printf("OpenGL initialization failed\n");
-        return 1;
+        DEBUG_PRINT("Failed to initialize Oogabooga!");
+        goto cleanup;
     }
     {
         // Create UI Manager
         ui::UIManager uiManager(WINDOW_X, WINDOW_Y);
-        uiManager.onQuitGame = []() {
+        uiManager.onQuitGame = []()
+        {
             DEBUG_PRINT("Quit button pressed - closing window...");
             glfwSetWindowShouldClose(g_window, GLFW_TRUE);
         };
 
         DEBUG_PRINT("Starting in MAIN_MENU state...");
-        uiManager.transitionTo(ui::GameState::MAIN_MENU); 
+        uiManager.transitionTo(ui::GameState::MAIN_MENU);
 
         // World manager (nullptr until game starts)
         std::unique_ptr<WorldManager> worldManager;
@@ -71,7 +72,7 @@ int main(int, char **)
         };
 
         // UI callback: Score submitted from death screen
-        uiManager.onScoreSubmit = [&](const std::string& playerName, int score)
+        uiManager.onScoreSubmit = [&](const std::string &playerName, int score)
         {
             float timeSurvived = 0.0f;
             if (worldManager && worldManager->getGameClock())
@@ -94,12 +95,12 @@ int main(int, char **)
 
         // Set up character callback for text input (death screen name entry)
         glfwSetWindowUserPointer(g_window, &uiManager);
-        glfwSetCharCallback(g_window, [](GLFWwindow* window, unsigned int codepoint) {
+        glfwSetCharCallback(g_window, [](GLFWwindow *window, unsigned int codepoint)
+                            {
             auto* ui = static_cast<ui::UIManager*>(glfwGetWindowUserPointer(window));
             if (ui) {
                 ui->handleCharInput(codepoint);
-            }
-        });
+            } });
 
         // Main game loop
         while (!glfwWindowShouldClose(g_window))
@@ -137,25 +138,25 @@ int main(int, char **)
                 uiManager.handleMouseMove(cursorX, cursorY);
 
                 static bool lastLeftMouse = false;
-                bool leftMouse, rightMouse;
-                g_InputManager->mouseButtonInput.fetchButtons(leftMouse, rightMouse);
-
-                if (leftMouse && !lastLeftMouse)
+                bool leftMouseDown = false, rightMouseDown = false;                
+                g_InputManager->mouseButtonInput.fetchButtons(leftMouseDown, rightMouseDown);
+                
+                if (leftMouseDown && !lastLeftMouse)
                 {
                     uiManager.handleMouseClick(cursorX, cursorY, true);
                 }
 
                 // mouse released
-                if (!leftMouse && lastLeftMouse)
+                if (!leftMouseDown && lastLeftMouse)
                 {
                     uiManager.handleMouseClick(cursorX, cursorY, false);
                 }
 
-                lastLeftMouse = leftMouse;
+                lastLeftMouse = leftMouseDown;
             }
 
             // Update UI
-            uiManager.update(dt); 
+            uiManager.update(dt);
 
             // Update game world if playing and not paused
             if (uiManager.getCurrentState() == ui::GameState::PLAYING &&
@@ -199,6 +200,7 @@ int main(int, char **)
         }
     }
 
+cleanup:
     DEBUG_PRINT("Exiting program...");
     oogaboogaExit();
     return 0;

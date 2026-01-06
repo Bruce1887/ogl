@@ -25,7 +25,8 @@ struct PlayerData
     float m_rotationSpeed = 90.0f;
 
     // Attack properties
-    float m_attackRange = 10.0f;
+    float m_attackRange = 4.0f; // Radius of attack-circle
+    float m_attackRangeOffset = 4.0f; // how far in front of player the attack-circle is centered
     float m_attackDamage = 25.0f;
     float m_attackCooldown = 0.1f; // seconds between attacks
     float m_attackTimer = 0.0f;    // tracks cooldown

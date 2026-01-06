@@ -41,7 +41,7 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
     if (rightMove != 0)
         movement += right * (rightMove * speed);
 
-    if(forwardMove != 0 || rightMove != 0)
+    if (forwardMove != 0 || rightMove != 0)
         m_playerData.setAnimationState(AnimationState::WALKING);
     else
         m_playerData.setAnimationState(AnimationState::IDLE);
@@ -67,7 +67,7 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
             m_playerData.lockAnimationState(false);
     }
 
-     // Build transform
+    // Build transform
     glm::mat4 transform(1.0f);
     // translate to world position (with Y offset for proper ground placement)
     transform = glm::translate(transform, m_playerData.m_position + glm::vec3(0.0f, m_playerData.m_modelYOffset, 0.0f));
@@ -88,17 +88,23 @@ int Player::attack(std::vector<EnemyData *> &enemies)
         return 0;
 
     m_playerData.setAnimationState(AnimationState::ATTACK);
-    if(m_sounds.has_value())
+    if (m_sounds.has_value())
     {
         SoundPlayer::getInstance().PlaySFX((*m_sounds).m_attackSound);
     }
-    
+
     m_playerData.lockAnimationState(true);
 
     // Reset cooldown
     m_playerData.m_attackTimer = m_playerData.m_attackCooldown;
 
     int enemiesHit = 0;
+
+    glm::vec3 attack_circle_center = m_playerData.m_position +
+                                     glm::vec3(
+                                         sin(glm::radians(m_playerData.m_yaw)) * m_playerData.m_attackRangeOffset,
+                                         0.0f,
+                                         cos(glm::radians(m_playerData.m_yaw)) * m_playerData.m_attackRangeOffset);
 
     // Check all enemies and damage those within range
     for (EnemyData *e_data : enemies)
@@ -107,7 +113,8 @@ int Player::attack(std::vector<EnemyData *> &enemies)
             continue;
 
         // Calculate distance to enemy (XZ plane only)
-        glm::vec3 toEnemy = e_data->m_position - m_playerData.m_position;
+
+        glm::vec3 toEnemy = e_data->m_position - attack_circle_center;
         toEnemy.y = 0.0f;
         float distance = glm::length(toEnemy);
 
@@ -125,7 +132,7 @@ int Player::attack(std::vector<EnemyData *> &enemies)
     return enemiesHit;
 }
 
-int Player::specialAttack(std::vector<EnemyData*> &enemies)
+int Player::specialAttack(std::vector<EnemyData *> &enemies)
 {
     // Check cooldown
     if (m_playerData.m_specialAttackTimer > 0.0f)
@@ -142,7 +149,7 @@ int Player::specialAttack(std::vector<EnemyData*> &enemies)
     DEBUG_PRINT("=== SPECIAL ATTACK ACTIVATED ===");
 
     // Insta-kill all enemies within special attack range
-    for (EnemyData* e_data : enemies)
+    for (EnemyData *e_data : enemies)
     {
         if (e_data->isDead())
             continue;

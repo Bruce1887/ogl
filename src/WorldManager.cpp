@@ -237,8 +237,7 @@ void WorldManager::update(float dt, InputManager *input)
 
     if (input->keyboardInput.getKeyState(OOGABOOGA_ATTACK_KEY).readAndClear())
     {
-        int hits = m_player->attack(allEnemies);
-        DEBUG_PRINT("Hit " << hits << " enemies!");
+        int hits = m_player->attack(allEnemies);        
     }
 
     // Special attack - J key
@@ -247,11 +246,7 @@ void WorldManager::update(float dt, InputManager *input)
         if (m_player->m_playerData.isSpecialAttackReady())
         {
             int kills = m_player->specialAttack(allEnemies);
-            triggerScreenFlash();
-            if (kills > 0)
-            {
-                DEBUG_PRINT("Special attack killed " << kills << " enemies!");
-            }
+            triggerScreenFlash();    
         }
     }
 
