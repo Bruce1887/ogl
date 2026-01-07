@@ -21,19 +21,19 @@ namespace Database
     {
         std::string name;
         float time;
-        int kills;
+        int score;
     };
 
     // Post a score to Firebase Realtime Database
     // Returns true if the command was executed (note: doesn't verify server response)
-    inline bool PostScore(const std::string& playerName, float timeSurvived, int enemiesKilled)
+    inline bool PostScore(const std::string& playerName, float timeSurvived, int score)
     {
         // Build JSON payload
         std::stringstream json;
         json << "{"
              << "\"name\":\"" << playerName << "\","
              << "\"time\":" << timeSurvived << ","
-             << "\"kills\":" << enemiesKilled
+             << "\"score\":" << score
              << "}";
 
         // Build curl command
@@ -55,12 +55,12 @@ namespace Database
 
         std::cout << "Score posted: " << playerName 
                   << " - Time: " << timeSurvived 
-                  << "s, Kills: " << enemiesKilled << std::endl;
+                  << "s, score: " << score << std::endl;
         return true;
     }
 
-    // Fetch top 10 entries by kills (synchronous - blocks until complete)
-    // Returns entries sorted by kills (highest first)
+    // Fetch top 10 entries by score (synchronous - blocks until complete)
+    // Returns entries sorted by score (highest first)
     inline std::vector<Entry> FetchTop10()
     {
         std::vector<Entry> entries;
@@ -68,11 +68,11 @@ namespace Database
         // Temp file to store curl output
         std::string tempFile = "/tmp/leaderboard_response.json";
         
-        // Query Firebase: orderBy kills, get last 10 (highest), limitToLast=10
+        // Query Firebase: orderBy "score", get last 10 (highest), limitToLast=10
         std::stringstream cmd;
         cmd << "curl -s \""
             << "https://opengl-game-default-rtdb.europe-west1.firebasedatabase.app/leaderboard.json"
-            << "?orderBy=\\\"kills\\\"&limitToLast=10"
+            << "?orderBy=\\\"score\\\"&limitToLast=10"
             << "\" > " << tempFile << " 2>/dev/null";
         
         int result = std::system(cmd.str().c_str());
@@ -117,7 +117,7 @@ namespace Database
             
             Entry entry;
             entry.time = 0.0f;
-            entry.kills = 0;
+            entry.score = 0;
             
             // Parse name within this entry
             size_t namePos = entryJson.find("\"name\"");
@@ -147,18 +147,18 @@ namespace Database
                 }
             }
             
-            // Parse kills within this entry
-            size_t killsPos = entryJson.find("\"kills\"");
-            if (killsPos != std::string::npos)
+            // Parse score within this entry
+            size_t scorePos = entryJson.find("\"score\"");
+            if (scorePos != std::string::npos)
             {
-                size_t killsStart = entryJson.find(":", killsPos) + 1;
-                size_t killsEnd = entryJson.find_first_of(",}", killsStart);
-                if (killsStart != std::string::npos && killsEnd != std::string::npos)
+                size_t scoreStart = entryJson.find(":", scorePos) + 1;
+                size_t scoreEnd = entryJson.find_first_of(",}", scoreStart);
+                if (scoreStart != std::string::npos && scoreEnd != std::string::npos)
                 {
                     try {
-                        entry.kills = std::stoi(entryJson.substr(killsStart, killsEnd - killsStart));
+                        entry.score = std::stoi(entryJson.substr(scoreStart, scoreEnd - scoreStart));
                     } catch (...) {
-                        entry.kills = 0;
+                        entry.score = 0;
                     }
                 }
             }
@@ -172,9 +172,9 @@ namespace Database
             pos = objEnd + 1;
         }
         
-        // Sort by kills (highest first) - Firebase limitToLast gives ascending order
+        // Sort by score(highest first) - Firebase limitToLast gives ascending order
         std::sort(entries.begin(), entries.end(), [](const Entry& a, const Entry& b) {
-            return a.kills > b.kills;
+            return a.score > b.score;
         });
         
         // Clean up temp file

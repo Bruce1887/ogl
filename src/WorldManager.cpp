@@ -261,7 +261,7 @@ void WorldManager::update(float dt, InputManager *input)
     {
         if (m_player->m_playerData.isSpecialAttackReady())
         {
-            int kills = m_player->specialAttack(allEnemies);
+            m_player->specialAttack(allEnemies);
             triggerScreenFlash();
         }
     }
@@ -286,11 +286,11 @@ void WorldManager::update(float dt, InputManager *input)
             m_scorePosted = true;
 
             float timeSurvived = m_gameClock ? m_gameClock->GetTotalElapsedSeconds() : 0.0f;
-            int enemiesKilled = m_player->getScore();
+            int playerScore = m_player->getScore();
 
             DEBUG_PRINT("=== GAME OVER ===");
             DEBUG_PRINT("Time survived: " << timeSurvived << " seconds");
-            DEBUG_PRINT("Enemies killed: " << enemiesKilled);
+            DEBUG_PRINT("Player score: " << playerScore);
             DEBUG_PRINT("Wave reached: " << m_currentWave);
         }
     }

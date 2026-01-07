@@ -2,12 +2,14 @@
 
 #include "Renderable.h"
 #include "TextRenderer.h"
+#include "UIConfig.h"
+#include "../game/Player.h"
+#include "../game/GameClock.h"
+
 #include <glm/glm.hpp>
 #include <string>
 #include <memory>
 
-#include "../game/Player.h"
-#include "../game/GameClock.h"
 
 // Renaming the class from HUD to HUDEntityImpl to implement the abstract HUDEntity
 class HUDEntityImpl : public HUDEntity {

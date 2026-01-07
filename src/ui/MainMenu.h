@@ -1,5 +1,7 @@
 #pragma once
 
+#include "UIConfig.h"
+
 #include "GameState.h"
 #include <glm/glm.hpp>
 #include <string>

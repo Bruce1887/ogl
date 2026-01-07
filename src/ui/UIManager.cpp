@@ -429,7 +429,7 @@ void UIManager::transitionTo(GameState newState)
             int seconds = totalSeconds % 60;
             char timeStr[16];
             snprintf(timeStr, sizeof(timeStr), "%02d:%02d", minutes, seconds);
-            m_leaderboard->addEntry(entry.name, entry.kills, timeStr);
+            m_leaderboard->addEntry(entry.name, entry.score, timeStr);
         }
         
         if (entries.empty()) {

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "UIConfig.h"
+
 #include <glm/glm.hpp>
 #include <string>
 #include <functional>
