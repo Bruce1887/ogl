@@ -15,6 +15,30 @@ void Player::render(glm::mat4 view, glm::mat4 proj, PhongLightConfig *light)
     m_playerRenderer->render(view, proj, light);
 }
 
+static glm::vec2 resolveXZCollisions(
+    const glm::vec2& current,
+    const glm::vec2& proposed,
+    float playerRadius,
+    const std::vector<StaticObstacle>& obstacles)
+{
+    glm::vec2 result = proposed;
+
+    for (const auto& o : obstacles)
+    {
+        glm::vec2 diff = result - o.posXZ;
+        float dist = glm::length(diff);
+        float minDist = playerRadius + o.radius;
+
+        if (dist < minDist && dist > 0.0001f)
+        {
+            glm::vec2 normal = diff / dist;
+            result = o.posXZ + normal * minDist;
+        }
+    }
+
+    return result;
+}
+
 void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
 {
     int forwardMove, rightMove;
@@ -46,7 +70,26 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
     else
         m_playerData.setAnimationState(AnimationState::IDLE);
 
-    m_playerData.m_position += movement;
+    //m_playerData.m_position += movement;
+
+
+    
+    glm::vec3 proposed = m_playerData.m_position + movement;
+
+
+    std::vector<StaticObstacle> nearbyObstacles;
+    terrain->collectNearbyObstacles(m_playerData.m_position, 5.0f, nearbyObstacles);
+
+    // --- resolve XZ collision ---
+    glm::vec2 correctedXZ = resolveXZCollisions(
+        glm::vec2(m_playerData.m_position.x, m_playerData.m_position.z),
+        glm::vec2(proposed.x, proposed.z),
+        1.0f,               // player radius
+        nearbyObstacles
+    );
+
+    m_playerData.m_position.x = correctedXZ.x;
+    m_playerData.m_position.z = correctedXZ.y;
 
     // collision with terrain
     float terrainY = terrain->getPreciseHeightAt(m_playerData.m_position.x, m_playerData.m_position.z);
@@ -66,6 +109,17 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
         if (m_playerData.m_attackTimer <= 0.0f)
             m_playerData.lockAnimationState(false);
     }
+
+
+    double dx, dy;
+    if (input->mouseMoveInput.fetchDeltas(dx, dy))
+    {
+        float sensitivity = 0.1f;
+        m_playerData.m_yaw -= dx * sensitivity;     
+        m_playerData.m_campitch -= dy * sensitivity * 2/3; 
+        m_playerData.m_campitch = glm::clamp(m_playerData.m_campitch, -60.0f, 30.0f);
+    }
+
 
     // Build transform
     glm::mat4 transform(1.0f);
