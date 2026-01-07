@@ -92,9 +92,36 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
     m_playerData.m_position.z = correctedXZ.y;
 
     // collision with terrain
-    float terrainY = terrain->getPreciseHeightAt(m_playerData.m_position.x, m_playerData.m_position.z);
-    m_playerData.m_position.y = terrainY;
+    // float terrainY = terrain->getPreciseHeightAt(m_playerData.m_position.x, m_playerData.m_position.z);
+    // m_playerData.m_position.y = terrainY;
+    
+    // --- jump input ---
+    if (glfwGetKey(g_window, GLFW_KEY_SPACE) == GLFW_PRESS && m_playerData.m_isGrounded)
+    {
+        m_playerData.m_verticalVelocity = m_playerData.m_jumpVelocity;
+        m_playerData.m_isGrounded = false;
+    }
 
+    // --- gravity ---
+    m_playerData.m_verticalVelocity -= m_playerData.m_gravity * dt;
+
+    // --- vertical integration ---
+    m_playerData.m_position.y += m_playerData.m_verticalVelocity * dt;
+
+    // --- terrain collision ---
+    float terrainY = terrain->getPreciseHeightAt(
+        m_playerData.m_position.x,
+        m_playerData.m_position.z
+    );
+
+    if (m_playerData.m_position.y <= terrainY)
+    {
+        m_playerData.m_position.y = terrainY;
+        m_playerData.m_verticalVelocity = 0.0f;
+        m_playerData.m_isGrounded = true;
+    }
+
+    
     // --- Turn player left/right ---
     if (glfwGetKey(g_window, GLFW_KEY_Q) == GLFW_PRESS)
         m_playerData.m_yaw += m_playerData.m_rotationSpeed * dt;
