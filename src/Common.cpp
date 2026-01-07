@@ -98,6 +98,19 @@ int oogaboogaInit(const std::string &windowname)
         return -1;
     }
 
+    // Get 90% of native screen resolution from primary monitor
+    GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
+    if (primaryMonitor)
+    {
+        const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+        if (mode)
+        {
+            WINDOW_X = static_cast<GLsizei>(mode->width * 0.9f);
+            WINDOW_Y = static_cast<GLsizei>(mode->height * 0.9f);
+            DEBUG_PRINT("Window size (90% of native): " << WINDOW_X << "x" << WINDOW_Y);
+        }
+    }
+
 #ifdef __APPLE__
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
@@ -106,8 +119,6 @@ int oogaboogaInit(const std::string &windowname)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_SAMPLES, 4); // 4x MSAA (multi-sample anti-aliasing)
-
-    // monitor = glfwGetPrimaryMonitor(); // for fullscreen maybe?
 
     g_window = glfwCreateWindow(WINDOW_X, WINDOW_Y, windowname.c_str(), g_monitor, NULL);
 

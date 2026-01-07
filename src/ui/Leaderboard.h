@@ -69,7 +69,7 @@ public:
     void updateScreenSize(int width, int height);
 
     // Add/populate leaderboard entries
-    void addEntry(const std::string& name, int kills, const std::string& time);
+    void addEntry(const std::string& name, int score, const std::string& time);
     void clearEntries();
 
     // Set skybox for background rendering

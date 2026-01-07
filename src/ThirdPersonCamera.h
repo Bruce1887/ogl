@@ -13,6 +13,8 @@ public:
     float m_minHeight = -5.0f;
     float m_maxHeight = 15.0f;
 
+    float pitch = -15.0f; 
+
     void update(Camera &cam, const PlayerData &p_data, float dt);
 
     void setMinHeightFunction(std::function<float(float, float)> func)

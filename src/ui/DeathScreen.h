@@ -53,7 +53,7 @@ private:
 
     // Text input state
     std::string m_playerName;
-    static constexpr size_t MAX_NAME_LENGTH = 20;
+    static constexpr size_t MAX_NAME_LENGTH = 18;
     bool m_textInputFocused = true;
     float m_cursorBlinkTimer = 0.0f;
     bool m_showCursor = true;

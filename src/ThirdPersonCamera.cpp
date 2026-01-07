@@ -8,10 +8,11 @@ extern GLFWwindow *g_window;
 void ThirdPersonCamera::update(Camera &cam, const PlayerData &p_data, float dt)
 {
     float yawRad = glm::radians(p_data.m_yaw);
+    float pitchRad = glm::radians(p_data.m_campitch);
 
     glm::vec3 forward(
         sin(yawRad),
-        0,
+        sin(pitchRad),
         cos(yawRad));
 
     glm::vec3 camPos = p_data.m_position - forward * m_distance + glm::vec3(0, m_height, 0);

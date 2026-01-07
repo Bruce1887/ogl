@@ -98,36 +98,37 @@ void Leaderboard::render(glm::mat4 view, glm::mat4 projection, PhongLightConfig*
     // Draw leaderboard panel - scaled UIConfig dimensions
     float sw = (float)m_screenWidth;
     float sh = (float)m_screenHeight;
+    float scale = UIConfig::scaleUniform(sw, sh);
     float panelWidth = UIConfig::panelWidthLarge(sw, sh);
     float panelHeight = UIConfig::panelHeightLarge(sw, sh);
     float panelX = (m_screenWidth - panelWidth) * 0.5f;
     float panelY_original = (m_screenHeight - panelHeight) * 0.5f;
-    float panelY = panelY_original - 30.0f;
+    float panelY = panelY_original - 30.0f * scale;
     DrawRect(panelX, panelY, panelWidth, panelHeight, {0.1f, 0.1f, 0.2f, 0.9f}, -0.2f);
 
     // Draw title (keep at original position)
     DrawText("LEADERBOARD", 
              m_screenWidth * 0.5f,
-             panelY_original + 30.0f,
-             1.5f,
+             panelY_original + 30.0f * scale,
+             1.5f * scale,
              glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
     // Column layout: Rank # on far left, player name next, score and time on right
-    float rankX = panelX + 20.0f;
-    float nameX = panelX + 70.0f;
-    float scoreX = panelX + panelWidth - 180.0f;
-    float timeX = panelX + panelWidth - 80.0f;
-    float entryY = panelY_original + 80.0f;
-    float entrySpacing = 35.0f;
+    float rankX = panelX + 20.0f * scale;
+    float nameX = panelX + 70.0f * scale;
+    float scoreX = panelX + panelWidth - 180.0f * scale;
+    float timeX = panelX + panelWidth - 80.0f * scale;
+    float entryY = panelY_original + 80.0f * scale;
+    float entrySpacing = 35.0f * scale;
 
     // Draw column headers
-    DrawText("#", rankX + 10.0f, entryY, 0.8f, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f));
-    DrawText("Player", nameX + 60.0f, entryY, 0.8f, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f));
-    DrawText("Score", scoreX, entryY, 0.8f, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f));
-    DrawText("Time", timeX, entryY, 0.8f, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f));
+    DrawText("#", rankX + 10.0f * scale, entryY, 0.8f * scale, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f));
+    DrawText("Player", nameX + 60.0f * scale, entryY, 0.8f * scale, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f));
+    DrawText("Score", scoreX, entryY, 0.8f * scale, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f));
+    DrawText("Time", timeX, entryY, 0.8f * scale, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f));
 
     // Draw leaderboard entries (top 10)
-    entryY += entrySpacing + 10.0f;
+    entryY += entrySpacing + 10.0f * scale;
     int maxEntries = std::min(10, (int)m_entries.size());
     for (int i = 0; i < maxEntries; ++i)
     {
@@ -136,22 +137,22 @@ void Leaderboard::render(glm::mat4 view, glm::mat4 projection, PhongLightConfig*
         std::string scoreStr = std::to_string(entry.score);
 
         // Draw rank number (left-aligned)
-        float rankWidth = m_textRenderer ? m_textRenderer->GetTextWidth(rankStr, 0.7f) : 20.0f;
+        float rankWidth = m_textRenderer ? m_textRenderer->GetTextWidth(rankStr, 0.7f * scale) : 20.0f * scale;
         DrawText(rankStr, 
                 rankX + rankWidth * 0.5f,
-                entryY, 0.7f, glm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
+                entryY, 0.7f * scale, glm::vec4(0.8f, 0.8f, 0.8f, 1.0f));
                 
         // Draw player name (left-aligned)
-        float nameWidth = m_textRenderer ? m_textRenderer->GetTextWidth(entry.playerName, 0.7f) : 100.0f;
+        float nameWidth = m_textRenderer ? m_textRenderer->GetTextWidth(entry.playerName, 0.7f * scale) : 100.0f * scale;
         DrawText(entry.playerName, 
                 nameX + nameWidth * 0.5f,
-                entryY, 0.7f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+                entryY, 0.7f * scale, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
         
         // Draw score
-        DrawText(scoreStr, scoreX, entryY, 0.7f, glm::vec4(1.0f, 0.5f, 0.5f, 1.0f));
+        DrawText(scoreStr, scoreX, entryY, 0.7f * scale, glm::vec4(1.0f, 0.5f, 0.5f, 1.0f));
         
         // Draw time
-        DrawText(entry.time, timeX, entryY, 0.7f, glm::vec4(0.5f, 1.0f, 0.5f, 1.0f));
+        DrawText(entry.time, timeX, entryY, 0.7f * scale, glm::vec4(0.5f, 1.0f, 0.5f, 1.0f));
 
         entryY += entrySpacing;
     }
@@ -213,9 +214,9 @@ void Leaderboard::updateScreenSize(int width, int height)
     InitializeButtons();
 }
 
-void Leaderboard::addEntry(const std::string& name, int kills, const std::string& time)
+void Leaderboard::addEntry(const std::string& name, int score, const std::string& time)
 {
-    LeaderboardEntry entry{name, kills, time, (int)m_entries.size() + 1};
+    LeaderboardEntry entry{name, score, time, (int)m_entries.size() + 1};
     m_entries.push_back(entry);
     
     // Sort by score descending
