@@ -112,10 +112,10 @@ void Leaderboard::render(glm::mat4 view, glm::mat4 projection, PhongLightConfig*
              1.5f,
              glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
 
-    // Column layout: Rank # on far left, player name next, kills and time on right
+    // Column layout: Rank # on far left, player name next, score and time on right
     float rankX = panelX + 20.0f;
     float nameX = panelX + 70.0f;
-    float killsX = panelX + panelWidth - 180.0f;
+    float scoreX = panelX + panelWidth - 180.0f;
     float timeX = panelX + panelWidth - 80.0f;
     float entryY = panelY_original + 80.0f;
     float entrySpacing = 35.0f;
@@ -123,7 +123,7 @@ void Leaderboard::render(glm::mat4 view, glm::mat4 projection, PhongLightConfig*
     // Draw column headers
     DrawText("#", rankX + 10.0f, entryY, 0.8f, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f));
     DrawText("Player", nameX + 60.0f, entryY, 0.8f, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f));
-    DrawText("Kills", killsX, entryY, 0.8f, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f));
+    DrawText("Score", scoreX, entryY, 0.8f, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f));
     DrawText("Time", timeX, entryY, 0.8f, glm::vec4(0.7f, 0.7f, 0.7f, 1.0f));
 
     // Draw leaderboard entries (top 10)
@@ -133,7 +133,7 @@ void Leaderboard::render(glm::mat4 view, glm::mat4 projection, PhongLightConfig*
     {
         const auto& entry = m_entries[i];
         std::string rankStr = std::to_string(entry.rank);
-        std::string killsStr = std::to_string(entry.kills);
+        std::string scoreStr = std::to_string(entry.score);
 
         // Draw rank number (left-aligned)
         float rankWidth = m_textRenderer ? m_textRenderer->GetTextWidth(rankStr, 0.7f) : 20.0f;
@@ -147,8 +147,8 @@ void Leaderboard::render(glm::mat4 view, glm::mat4 projection, PhongLightConfig*
                 nameX + nameWidth * 0.5f,
                 entryY, 0.7f, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
         
-        // Draw kills
-        DrawText(killsStr, killsX, entryY, 0.7f, glm::vec4(1.0f, 0.5f, 0.5f, 1.0f));
+        // Draw score
+        DrawText(scoreStr, scoreX, entryY, 0.7f, glm::vec4(1.0f, 0.5f, 0.5f, 1.0f));
         
         // Draw time
         DrawText(entry.time, timeX, entryY, 0.7f, glm::vec4(0.5f, 1.0f, 0.5f, 1.0f));
@@ -218,10 +218,10 @@ void Leaderboard::addEntry(const std::string& name, int kills, const std::string
     LeaderboardEntry entry{name, kills, time, (int)m_entries.size() + 1};
     m_entries.push_back(entry);
     
-    // Sort by kills descending
+    // Sort by score descending
     std::sort(m_entries.begin(), m_entries.end(), 
         [](const LeaderboardEntry& a, const LeaderboardEntry& b) { 
-            return a.kills > b.kills; 
+            return a.score > b.score; 
         });
     
     // Update ranks

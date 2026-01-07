@@ -55,12 +55,19 @@ add_library(glad STATIC src/glad/glad.c)
 target_include_directories(glad PUBLIC src)
 target_include_directories(glad SYSTEM PRIVATE src/glad)
 
-
 add_library(stb_image STATIC src/vendor/stb_image/stb_image.cpp)
-
-
 target_include_directories(stb_image PUBLIC src)
 target_include_directories(stb_image SYSTEM PRIVATE src/vendor/stb_image)
+
+
+find_package(OpenSSL REQUIRED)
+add_library(httplib STATIC src/vendor/httplib/httplib.cpp)
+target_compile_definitions(httplib PUBLIC CPPHTTPLIB_OPENSSL_SUPPORT)
+target_include_directories(httplib
+    PUBLIC
+        ${PROJECT_SOURCE_DIR}/src/vendor/httplib
+)
+target_link_libraries(httplib PUBLIC OpenSSL::SSL OpenSSL::Crypto)
 
 # --- Common static library (compiled once) ---
 add_library(oogabooga_common STATIC ${COMMON_SOURCES})
@@ -72,6 +79,7 @@ target_link_libraries(oogabooga_common PUBLIC
     glfw
     OpenGL::GL
     freetype
+    httplib
 )
 
 

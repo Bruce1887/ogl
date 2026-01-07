@@ -45,7 +45,7 @@ struct LeaderboardButton
 struct LeaderboardEntry
 {
     std::string playerName;
-    int kills;
+    int score;
     std::string time;  // MM:SS format
     int rank;
 };

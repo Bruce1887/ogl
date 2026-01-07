@@ -70,7 +70,7 @@ void HUDEntityImpl::render(const glm::mat4 view, const glm::mat4 projection, con
 
     DrawVitalsBars();
     DrawTimer();
-    DrawKillsAndWave();
+    DrawScoreAndWave();
 
     glDisable(GL_BLEND);  // Disable blending after HUD
     glDepthMask(GL_TRUE); // Re-enable depth writing
@@ -128,7 +128,7 @@ void HUDEntityImpl::DrawTimer() {
     m_textRenderer->RenderText(timeStr, x, y, textScale, glm::vec3(1.0f, 1.0f, 1.0f));
 }
 
-void HUDEntityImpl::DrawKillsAndWave() {
+void HUDEntityImpl::DrawScoreAndWave() {
     if (!m_textRenderer || !m_player) return;
     
     float sw = (float)m_screenWidth;
@@ -139,8 +139,8 @@ void HUDEntityImpl::DrawKillsAndWave() {
     float textScale = 0.8f * scale;
     float lineHeight = 35.0f * scale;
     
-    // Get kills (score) from player
-    int kills = m_player->getScore();
+    // Get score from player
+    int score = m_player->getScore();
     
     // Wave text
     std::string waveStr = "Wave: " + std::to_string(m_currentWave);
@@ -148,19 +148,19 @@ void HUDEntityImpl::DrawKillsAndWave() {
     float waveX = sw - margin - waveWidth;
     float waveY = margin + 20.0f * scale;
     
-    // Kill text
-    std::string killStr = "Kills: " + std::to_string(kills);
-    float killWidth = m_textRenderer->GetTextWidth(killStr, textScale);
-    float killX = sw - margin - killWidth;
-    float killY = waveY + lineHeight;
+    // Score text
+    std::string scoreStr = "Score: " + std::to_string(score);
+    float scoreWidth = m_textRenderer->GetTextWidth(scoreStr, textScale);
+    float scoreX = sw - margin - scoreWidth;
+    float scoreY = waveY + lineHeight;
     
     // Draw wave with shadow
     m_textRenderer->RenderText(waveStr, waveX + 2*scale, waveY + 2*scale, textScale, glm::vec3(0.0f, 0.0f, 0.0f));
     m_textRenderer->RenderText(waveStr, waveX, waveY, textScale, glm::vec3(1.0f, 0.9f, 0.3f));  // Yellow
     
-    // Draw kills with shadow
-    m_textRenderer->RenderText(killStr, killX + 2*scale, killY + 2*scale, textScale, glm::vec3(0.0f, 0.0f, 0.0f));
-    m_textRenderer->RenderText(killStr, killX, killY, textScale, glm::vec3(1.0f, 0.4f, 0.4f));  // Red
+    // Draw score with shadow
+    m_textRenderer->RenderText(scoreStr, scoreX + 2*scale, scoreY + 2*scale, textScale, glm::vec3(0.0f, 0.0f, 0.0f));
+    m_textRenderer->RenderText(scoreStr, scoreX, scoreY, textScale, glm::vec3(1.0f, 0.4f, 0.4f));  // Red
 }
 
 void HUDEntityImpl::DrawText(const std::string& text, float x, float y, float scale, const glm::vec3& color) {
