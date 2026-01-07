@@ -15,6 +15,7 @@ struct PlayerData
 {
     glm::vec3 m_position;
     float m_yaw = 0.0f;
+    float m_campitch = 0.0f;
 
     float m_maxHealth = 100.0f;
     float m_health = m_maxHealth; // Set starting health to max health

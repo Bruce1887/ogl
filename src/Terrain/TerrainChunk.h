@@ -25,6 +25,13 @@ struct ChunkCoord
     }
 };
 
+
+struct StaticObstacle
+{
+    glm::vec2 posXZ;
+    float radius;
+};
+
 // Hash function for ChunkCoord to use in unordered_map
 namespace std
 {
@@ -123,7 +130,8 @@ public:
 
     // Render global water plane (call after terrain, before trees for proper transparency)
     void renderWater(const glm::mat4 &view, const glm::mat4 &projection, PhongLightConfig *light, const glm::vec3 &cameraPosition, float renderDistance);
-
+    
+    void collectNearbyObstacles(const glm::vec3& pos, float range, std::vector<StaticObstacle>& out) const;
 private:
     TerrainGenerator *m_generator;
 
