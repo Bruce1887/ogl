@@ -111,16 +111,31 @@ set(ASSIMP_BUILD_OBJ_IMPORTER ON CACHE BOOL "" FORCE)
 add_subdirectory(src/vendor/assimp)
 target_link_libraries(oogabooga_common PUBLIC assimp)
 
-
-# --- OpenAL Configuration ---
+# OpenAL - Platform-specific configuration
+# Check for Homebrew OpenAL first (preferred on macOS if installed)
+set(OPENAL_HOMEBREW_FOUND FALSE)
 if(APPLE)
-    # OpenAL (from Homebrew - explicit paths to avoid macOS system OpenAL)
-    set(OPENAL_INCLUDE_DIR "/usr/local/opt/openal-soft/include")
-    set(OPENAL_LIBRARY "/usr/local/opt/openal-soft/lib/libopenal.dylib")
+    if(EXISTS "/opt/homebrew/opt/openal-soft/include")
+        # Apple Silicon Mac (M1/M2/M3) with Homebrew
+        set(OPENAL_INCLUDE_DIR "/opt/homebrew/opt/openal-soft/include")
+        set(OPENAL_LIBRARY "/opt/homebrew/opt/openal-soft/lib/libopenal.dylib")
+        set(OPENAL_HOMEBREW_FOUND TRUE)
+    elseif(EXISTS "/usr/local/opt/openal-soft/include")
+        # Intel Mac with Homebrew
+        set(OPENAL_INCLUDE_DIR "/usr/local/opt/openal-soft/include")
+        set(OPENAL_LIBRARY "/usr/local/opt/openal-soft/lib/libopenal.dylib")
+        set(OPENAL_HOMEBREW_FOUND TRUE)
+    endif()
+endif()
+
+if(OPENAL_HOMEBREW_FOUND)
+    # Use Homebrew OpenAL
+    message(STATUS "Using Homebrew OpenAL: ${OPENAL_LIBRARY}")
     target_include_directories(oogabooga_common PUBLIC ${OPENAL_INCLUDE_DIR})
     target_link_libraries(oogabooga_common PUBLIC ${OPENAL_LIBRARY})
 else()
-    # OpenAL Soft from submodule for Windows/Linux
+    # Build OpenAL Soft from submodule (Windows/Linux/macOS without Homebrew)
+    message(STATUS "Building OpenAL Soft from submodule")
     set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
     set(ALSOFT_UTILS OFF CACHE BOOL "" FORCE)
     set(ALSOFT_TESTS OFF CACHE BOOL "" FORCE)

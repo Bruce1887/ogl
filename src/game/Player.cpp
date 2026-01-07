@@ -110,6 +110,12 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
             m_playerData.lockAnimationState(false);
     }
 
+    // Update special attack cooldown timer
+    if (m_playerData.m_specialAttackTimer > 0.0f)
+    {
+        m_playerData.m_specialAttackTimer -= dt;
+    }
+
 
     double dx, dy;
     if (input->mouseMoveInput.fetchDeltas(dx, dy))

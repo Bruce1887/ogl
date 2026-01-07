@@ -251,7 +251,25 @@ void WorldManager::update(float dt, InputManager *input)
         }
     }
 
-    if (input->keyboardInput.getKeyState(OOGABOOGA_ATTACK_KEY).readAndClear())
+    // Auto-attack: attack if any enemy is in range
+    bool enemyInRange = false;
+    glm::vec3 playerPos = m_player->m_playerData.m_position;
+    float attackRange = m_player->m_playerData.m_attackRange + m_player->m_playerData.m_attackRangeOffset;
+    for (EnemyData* e : allEnemies)
+    {
+        if (!e->isDead())
+        {
+            glm::vec3 toEnemy = e->m_position - playerPos;
+            toEnemy.y = 0.0f;
+            if (glm::length(toEnemy) <= attackRange)
+            {
+                enemyInRange = true;
+                break;
+            }
+        }
+    }
+    
+    if (enemyInRange)
     {
         int hits = m_player->attack(allEnemies);
     }
