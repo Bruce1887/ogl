@@ -9,7 +9,7 @@
 
 class TerrainChunkManager;
 class InputManager;
-class EnemyData;
+struct EnemyData;
 
 struct PlayerData
 {

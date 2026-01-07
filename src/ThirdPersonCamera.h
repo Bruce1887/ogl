@@ -2,7 +2,7 @@
 #include <glm/glm.hpp>
 #include <optional>
 
-class PlayerData;
+struct PlayerData;
 class Camera;
 
 class ThirdPersonCamera
