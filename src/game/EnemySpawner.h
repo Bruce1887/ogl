@@ -10,15 +10,21 @@
 #include <glm/glm.hpp>
 #include "Audio.h"
 
-struct SpawnerConfig {
+struct SpawnerConfig
+{
+	// Spawning parameters
 	unsigned int m_maxEnemies = 1;
-    int m_enemiesPerWave = 1;      // Additional enemies per wave
-	int m_enemiesPerWaveFactor = 1; // Additional enemies per wave
-	
 	float m_spawnInterval = 0.5f;
-	float m_minSpawnDistance = 50.0f;
-	float m_maxSpawnDistance = 100.0f;
-	float m_despawnThreshold = 320.0f; // If set, enemies beyond this distance from player are despawned
+	float m_minSpawnDistance = 75.0f;
+	float m_maxSpawnDistance = 125.0f;
+	float m_despawnThreshold = 320.0f; // enemies beyond this distance from player are despawned
+
+	// Upgrade parameters (how much to increase difficulty with each wave)
+	int m_enemiesPerWaveIncrement = 0; // Additional enemies per wave (additive)
+	int m_enemiesPerWaveFactor = 1;	   // Additional enemies per wave (multiplicative)
+
+	float m_speedIncreaseIncrement = 0.0f; // How much to increase enemy speed per wave
+	float m_speedIncreaseFactor = 1.0f;	 // How much to multiply enemy speed per wave
 };
 
 /**
@@ -42,10 +48,10 @@ public:
 
 	void setMinHeightFunction(std::function<float(float, float)> func)
 	{
-		m_heightFunc = std::move(func);		
+		m_heightFunc = std::move(func);
 	}
 
-	unsigned int enemyCount() const { return static_cast<unsigned int>(m_enemyDataList.size()); }	
+	unsigned int enemyCount() const { return static_cast<unsigned int>(m_enemyDataList.size()); }
 
 	void updateAll(float dt, Player &player);
 
@@ -81,6 +87,16 @@ public:
 	void activate() { m_active = true; }
 	// Deactivate spawner (stops spawning new enemies),
 	void deactivate() { m_active = false; }
+
+	void upgrade(){
+		// Increase max enemies
+		m_spawnerConfig.m_maxEnemies += m_spawnerConfig.m_enemiesPerWaveIncrement;
+		m_spawnerConfig.m_maxEnemies *= m_spawnerConfig.m_enemiesPerWaveFactor;
+
+		// Increase enemy speed
+		m_prototypeEnemyData.m_moveSpeed += m_spawnerConfig.m_speedIncreaseIncrement;
+		m_prototypeEnemyData.m_moveSpeed *= m_spawnerConfig.m_speedIncreaseFactor;
+	}
 private:
 	bool m_active = false;
 

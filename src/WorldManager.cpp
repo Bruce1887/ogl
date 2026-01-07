@@ -24,6 +24,8 @@ bool WorldManager::initialize()
     SoundPlayer &sp = SoundPlayer::getInstance();
     sp.PlayMusic(sp.LoadWav(AUDIO_DIR / "piraten.wav"), true);
 
+    advanceWave(); // start first wave
+
     return true;
 }
 
@@ -136,9 +138,8 @@ bool WorldManager::initializeEnemySpawners()
     EnemyData cowEnemyData; // default enemy data
     SpawnerConfig cowSpawnerConfig{
         .m_maxEnemies = 10,
-        .m_enemiesPerWave = 0,
-        .m_enemiesPerWaveFactor = 2, // doubles each wave
         .m_spawnInterval = 0.1f,
+        .m_enemiesPerWaveFactor = 2, // doubles each wave
     };
     std::unique_ptr<EnemySpawner> cowSpawner = std::make_unique<EnemySpawner>(cowEnemyData, cowSpawnerConfig);
     cowSpawner->setMinHeightFunction([this](float x, float z)
@@ -166,11 +167,13 @@ bool WorldManager::initializeEnemySpawners()
     abbeEnemyData.killScore = 3; // Abbe gives moderate points
     SpawnerConfig abbeSpawnerConfig{
         .m_maxEnemies = 5,
-        .m_enemiesPerWave = 5,
         .m_spawnInterval = 0.3f,
         .m_minSpawnDistance = 200.0f,
         .m_maxSpawnDistance = 250.0f,
-        .m_despawnThreshold = 400.0f};
+        .m_despawnThreshold = 400.0f,
+        .m_enemiesPerWaveIncrement = 1,
+        .m_speedIncreaseIncrement = 1.0f,
+    };
     std::unique_ptr<EnemySpawner> abbeSpawner = std::make_unique<EnemySpawner>(abbeEnemyData, abbeSpawnerConfig);
     abbeSpawner->setMinHeightFunction([this](float x, float z)
                                       { return m_chunkManager->getPreciseHeightAt(x, z); });
@@ -197,8 +200,9 @@ bool WorldManager::initializeEnemySpawners()
     mangeEnemyData.killScore = 10; // Mange gives more points
     SpawnerConfig mangeSpawnerConfig{
         .m_maxEnemies = 1,
-        .m_enemiesPerWave = 2,
         .m_spawnInterval = 2.0f,
+        .m_enemiesPerWaveIncrement = 2,
+        .m_speedIncreaseFactor = 2.0f,
     };
     std::unique_ptr<EnemySpawner> mangeSpawner = std::make_unique<EnemySpawner>(mangeEnemyData, mangeSpawnerConfig);
     mangeSpawner->setMinHeightFunction([this](float x, float z)
@@ -255,7 +259,7 @@ void WorldManager::update(float dt, InputManager *input)
     bool enemyInRange = false;
     glm::vec3 playerPos = m_player->m_playerData.m_position;
     float attackRange = m_player->m_playerData.m_attackRange + m_player->m_playerData.m_attackRangeOffset;
-    for (EnemyData* e : allEnemies)
+    for (EnemyData *e : allEnemies)
     {
         if (!e->isDead())
         {
@@ -268,7 +272,7 @@ void WorldManager::update(float dt, InputManager *input)
             }
         }
     }
-    
+
     if (enemyInRange)
     {
         int hits = m_player->attack(allEnemies);
@@ -456,10 +460,7 @@ void WorldManager::advanceWave()
         {
             DEBUG_PRINT("Activating spawner " << i << " for wave " << m_currentWave);
             spawner.activate();
-            int current_max = spawner.m_spawnerConfig.m_maxEnemies;
-            int factor = spawner.m_spawnerConfig.m_enemiesPerWaveFactor;
-            int additional = spawner.m_spawnerConfig.m_enemiesPerWave;
-            spawner.m_spawnerConfig.m_maxEnemies = current_max * factor + additional;
+            spawner.upgrade();
             DEBUG_PRINT("Spawner " << i << " max enemies increased to: " << spawner.m_spawnerConfig.m_maxEnemies);
         }
         else

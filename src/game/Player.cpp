@@ -123,7 +123,7 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
         float sensitivity = 0.1f;
         m_playerData.m_yaw -= dx * sensitivity;     
         m_playerData.m_campitch -= dy * sensitivity * 2/3; 
-        m_playerData.m_campitch = glm::clamp(m_playerData.m_campitch, -60.0f, 30.0f);
+        m_playerData.m_campitch = glm::clamp(m_playerData.m_campitch, -90.0f, 90.0f);
     }
 
 
