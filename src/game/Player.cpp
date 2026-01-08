@@ -19,12 +19,15 @@ static glm::vec2 resolveXZCollisions(
     const glm::vec2& current,
     const glm::vec2& proposed,
     float playerRadius,
+    float jumpover,
     const std::vector<StaticObstacle>& obstacles)
 {
     glm::vec2 result = proposed;
 
     for (const auto& o : obstacles)
     {
+        if (jumpover > 2.0f)
+            continue;
         glm::vec2 diff = result - o.posXZ;
         float dist = glm::length(diff);
         float minDist = playerRadius + o.radius;
@@ -72,7 +75,10 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
 
     //m_playerData.m_position += movement;
 
-
+    float terrainY = terrain->getPreciseHeightAt(
+        m_playerData.m_position.x,
+        m_playerData.m_position.z
+    );
     
     glm::vec3 proposed = m_playerData.m_position + movement;
 
@@ -84,7 +90,8 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
     glm::vec2 correctedXZ = resolveXZCollisions(
         glm::vec2(m_playerData.m_position.x, m_playerData.m_position.z),
         glm::vec2(proposed.x, proposed.z),
-        1.0f,               // player radius
+        1.0f,
+        m_playerData.m_position.y - terrainY,
         nearbyObstacles
     );
 
@@ -92,9 +99,30 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
     m_playerData.m_position.z = correctedXZ.y;
 
     // collision with terrain
-    float terrainY = terrain->getPreciseHeightAt(m_playerData.m_position.x, m_playerData.m_position.z);
-    m_playerData.m_position.y = terrainY;
+    // float terrainY = terrain->getPreciseHeightAt(m_playerData.m_position.x, m_playerData.m_position.z);
+    // m_playerData.m_position.y = terrainY;
+    
+    // --- jump input ---
+    if (glfwGetKey(g_window, GLFW_KEY_SPACE) == GLFW_PRESS && m_playerData.m_isGrounded)
+    {
+        m_playerData.m_verticalVelocity = m_playerData.m_jumpVelocity;
+        m_playerData.m_isGrounded = false;
+    }
 
+    // --- gravity ---
+    m_playerData.m_verticalVelocity -= m_playerData.m_gravity * dt;
+
+    // --- vertical integration ---
+    m_playerData.m_position.y += m_playerData.m_verticalVelocity * dt;
+
+    if (m_playerData.m_position.y <= terrainY)
+    {
+        m_playerData.m_position.y = terrainY;
+        m_playerData.m_verticalVelocity = 0.0f;
+        m_playerData.m_isGrounded = true;
+    }
+
+    
     // --- Turn player left/right ---
     if (glfwGetKey(g_window, GLFW_KEY_Q) == GLFW_PRESS)
         m_playerData.m_yaw += m_playerData.m_rotationSpeed * dt;
