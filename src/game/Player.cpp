@@ -115,12 +115,6 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
     // --- vertical integration ---
     m_playerData.m_position.y += m_playerData.m_verticalVelocity * dt;
 
-    // --- terrain collision ---
-    float terrainY = terrain->getPreciseHeightAt(
-        m_playerData.m_position.x,
-        m_playerData.m_position.z
-    );
-
     if (m_playerData.m_position.y <= terrainY)
     {
         m_playerData.m_position.y = terrainY;
