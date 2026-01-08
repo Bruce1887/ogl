@@ -17,7 +17,6 @@
 namespace ui
 {
 
-// Static array of loading tips - add your own game tips here!
 const std::vector<std::string> LoadingScreen::s_loadingTips = {
     "Tip: Monster Manges attacks deal a lot of damage, so WATCH OUT!!!",
     "Tip: Use your special abilitiy on 'J' to annihilate enemies.",
@@ -41,33 +40,27 @@ LoadingScreen::LoadingScreen(int screenWidth, int screenHeight)
     : m_screenWidth(screenWidth),
       m_screenHeight(screenHeight)
 {
-    // Select a random tip for this loading session
     SelectRandomTip();
     
-    // Create shader for UI rendering
     try
     {
         m_shader = std::make_shared<Shader>();
         if (!m_shader)
         {
-            DEBUG_PRINT("Failed to create loading screen shader");
             return;
         }
         m_shader->addShader("2D.vert", ShaderType::VERTEX);
         m_shader->addShader("uniformColor.frag", ShaderType::FRAGMENT);
         m_shader->createProgram();
-        DEBUG_PRINT("LoadingScreen shader created successfully");
     }
     catch (const std::exception& e)
     {
-        DEBUG_PRINT("Exception creating loading screen shader: " << e.what());
         m_shader = nullptr;
     }
 
     try
     {
         SetupQuadRendering();
-        DEBUG_PRINT("LoadingScreen quad rendering set up successfully");
     }
     catch (const std::exception& e)
     {
@@ -78,11 +71,9 @@ LoadingScreen::LoadingScreen(int screenWidth, int screenHeight)
     {
         m_textRenderer = std::make_unique<TextRenderer>(screenWidth, screenHeight);
         m_textRenderer->LoadFont((FONTS_DIR / "DejaVuSans.ttf").string().c_str(), MENU_FONT_SIZE);
-        DEBUG_PRINT("LoadingScreen text renderer initialized successfully");
     }
     catch (const std::exception& e)
     {
-        DEBUG_PRINT("Exception initializing TextRenderer: " << e.what());
         m_textRenderer = nullptr;
     }
 }
@@ -93,7 +84,6 @@ void LoadingScreen::update(float deltaTime)
 {
     // Update animation time for spinner
     m_animationTime += deltaTime;
-    DEBUG_PRINT("anim time: " << m_animationTime);
 
     // Animate the dots (cycle every 0.5 seconds)
     m_dotTimer += deltaTime;
