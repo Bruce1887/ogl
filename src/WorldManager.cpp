@@ -120,6 +120,10 @@ bool WorldManager::initializeEntities()
 
     EntitySounds playerSounds{.m_attackSound = SoundPlayer::getInstance().LoadWav(AUDIO_DIR / "swordSwoosh.wav")};
     m_player->setEntitySounds(playerSounds);
+    
+    // Preload explosion sound
+    m_explosionSound = SoundPlayer::getInstance().LoadWav(AUDIO_DIR / "explosion.wav");
+    
     float fogStart = m_renderDistance * m_fogStart;
     float fogEnd = m_renderDistance * m_fogEnd;
     m_player->m_playerRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
@@ -255,25 +259,35 @@ void WorldManager::update(float dt, InputManager *input)
         }
     }
 
-    // Auto-attack: attack if any enemy is in range
-    bool enemyInRange = false;
+    // Auto-attack: attack if any enemy is in the attack zone (in front of player)
+    bool enemyInAttackZone = false;
     glm::vec3 playerPos = m_player->m_playerData.m_position;
-    float attackRange = m_player->m_playerData.m_attackRange + m_player->m_playerData.m_attackRangeOffset;
-    for (EnemyData *e : allEnemies)
+    float yaw = m_player->m_playerData.m_yaw;
+    float attackRangeOffset = m_player->m_playerData.m_attackRangeOffset;
+    float attackRange = m_player->m_playerData.m_attackRange;
+    
+    // Calculate attack circle center (in front of player)
+    glm::vec3 attackCircleCenter = playerPos + glm::vec3(
+        sin(glm::radians(yaw)) * attackRangeOffset,
+        0.0f,
+        cos(glm::radians(yaw)) * attackRangeOffset
+    );
+    
+    for (EnemyData* e : allEnemies)
     {
         if (!e->isDead())
         {
-            glm::vec3 toEnemy = e->m_position - playerPos;
+            glm::vec3 toEnemy = e->m_position - attackCircleCenter;
             toEnemy.y = 0.0f;
             if (glm::length(toEnemy) <= attackRange)
             {
-                enemyInRange = true;
+                enemyInAttackZone = true;
                 break;
             }
         }
     }
-
-    if (enemyInRange)
+    
+    if (enemyInAttackZone)
     {
         int hits = m_player->attack(allEnemies);
     }
@@ -301,11 +315,14 @@ void WorldManager::update(float dt, InputManager *input)
     {
         m_player->update(dt, input, m_chunkManager.get());
 
-        // Check for player death (UI handles the death screen and score submission)
+        // Check for player death (UI handles the death screen, sound, and score submission)
         if (m_player->m_playerData.m_health <= 0.0f && !m_scorePosted)
         {
             m_isGameOver = true;
             m_scorePosted = true;
+
+            // Play death sound (reusing explosion sound since it works)
+            SoundPlayer::getInstance().PlaySFX(m_explosionSound, std::nullopt, true);
 
             float timeSurvived = m_gameClock ? m_gameClock->GetTotalElapsedSeconds() : 0.0f;
             int playerScore = m_player->getScore();
@@ -473,10 +490,6 @@ void WorldManager::triggerScreenFlash()
     m_screenFlashTimer = m_screenFlashDuration;
 
     // Play explosion sound
-    if (m_explosionSound == 0)
-    {
-        m_explosionSound = SoundPlayer::getInstance().LoadWav(AUDIO_DIR / "explosion.wav");
-    }
     SoundPlayer::getInstance().PlaySFX(m_explosionSound, std::nullopt, true);
 }
 

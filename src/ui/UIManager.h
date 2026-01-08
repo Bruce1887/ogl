@@ -8,6 +8,7 @@
 #include "ui/DeathScreen.h"
 #include "game/Player.h"
 #include "game/GameClock.h"
+#include <AL/al.h>
 #include <memory>
 #include <functional>
 #include <GLFW/glfw3.h>
@@ -82,6 +83,7 @@ namespace ui
         GameState m_currentState;
         bool m_isPaused;
         bool m_loadingStarted = false;  // Track if loading callback was called
+        bool m_deathSoundPlayed = false;  // Track if death sound was played
         int m_screenWidth;
         int m_screenHeight;
 

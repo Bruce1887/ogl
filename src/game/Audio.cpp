@@ -145,6 +145,14 @@ void SoundPlayer::StopAll()
     for (int i = 0; i < SFX_SOUND_SOURCES; i++)
         alSourceStop(m_SFXSourcesPool[i]);
 }
+
+void SoundPlayer::StopAllSFX()
+{
+    // Stop all sound effects but leave music playing
+    for (int i = 0; i < SFX_SOUND_SOURCES; i++)
+        alSourceStop(m_SFXSourcesPool[i]);
+}
+
 void SoundPlayer::PauseMusic()
 {
     if (!m_activeMusicSource) return;

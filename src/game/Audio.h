@@ -101,9 +101,17 @@ private:
 public:
 	void PauseAll();
 	void ResumeAll();
-	void StopAll();	
+	void StopAll();
+	void StopAllSFX();  // Stops all SFX but keeps music playing
 	void PauseMusic();
 	void ResumeMusic();
+	void SetMusicVolume(float volume)
+	{
+		if (m_activeMusicSource != 0)
+		{
+			alSourcef(m_activeMusicSource, AL_GAIN, volume);
+		}
+	}
 	SoundPlayer(const SoundPlayer &) = delete;
 	SoundPlayer &operator=(const SoundPlayer &) = delete;
 
@@ -185,8 +193,4 @@ struct EntitySounds
 {
 	// Just raw openAL buffer IDs for now (could be wrapped later)
 	ALuint m_attackSound = 0;
-	// Add more sounds as needed
-	// ALuint m_hurtSound;
-	// ALuint m_deathSound;
-	// ALuint m_walkSound;
 };
