@@ -30,7 +30,6 @@ namespace ui
             m_shader->addShader("2D.vert", ShaderType::VERTEX);
             m_shader->addShader("uniformColor.frag", ShaderType::FRAGMENT);
             m_shader->createProgram();
-            DEBUG_PRINT("MainMenu shader created successfully");
         }
         catch (const std::exception &e)
         {
@@ -41,7 +40,6 @@ namespace ui
         try
         {
             SetupQuadRendering();
-            DEBUG_PRINT("MainMenu quad rendering set up successfully");
         }
         catch (const std::exception &e)
         {
@@ -52,7 +50,6 @@ namespace ui
         {
             m_textRenderer = std::make_unique<TextRenderer>(screenWidth, screenHeight);
             m_textRenderer->LoadFont((FONTS_DIR / "DejaVuSans.ttf").string().c_str(), MENU_FONT_SIZE);
-            DEBUG_PRINT("MainMenu text renderer initialized successfully");
         }
         catch (const std::exception &e)
         {
@@ -63,7 +60,6 @@ namespace ui
         try
         {
             InitializeButtons();
-            DEBUG_PRINT("MainMenu buttons initialized successfully");
         }
         catch (const std::exception &e)
         {
@@ -142,53 +138,26 @@ namespace ui
 
     void MainMenu::handleMouseMove(double mouseX, double mouseY)
     {
-        static int debugCounter = 0;
-        if (debugCounter++ % 60 == 0)
-        { // Print every 60 frames to avoid spam
-            DEBUG_PRINT("Mouse position: (" << mouseX << ", " << mouseY << ")");
-        }
-
         // Update hover state for all buttons
         for (auto &button : m_buttons)
         {
             bool wasHovered = button.isHovered;
             button.isHovered = button.contains((float)mouseX, (float)mouseY);
-
-            if (button.isHovered && !wasHovered)
-            {
-                DEBUG_PRINT("Hovering over: " << button.label);
-            }
         }
     }
 
     void MainMenu::handleMouseClick(double mouseX, double mouseY, bool pressed)
     {
-        if (pressed)
-        {
-            DEBUG_PRINT("Mouse clicked at (" << mouseX << ", " << mouseY << ")");
-        }
-
         for (auto &button : m_buttons)
         {
             bool contains = button.contains((float)mouseX, (float)mouseY);
-
-            if (pressed)
-            {
-                DEBUG_PRINT("  Checking button '" << button.label << "' ["
-                                                  << button.x << "," << button.y << " to "
-                                                  << (button.x + button.width) << "," << (button.y + button.height) << "]: "
-                                                  << (contains ? "HIT" : "miss"));
-            }
 
             if (contains)
             {
                 button.isPressed = pressed;
                 // On mouse release (click complete), trigger callback
                 if (!pressed && button.onClick)
-                {
-                    DEBUG_PRINT("Button clicked: " << button.label);
                     button.onClick();
-                }
             }
             else
             {
@@ -203,7 +172,8 @@ namespace ui
         m_screenHeight = height;
 
         // Update text renderer projection
-        if (m_textRenderer) {
+        if (m_textRenderer)
+        {
             m_textRenderer->UpdateScreenSize(width, height);
         }
 
@@ -294,19 +264,10 @@ namespace ui
         try
         {
             m_quadVAO = std::make_unique<VertexArray>();
-            DEBUG_PRINT("VertexArray created with ID: " << m_quadVAO->getID());
-
             m_quadVBO = std::make_unique<VertexBuffer>(vertices, sizeof(vertices), m_quadVAO.get());
-            DEBUG_PRINT("VertexBuffer created with size: " << m_quadVBO->getSize());
-
             VertexBufferLayout layout;
-            DEBUG_PRINT("VertexBufferLayout created, stride before push: " << layout.getStride());
-
             layout.push<float>(2);
-            DEBUG_PRINT("After push, stride: " << layout.getStride());
-
             m_quadVAO->addBuffer(m_quadVBO.get(), layout);
-            DEBUG_PRINT("VertexBufferLayout added successfully");
         }
         catch (const std::exception &e)
         {
@@ -333,9 +294,6 @@ namespace ui
         // Start buttons below the title area (using ratio-based positioning)
         float startY = sh * UIConfig::MENU_START_Y_RATIO;
 
-        DEBUG_PRINT("Initializing buttons for screen " << m_screenWidth << "x" << m_screenHeight);
-        DEBUG_PRINT("Button start position: (" << startX << ", " << startY << ")");
-
         // Play button
         MenuButton playButton;
         playButton.label = "Play Game";
@@ -352,8 +310,6 @@ namespace ui
                 onPlayClicked();
         };
         m_buttons.push_back(playButton);
-        DEBUG_PRINT("Play button: x=" << playButton.x << " y=" << playButton.y
-                                      << " w=" << playButton.width << " h=" << playButton.height);
 
         // Leaderboard button
         MenuButton settingsButton;
