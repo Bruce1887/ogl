@@ -175,8 +175,7 @@ bool WorldManager::initializeEnemySpawners()
         .m_minSpawnDistance = 200.0f,
         .m_maxSpawnDistance = 250.0f,
         .m_despawnThreshold = 400.0f,
-        .m_enemiesPerWaveIncrement = 1,
-        .m_speedIncreaseIncrement = 1.0f,
+        .m_enemiesPerWaveIncrement = 5,
     };
     std::unique_ptr<EnemySpawner> abbeSpawner = std::make_unique<EnemySpawner>(abbeEnemyData, abbeSpawnerConfig);
     abbeSpawner->setMinHeightFunction([this](float x, float z)
@@ -205,8 +204,7 @@ bool WorldManager::initializeEnemySpawners()
     SpawnerConfig mangeSpawnerConfig{
         .m_maxEnemies = 1,
         .m_spawnInterval = 2.0f,
-        .m_enemiesPerWaveIncrement = 2,
-        .m_speedIncreaseFactor = 2.0f,
+        .m_enemiesPerWaveIncrement = 2,        
     };
     std::unique_ptr<EnemySpawner> mangeSpawner = std::make_unique<EnemySpawner>(mangeEnemyData, mangeSpawnerConfig);
     mangeSpawner->setMinHeightFunction([this](float x, float z)
@@ -479,9 +477,7 @@ void WorldManager::advanceWave()
             spawner.activate();
             spawner.upgrade();
             DEBUG_PRINT("Spawner " << i << " max enemies increased to: " << spawner.m_spawnerConfig.m_maxEnemies);
-        }
-        else
-            spawner.deactivate(); // Disable this spawner for now
+        }        
     }
 }
 

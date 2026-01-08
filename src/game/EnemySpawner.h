@@ -22,9 +22,6 @@ struct SpawnerConfig
 	// Upgrade parameters (how much to increase difficulty with each wave)
 	int m_enemiesPerWaveIncrement = 0; // Additional enemies per wave (additive)
 	int m_enemiesPerWaveFactor = 1;	   // Additional enemies per wave (multiplicative)
-
-	float m_speedIncreaseIncrement = 0.0f; // How much to increase enemy speed per wave
-	float m_speedIncreaseFactor = 1.0f;	 // How much to multiply enemy speed per wave
 };
 
 /**
@@ -92,10 +89,6 @@ public:
 		// Increase max enemies
 		m_spawnerConfig.m_maxEnemies += m_spawnerConfig.m_enemiesPerWaveIncrement;
 		m_spawnerConfig.m_maxEnemies *= m_spawnerConfig.m_enemiesPerWaveFactor;
-
-		// Increase enemy speed
-		m_prototypeEnemyData.m_moveSpeed += m_spawnerConfig.m_speedIncreaseIncrement;
-		m_prototypeEnemyData.m_moveSpeed *= m_spawnerConfig.m_speedIncreaseFactor;
 	}
 private:
 	bool m_active = false;
