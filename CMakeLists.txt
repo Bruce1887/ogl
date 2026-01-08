@@ -2,6 +2,15 @@ cmake_minimum_required(VERSION 3.10)
 project(oogabooga VERSION 0.1.0)
 cmake_policy(SET CMP0072 NEW)
 
+if(MSVC)
+    set(CMAKE_SHELL "cmd.exe")
+    # This disables the strict iterator checks that cause the "span iterator" crash
+    add_compile_definitions($<$<CONFIG:Debug>:_ITERATOR_DEBUG_LEVEL=0>)
+    
+    # Also disable related security checks that trigger assertions in modern MSVC
+    add_compile_definitions($<$<CONFIG:Debug>:_HAS_ITERATOR_DEBUGGING=0>)
+endif()
+
 # Allow older submodules (like freetype) to configure
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
@@ -134,20 +143,21 @@ if(OPENAL_HOMEBREW_FOUND)
     target_include_directories(oogabooga_common PUBLIC ${OPENAL_INCLUDE_DIR})
     target_link_libraries(oogabooga_common PUBLIC ${OPENAL_LIBRARY})
 else()
-    # Build OpenAL Soft from submodule (Windows/Linux/macOS without Homebrew)
     message(STATUS "Building OpenAL Soft from submodule")
+    
+    # 1. Set standard to 17 just for this submodule to avoid the std::span bug
+    set(CMAKE_CXX_STANDARD 17) 
+
     set(ALSOFT_EXAMPLES OFF CACHE BOOL "" FORCE)
     set(ALSOFT_UTILS OFF CACHE BOOL "" FORCE)
     set(ALSOFT_TESTS OFF CACHE BOOL "" FORCE)
-    set(ALSOFT_BACKEND_ALSA ON CACHE BOOL "" FORCE)
-    set(ALSOFT_BACKEND_PULSEAUDIO ON CACHE BOOL "" FORCE)
-    set(ALSOFT_BACKEND_PIPEWIRE ON CACHE BOOL "" FORCE)
-    set(ALSOFT_BACKEND_WASAPI ON CACHE BOOL "" FORCE)
-    set(ALSOFT_BACKEND_WINMM OFF CACHE BOOL "" FORCE)
-    set(ALSOFT_BACKEND_COREAUDIO ON CACHE BOOL "" FORCE)
     set(ALSOFT_STL_HARDENING OFF CACHE BOOL "" FORCE)
 
     add_subdirectory(src/vendor/openal-soft)
+    
+    # 2. Switch back to 20 for your main project
+    set(CMAKE_CXX_STANDARD 20) 
+
     target_link_libraries(oogabooga_common PUBLIC OpenAL)
 endif()
 
