@@ -1,7 +1,6 @@
 #pragma once
 #include <GLFW/glfw3.h>
 
-#define OOGABOOGA_ATTACK_KEY GLFW_KEY_K
 #define OOGABOOGA_SPECIAL_ATTACK_KEY GLFW_KEY_J
 
 #ifdef DEBUG

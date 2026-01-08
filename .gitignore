@@ -1,6 +1,7 @@
 .vscode/
 build/
 windows-build/
+windows_build/
 html/
 latex/
 doxy_output/

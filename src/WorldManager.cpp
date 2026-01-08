@@ -24,6 +24,8 @@ bool WorldManager::initialize()
     SoundPlayer &sp = SoundPlayer::getInstance();
     sp.PlayMusic(sp.LoadWav(AUDIO_DIR / "piraten.wav"), true);
 
+    advanceWave(); // start first wave
+
     return true;
 }
 
@@ -118,6 +120,10 @@ bool WorldManager::initializeEntities()
 
     EntitySounds playerSounds{.m_attackSound = SoundPlayer::getInstance().LoadWav(AUDIO_DIR / "swordSwoosh.wav")};
     m_player->setEntitySounds(playerSounds);
+    
+    // Preload explosion sound
+    m_explosionSound = SoundPlayer::getInstance().LoadWav(AUDIO_DIR / "explosion.wav");
+    
     float fogStart = m_renderDistance * m_fogStart;
     float fogEnd = m_renderDistance * m_fogEnd;
     m_player->m_playerRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
@@ -136,9 +142,8 @@ bool WorldManager::initializeEnemySpawners()
     EnemyData cowEnemyData; // default enemy data
     SpawnerConfig cowSpawnerConfig{
         .m_maxEnemies = 10,
-        .m_enemiesPerWave = 0,
-        .m_enemiesPerWaveFactor = 2, // doubles each wave
         .m_spawnInterval = 0.1f,
+        .m_enemiesPerWaveFactor = 2, // doubles each wave
     };
     std::unique_ptr<EnemySpawner> cowSpawner = std::make_unique<EnemySpawner>(cowEnemyData, cowSpawnerConfig);
     cowSpawner->setMinHeightFunction([this](float x, float z)
@@ -166,11 +171,12 @@ bool WorldManager::initializeEnemySpawners()
     abbeEnemyData.killScore = 3; // Abbe gives moderate points
     SpawnerConfig abbeSpawnerConfig{
         .m_maxEnemies = 5,
-        .m_enemiesPerWave = 5,
         .m_spawnInterval = 0.3f,
         .m_minSpawnDistance = 200.0f,
         .m_maxSpawnDistance = 250.0f,
-        .m_despawnThreshold = 400.0f};
+        .m_despawnThreshold = 400.0f,
+        .m_enemiesPerWaveIncrement = 5,
+    };
     std::unique_ptr<EnemySpawner> abbeSpawner = std::make_unique<EnemySpawner>(abbeEnemyData, abbeSpawnerConfig);
     abbeSpawner->setMinHeightFunction([this](float x, float z)
                                       { return m_chunkManager->getPreciseHeightAt(x, z); });
@@ -197,8 +203,8 @@ bool WorldManager::initializeEnemySpawners()
     mangeEnemyData.killScore = 10; // Mange gives more points
     SpawnerConfig mangeSpawnerConfig{
         .m_maxEnemies = 1,
-        .m_enemiesPerWave = 2,
         .m_spawnInterval = 2.0f,
+        .m_enemiesPerWaveIncrement = 2,        
     };
     std::unique_ptr<EnemySpawner> mangeSpawner = std::make_unique<EnemySpawner>(mangeEnemyData, mangeSpawnerConfig);
     mangeSpawner->setMinHeightFunction([this](float x, float z)
@@ -251,7 +257,35 @@ void WorldManager::update(float dt, InputManager *input)
         }
     }
 
-    if (input->keyboardInput.getKeyState(OOGABOOGA_ATTACK_KEY).readAndClear())
+    // Auto-attack: attack if any enemy is in the attack zone (in front of player)
+    bool enemyInAttackZone = false;
+    glm::vec3 playerPos = m_player->m_playerData.m_position;
+    float yaw = m_player->m_playerData.m_yaw;
+    float attackRangeOffset = m_player->m_playerData.m_attackRangeOffset;
+    float attackRange = m_player->m_playerData.m_attackRange;
+    
+    // Calculate attack circle center (in front of player)
+    glm::vec3 attackCircleCenter = playerPos + glm::vec3(
+        sin(glm::radians(yaw)) * attackRangeOffset,
+        0.0f,
+        cos(glm::radians(yaw)) * attackRangeOffset
+    );
+    
+    for (EnemyData* e : allEnemies)
+    {
+        if (!e->isDead())
+        {
+            glm::vec3 toEnemy = e->m_position - attackCircleCenter;
+            toEnemy.y = 0.0f;
+            if (glm::length(toEnemy) <= attackRange)
+            {
+                enemyInAttackZone = true;
+                break;
+            }
+        }
+    }
+    
+    if (enemyInAttackZone)
     {
         int hits = m_player->attack(allEnemies);
     }
@@ -279,11 +313,14 @@ void WorldManager::update(float dt, InputManager *input)
     {
         m_player->update(dt, input, m_chunkManager.get());
 
-        // Check for player death (UI handles the death screen and score submission)
+        // Check for player death (UI handles the death screen, sound, and score submission)
         if (m_player->m_playerData.m_health <= 0.0f && !m_scorePosted)
         {
             m_isGameOver = true;
             m_scorePosted = true;
+
+            // Play death sound (reusing explosion sound since it works)
+            SoundPlayer::getInstance().PlaySFX(m_explosionSound, std::nullopt, true);
 
             float timeSurvived = m_gameClock ? m_gameClock->GetTotalElapsedSeconds() : 0.0f;
             int playerScore = m_player->getScore();
@@ -438,14 +475,9 @@ void WorldManager::advanceWave()
         {
             DEBUG_PRINT("Activating spawner " << i << " for wave " << m_currentWave);
             spawner.activate();
-            int current_max = spawner.m_spawnerConfig.m_maxEnemies;
-            int factor = spawner.m_spawnerConfig.m_enemiesPerWaveFactor;
-            int additional = spawner.m_spawnerConfig.m_enemiesPerWave;
-            spawner.m_spawnerConfig.m_maxEnemies = current_max * factor + additional;
+            spawner.upgrade();
             DEBUG_PRINT("Spawner " << i << " max enemies increased to: " << spawner.m_spawnerConfig.m_maxEnemies);
-        }
-        else
-            spawner.deactivate(); // Disable this spawner for now
+        }        
     }
 }
 
@@ -454,10 +486,6 @@ void WorldManager::triggerScreenFlash()
     m_screenFlashTimer = m_screenFlashDuration;
 
     // Play explosion sound
-    if (m_explosionSound == 0)
-    {
-        m_explosionSound = SoundPlayer::getInstance().LoadWav(AUDIO_DIR / "explosion.wav");
-    }
     SoundPlayer::getInstance().PlaySFX(m_explosionSound, std::nullopt, true);
 }
 

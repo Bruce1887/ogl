@@ -442,3 +442,30 @@ void TerrainChunkManager::renderWater(const glm::mat4& view, const glm::mat4& pr
     
     m_waterMesh->render(view, projection, light);
 }
+
+void TerrainChunkManager::collectNearbyObstacles(
+    const glm::vec3& pos,
+    float range,
+    std::vector<StaticObstacle>& out) const
+{
+    float rangeSq = range * range;
+    constexpr float TREE_RADIUS = 1.0f;
+
+    for (const auto& chunk : m_chunks)
+    {
+        if (!chunk->isActive())
+            continue;
+
+        for (const glm::vec3& p : chunk->treePositions)
+        {
+            glm::vec2 d = glm::vec2(p.x, p.z) - glm::vec2(pos.x, pos.z);
+            if (glm::dot(d, d) <= rangeSq)
+            {
+                out.push_back({
+                    glm::vec2(p.x, p.z),
+                    TREE_RADIUS
+                });
+            }
+        }
+    }
+}

@@ -13,7 +13,7 @@ UIManager::UIManager(int screenWidth, int screenHeight)
       m_isPaused(false),
       m_screenWidth(screenWidth),
       m_screenHeight(screenHeight)
-{
+{    
     // Create main menu
     m_mainMenu = std::make_unique<MainMenu>(screenWidth, screenHeight);
     
@@ -40,6 +40,10 @@ UIManager::UIManager(int screenWidth, int screenHeight)
 void UIManager::initializeGameUI(Player* player)
 {
     m_player = player;
+    m_deathSoundPlayed = false;  // Reset death sound flag for new game
+    
+    // Reset music volume to full for new game
+    SoundPlayer::getInstance().SetMusicVolume(1.0f);
 
     // Create in-game HUD
     if (player)
@@ -143,7 +147,22 @@ void UIManager::checkPlayerDeath()
 {
     if (m_player && m_player->m_playerData.m_health <= 0.0f)
     {
-        DEBUG_PRINT("Player died!");
+        // Play death sound only once
+        if (!m_deathSoundPlayed)
+        {
+            m_deathSoundPlayed = true;
+            DEBUG_PRINT("Player died! Playing death sounds...");
+            
+            // Stop all sound effects (cow sounds, etc.) but keep music
+            SoundPlayer::getInstance().StopAllSFX();
+            
+            // Reduce music volume (keep pirates playing but quieter)
+            SoundPlayer::getInstance().SetMusicVolume(0.5f);
+            
+            // Load and play death sound
+            ALuint deathSound = SoundPlayer::getInstance().LoadWav(AUDIO_DIR / "death_sound.wav");
+            SoundPlayer::getInstance().PlaySFX(deathSound, std::nullopt, true);
+        }
         
         // Create death screen if not exists
         if (!m_deathScreen)
@@ -409,7 +428,7 @@ void UIManager::transitionTo(GameState newState)
     {
         SoundPlayer::getInstance().ResumeAll();
     }
-    else
+    else if (newState != GameState::DEAD)  // Don't pause sounds on death - let death sound play
     {
         SoundPlayer::getInstance().PauseAll();
     }

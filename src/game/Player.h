@@ -9,12 +9,20 @@
 
 class TerrainChunkManager;
 class InputManager;
-class EnemyData;
+struct EnemyData;
 
 struct PlayerData
 {
     glm::vec3 m_position;
     float m_yaw = 0.0f;
+    float m_campitch = 0.0f;
+
+
+    bool m_isGrounded = true;
+    float m_verticalVelocity = 0.0f;
+
+    float m_jumpVelocity = 7.0f;       
+    float m_gravity      = 20.0f;  
 
     float m_maxHealth = 100.0f;
     float m_health = m_maxHealth; // Set starting health to max health

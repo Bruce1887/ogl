@@ -83,7 +83,7 @@ private:
     float m_fogEnd = 0.90f;
     
     // Wave/difficulty system
-    int m_currentWave = 0;
+    int m_currentWave = 0; // Default is wave 0. wave 1 is started in WorldManager::initialize()
     float m_waveTimer = 0.0f;
     float m_waveDuration = 20.0f;  // Seconds per wave
     
