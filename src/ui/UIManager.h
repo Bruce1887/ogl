@@ -4,6 +4,7 @@
 #include "ui/MainMenu.h"
 #include "ui/PauseMenu.h"
 #include "ui/Leaderboard.h"
+#include "ui/LoadingScreen.h"
 #include "ui/HUDEntityImpl.h"
 #include "ui/DeathScreen.h"
 #include "game/Player.h"
@@ -83,6 +84,7 @@ namespace ui
         GameState m_currentState;
         bool m_isPaused;
         bool m_loadingStarted = false;  // Track if loading callback was called
+        int m_loadingFrames = 0;        // Count frames in loading state (to show screen before starting load)
         bool m_deathSoundPlayed = false;  // Track if death sound was played
         int m_screenWidth;
         int m_screenHeight;
@@ -91,6 +93,7 @@ namespace ui
         std::unique_ptr<MainMenu> m_mainMenu;
         std::unique_ptr<PauseMenu> m_pauseMenu;
         std::unique_ptr<Leaderboard> m_leaderboard;
+        std::unique_ptr<LoadingScreen> m_loadingScreen;
         std::unique_ptr<HUDEntityImpl> m_gameHUD;
         std::unique_ptr<DeathScreen> m_deathScreen;
 

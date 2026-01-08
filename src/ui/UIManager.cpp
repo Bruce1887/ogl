@@ -91,8 +91,24 @@ void UIManager::update(float deltaTime)
     switch (m_currentState)
     {
         case GameState::LOADING:
-            // Call the startup callback once per loading transition
-            if (onStartGame && !m_loadingStarted) {
+            // Create loading screen if not exists
+            if (!m_loadingScreen)
+            {
+                m_loadingScreen = std::make_unique<LoadingScreen>(m_screenWidth, m_screenHeight);
+                m_loadingScreen->setSkybox(m_menuSkybox.get());
+            }
+            
+            // Update loading screen animation
+            if (m_loadingScreen)
+            {
+                m_loadingScreen->update(deltaTime);
+            }
+            
+            // Count frames to ensure loading screen is visible before starting load
+            m_loadingFrames++;
+            
+            // Wait at least 2 frames before starting actual load (so loading screen renders)
+            if (onStartGame && !m_loadingStarted && m_loadingFrames >= 2) {
                 m_loadingStarted = true;
                 onStartGame();
             }
@@ -219,9 +235,11 @@ void UIManager::render(const glm::mat4& view, const glm::mat4& projection)
             break;
         }
         case GameState::LOADING:{
-            // Could render loading screen
-            //glClearColor(0.05f, 0.05f, 0.1f, 1.0f);
-            //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            // Render loading screen
+            if (m_loadingScreen)
+            {
+                m_loadingScreen->render(view, projection, nullptr);
+            }
             break;
         }
         case GameState::PLAYING:{
@@ -418,10 +436,12 @@ void UIManager::transitionTo(GameState newState)
     // Reset game state when returning to main menu
     if (newState == GameState::MAIN_MENU) {
         m_loadingStarted = false;
+        m_loadingFrames = 0;
         m_player = nullptr;
         m_gameHUD.reset();
         m_pauseMenu.reset();
         m_deathScreen.reset();
+        m_loadingScreen.reset();  // Reset so we get a new random tip next time
 
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
@@ -470,6 +490,9 @@ void UIManager::updateScreenSize(int width, int height)
     }
     if (m_leaderboard) {
         m_leaderboard->updateScreenSize(width, height);
+    }
+    if (m_loadingScreen) {
+        m_loadingScreen->updateScreenSize(width, height);
     }
     if (m_deathScreen) {
         m_deathScreen->updateScreenSize(width, height);
