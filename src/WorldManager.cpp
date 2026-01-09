@@ -120,10 +120,10 @@ bool WorldManager::initializeEntities()
 
     EntitySounds playerSounds{.m_attackSound = SoundPlayer::getInstance().LoadWav(AUDIO_DIR / "swordSwoosh.wav")};
     m_player->setEntitySounds(playerSounds);
-    
+
     // Preload explosion sound
     m_explosionSound = SoundPlayer::getInstance().LoadWav(AUDIO_DIR / "explosion.wav");
-    
+
     float fogStart = m_renderDistance * m_fogStart;
     float fogEnd = m_renderDistance * m_fogEnd;
     m_player->m_playerRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
@@ -180,13 +180,16 @@ bool WorldManager::initializeEnemySpawners()
     std::unique_ptr<EnemySpawner> abbeSpawner = std::make_unique<EnemySpawner>(abbeEnemyData, abbeSpawnerConfig);
     abbeSpawner->setMinHeightFunction([this](float x, float z)
                                       { return m_chunkManager->getPreciseHeightAt(x, z); });
+
+    // override texture for Abbe enemy
+    std::shared_ptr<Texture> abbeEnemyTexture = Texture::CreateTexture2D(MODELS_DIR / "abbe" / "abbe_enemy.JPEG", "u_texture_diffuse");
     // Add animation frames
-    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeIdle.obj", AnimationState::IDLE, 0.5f));
-    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeRun1.obj", AnimationState::WALKING, 0.2f));
-    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeRun2.obj", AnimationState::WALKING, 0.2f));
-    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeAttack1.obj", AnimationState::ATTACK, 0.1f));
-    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeAttack2.obj", AnimationState::ATTACK, 0.1f));
-    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeAttack3.obj", AnimationState::ATTACK, 0.1f));
+    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeIdle.obj", AnimationState::IDLE, 0.5f, abbeEnemyTexture));
+    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeRun1.obj", AnimationState::WALKING, 0.2f, abbeEnemyTexture));
+    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeRun2.obj", AnimationState::WALKING, 0.2f, abbeEnemyTexture));
+    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeAttack1.obj", AnimationState::ATTACK, 0.1f, abbeEnemyTexture));
+    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeAttack2.obj", AnimationState::ATTACK, 0.1f, abbeEnemyTexture));
+    abbeSpawner->m_animatedInstanceRenderer->addAnimationFrame(AnimatedInstanceRenderer::createAnimatedInstanceFrame(MODELS_DIR / "abbe" / "abbeAttack3.obj", AnimationState::ATTACK, 0.1f, abbeEnemyTexture));
     abbeSpawner->m_animatedInstanceRenderer->updateFogUniforms(m_fogColor, fogStart, fogEnd);
     // set sounds
     EntitySounds abbeSounds{.m_attackSound = SoundPlayer::getInstance().LoadWav(AUDIO_DIR / "swordAttack.wav")};
@@ -204,7 +207,7 @@ bool WorldManager::initializeEnemySpawners()
     SpawnerConfig mangeSpawnerConfig{
         .m_maxEnemies = 1,
         .m_spawnInterval = 2.0f,
-        .m_enemiesPerWaveIncrement = 2,        
+        .m_enemiesPerWaveIncrement = 2,
     };
     std::unique_ptr<EnemySpawner> mangeSpawner = std::make_unique<EnemySpawner>(mangeEnemyData, mangeSpawnerConfig);
     mangeSpawner->setMinHeightFunction([this](float x, float z)
@@ -263,15 +266,14 @@ void WorldManager::update(float dt, InputManager *input)
     float yaw = m_player->m_playerData.m_yaw;
     float attackRangeOffset = m_player->m_playerData.m_attackRangeOffset;
     float attackRange = m_player->m_playerData.m_attackRange;
-    
+
     // Calculate attack circle center (in front of player)
     glm::vec3 attackCircleCenter = playerPos + glm::vec3(
-        sin(glm::radians(yaw)) * attackRangeOffset,
-        0.0f,
-        cos(glm::radians(yaw)) * attackRangeOffset
-    );
-    
-    for (EnemyData* e : allEnemies)
+                                                   sin(glm::radians(yaw)) * attackRangeOffset,
+                                                   0.0f,
+                                                   cos(glm::radians(yaw)) * attackRangeOffset);
+
+    for (EnemyData *e : allEnemies)
     {
         if (!e->isDead())
         {
@@ -284,7 +286,7 @@ void WorldManager::update(float dt, InputManager *input)
             }
         }
     }
-    
+
     if (enemyInAttackZone)
     {
         int hits = m_player->attack(allEnemies);
@@ -477,7 +479,7 @@ void WorldManager::advanceWave()
             spawner.activate();
             spawner.upgrade();
             DEBUG_PRINT("Spawner " << i << " max enemies increased to: " << spawner.m_spawnerConfig.m_maxEnemies);
-        }        
+        }
     }
 }
 

@@ -26,10 +26,10 @@ struct Vertex
 
 ModelData::~ModelData()
 {
-    //DEBUG_PRINT("Destroying ModelData with " << m_meshRenderables.size() << " mesh renderables.");
+    // DEBUG_PRINT("Destroying ModelData with " << m_meshRenderables.size() << " mesh renderables.");
 }
 
-Model::Model(const std::filesystem::path &path)
+Model::Model(const std::filesystem::path &path, std::optional<std::shared_ptr<Texture>> overrideTexture)
     : m_modelPath(path)
 {
     Assimp::Importer importer;
@@ -186,10 +186,18 @@ Model::Model(const std::filesystem::path &path)
         // DEBUG_PRINT("modelpath " << m_modelPath << " model has texture diffuse: " << m_modelData->m_hasTextureDiffuse);
         if (m_modelData->m_hasTextureDiffuse)
         {
-            // DEBUG_PRINT("Loading diffuse texture: " << (path.parent_path() / texPath.C_Str()));
-            std::shared_ptr<Texture> diffuseTex = Texture::CreateTexture2D((path.parent_path() / texPath.C_Str()).string(), "u_texture_diffuse");
-            diffuseTex->m_targetUniform = "u_texture_diffuse";
-            mr->m_textureReferences.push_back(diffuseTex);
+            // If an override texture is provided, use it instead of the model's texture
+            if (overrideTexture.has_value())
+            {
+                mr->m_textureReferences.push_back(overrideTexture.value());
+            }
+            else
+            {
+                // DEBUG_PRINT("Loading diffuse texture: " << (path.parent_path() / texPath.C_Str()));
+                std::shared_ptr<Texture> diffuseTex = Texture::CreateTexture2D((path.parent_path() / texPath.C_Str()).string(), "u_texture_diffuse");
+                diffuseTex->m_targetUniform = "u_texture_diffuse";
+                mr->m_textureReferences.push_back(diffuseTex);
+            }
         }
         m_modelData->addMeshRenderable(std::shared_ptr<MeshRenderable>(mr));
     }

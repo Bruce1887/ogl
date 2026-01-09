@@ -89,9 +89,7 @@ class TerrainChunkManager
 public:
     TerrainChunkManager(TerrainGenerator *generator, std::vector<std::shared_ptr<Texture>> terrainTextures)
         : m_generator(generator), m_terrainTextures(terrainTextures)
-    {
-        DEBUG_PRINT("Initialized TerrainChunkManager with chunk size " << TC_CHUNK_SIZE << " and vertex step " << TC_VERTEX_STEP);
-
+    {        
         // Initialize instanced tree renderer
         m_treeRenderer = std::make_unique<InstancedRenderer>();
         // std::unique_ptr<Model> treeModel = m_generator->m_terrainRenderables.gran->copyFrom(m_generator->m_terrainRenderables.gran.get());

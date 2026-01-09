@@ -89,12 +89,12 @@ void AnimatedInstanceRenderer::render(const glm::mat4 view, const glm::mat4 proj
 	}
 }
 
-std::unique_ptr<AnimatedInstanceFrame> AnimatedInstanceRenderer::createAnimatedInstanceFrame(const std::filesystem::path &modelPath, AnimationState state, float duration)
+std::unique_ptr<AnimatedInstanceFrame> AnimatedInstanceRenderer::createAnimatedInstanceFrame(const std::filesystem::path &modelPath, AnimationState state, float duration, std::optional<std::shared_ptr<Texture>> overrideTexture)
 {
 	auto frame = std::make_unique<AnimatedInstanceFrame>();
 	frame->m_state = state;
 	frame->m_duration = duration;
-	std::unique_ptr<Model> model = std::make_unique<Model>(modelPath);
+	std::unique_ptr<Model> model = std::make_unique<Model>(modelPath, overrideTexture);
 
 	frame->m_InstancedRenderer.init(std::move(model));
 	return frame;

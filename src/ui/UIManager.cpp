@@ -43,7 +43,7 @@ void UIManager::initializeGameUI(Player* player)
     m_deathSoundPlayed = false;  // Reset death sound flag for new game
     
     // Reset music volume to full for new game
-    SoundPlayer::getInstance().SetMusicVolume(1.0f);
+    SoundPlayer::getInstance().SetMusicVolume(DEFAULT_MUSIC_GAIN);
 
     // Create in-game HUD
     if (player)
@@ -157,7 +157,7 @@ void UIManager::checkPlayerDeath()
             SoundPlayer::getInstance().StopAllSFX();
             
             // Reduce music volume (keep pirates playing but quieter)
-            SoundPlayer::getInstance().SetMusicVolume(0.5f);
+            SoundPlayer::getInstance().SetMusicVolume(DEFAULT_MUSIC_GAIN / 2.0f);
             
             // Load and play death sound
             ALuint deathSound = SoundPlayer::getInstance().LoadWav(AUDIO_DIR / "death_sound.wav");

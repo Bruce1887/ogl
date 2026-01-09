@@ -12,7 +12,7 @@
 
 #define MUSIC_SOUND_SOURCES 1 // num sources reserved for music
 #define SFX_SOUND_SOURCES 15  // num sources reserved for various sound effects
-
+#define DEFAULT_MUSIC_GAIN 0.6f
 inline const std::filesystem::path AUDIO_DIR = std::filesystem::path("resources") / "audio";
 
 extern ALCdevice *s_audio_device;
@@ -137,6 +137,7 @@ public:
 		alSourcei(source, AL_BUFFER, 0);      // clear previous
 		alSourcei(source, AL_BUFFER, buffer);
 		alSourcei(source, AL_LOOPING, loop ? AL_TRUE : AL_FALSE);
+		alSourcef(source, AL_GAIN, DEFAULT_MUSIC_GAIN);
 		alSourcePlay(source);
 
 		m_activeMusicSource = source;

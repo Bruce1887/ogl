@@ -39,7 +39,7 @@ class Model : public WorldEntity
 public:
     Model() = default;
 
-    Model(const std::filesystem::path &path);
+    Model(const std::filesystem::path &path, std::optional<std::shared_ptr<Texture>> overrideTexture = std::nullopt);
 
     static Model copyFrom(const Model *other)
     {
