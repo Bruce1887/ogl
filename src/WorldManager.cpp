@@ -142,8 +142,8 @@ bool WorldManager::initializeEnemySpawners()
     EnemyData cowEnemyData; // default enemy data
     SpawnerConfig cowSpawnerConfig{
         .m_maxEnemies = 10,
-        .m_spawnInterval = 0.1f,
-        .m_enemiesPerWaveFactor = 2, // doubles each wave
+        .m_spawnInterval = 0.01f,
+        .m_enemiesPerWaveFactor = 5, 
     };
     std::unique_ptr<EnemySpawner> cowSpawner = std::make_unique<EnemySpawner>(cowEnemyData, cowSpawnerConfig);
     cowSpawner->setMinHeightFunction([this](float x, float z)
@@ -170,12 +170,12 @@ bool WorldManager::initializeEnemySpawners()
     abbeEnemyData.m_moveSpeed = 10.0f;
     abbeEnemyData.killScore = 3; // Abbe gives moderate points
     SpawnerConfig abbeSpawnerConfig{
-        .m_maxEnemies = 5,
-        .m_spawnInterval = 0.3f,
+        .m_maxEnemies = 15,
+        .m_spawnInterval = 0.1f,
         .m_minSpawnDistance = 200.0f,
         .m_maxSpawnDistance = 250.0f,
         .m_despawnThreshold = 400.0f,
-        .m_enemiesPerWaveIncrement = 5,
+        .m_enemiesPerWaveFactor = 2,
     };
     std::unique_ptr<EnemySpawner> abbeSpawner = std::make_unique<EnemySpawner>(abbeEnemyData, abbeSpawnerConfig);
     abbeSpawner->setMinHeightFunction([this](float x, float z)
@@ -205,9 +205,9 @@ bool WorldManager::initializeEnemySpawners()
     mangeEnemyData.m_moveSpeed = 4.0f;
     mangeEnemyData.killScore = 10; // Mange gives more points
     SpawnerConfig mangeSpawnerConfig{
-        .m_maxEnemies = 1,
+        .m_maxEnemies = 10,
         .m_spawnInterval = 2.0f,
-        .m_enemiesPerWaveIncrement = 2,
+        .m_enemiesPerWaveIncrement = 5,
     };
     std::unique_ptr<EnemySpawner> mangeSpawner = std::make_unique<EnemySpawner>(mangeEnemyData, mangeSpawnerConfig);
     mangeSpawner->setMinHeightFunction([this](float x, float z)
