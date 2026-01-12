@@ -259,6 +259,7 @@ void WorldManager::update(float dt, InputManager *input)
             allEnemies.push_back(&enemy);
         }
     }
+
     
     // auto attack (the attack funciton itself checks for cooldowns and range)
     m_player->attack(allEnemies);
@@ -277,6 +278,7 @@ void WorldManager::update(float dt, InputManager *input)
 #ifdef DEBUG
     if (input->keyboardInput.getKeyState(OOGABOOGA_DEBUG_WILDCARD_KEY).readAndClear())
     {
+        DEBUG_PRINT("Number of enemies in world: " << allEnemies.size());
         DEBUG_PRINT("DEBUG: Advancing to next wave");
         advanceWave();
     }
