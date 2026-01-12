@@ -24,4 +24,5 @@ if %errorlevel% neq 0 (
 
 :: 3. BUILD: Compile the code
 cmake --build windows_build --config Debug
-pause
+
+echo Build completed.

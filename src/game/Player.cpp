@@ -16,15 +16,15 @@ void Player::render(glm::mat4 view, glm::mat4 proj, PhongLightConfig *light)
 }
 
 static glm::vec2 resolveXZCollisions(
-    const glm::vec2& current,
-    const glm::vec2& proposed,
+    const glm::vec2 &current,
+    const glm::vec2 &proposed,
     float playerRadius,
     float jumpover,
-    const std::vector<StaticObstacle>& obstacles)
+    const std::vector<StaticObstacle> &obstacles)
 {
     glm::vec2 result = proposed;
 
-    for (const auto& o : obstacles)
+    for (const auto &o : obstacles)
     {
         if (jumpover > 2.0f)
             continue;
@@ -73,15 +73,13 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
     else
         m_playerData.setAnimationState(AnimationState::IDLE);
 
-    //m_playerData.m_position += movement;
+    // m_playerData.m_position += movement;
 
     float terrainY = terrain->getPreciseHeightAt(
         m_playerData.m_position.x,
-        m_playerData.m_position.z
-    );
-    
-    glm::vec3 proposed = m_playerData.m_position + movement;
+        m_playerData.m_position.z);
 
+    glm::vec3 proposed = m_playerData.m_position + movement;
 
     std::vector<StaticObstacle> nearbyObstacles;
     terrain->collectNearbyObstacles(m_playerData.m_position, 5.0f, nearbyObstacles);
@@ -92,8 +90,7 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
         glm::vec2(proposed.x, proposed.z),
         1.0f,
         m_playerData.m_position.y - terrainY,
-        nearbyObstacles
-    );
+        nearbyObstacles);
 
     m_playerData.m_position.x = correctedXZ.x;
     m_playerData.m_position.z = correctedXZ.y;
@@ -101,7 +98,7 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
     // collision with terrain
     // float terrainY = terrain->getPreciseHeightAt(m_playerData.m_position.x, m_playerData.m_position.z);
     // m_playerData.m_position.y = terrainY;
-    
+
     // --- jump input ---
     if (glfwGetKey(g_window, GLFW_KEY_SPACE) == GLFW_PRESS && m_playerData.m_isGrounded)
     {
@@ -122,7 +119,6 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
         m_playerData.m_isGrounded = true;
     }
 
-    
     // --- Turn player left/right ---
     if (glfwGetKey(g_window, GLFW_KEY_Q) == GLFW_PRESS)
         m_playerData.m_yaw += m_playerData.m_rotationSpeed * dt;
@@ -134,8 +130,10 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
     if (m_playerData.m_attackTimer > 0.0f)
     {
         m_playerData.m_attackTimer -= dt;
-        if (m_playerData.m_attackTimer <= 0.0f)
-            m_playerData.lockAnimationState(false);
+    }
+    else{
+        // Unlock animation state if it was locked during attack
+        m_playerData.unlockAnimationState(AnimationState::ATTACK);
     }
 
     // Update special attack cooldown timer
@@ -144,16 +142,14 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
         m_playerData.m_specialAttackTimer -= dt;
     }
 
-
     double dx, dy;
     if (input->mouseMoveInput.fetchDeltas(dx, dy))
     {
         float sensitivity = 0.1f;
-        m_playerData.m_yaw -= dx * sensitivity;     
-        m_playerData.m_campitch -= dy * sensitivity * 2/3; 
+        m_playerData.m_yaw -= dx * sensitivity;
+        m_playerData.m_campitch -= dy * sensitivity * 2 / 3;
         m_playerData.m_campitch = glm::clamp(m_playerData.m_campitch, -90.0f, 90.0f);
     }
-
 
     // Build transform
     glm::mat4 transform(1.0f);
@@ -175,23 +171,16 @@ int Player::attack(std::vector<EnemyData *> &enemies)
     if (m_playerData.m_attackTimer > 0.0f)
         return 0;
 
-    m_playerData.setAnimationState(AnimationState::ATTACK);
-    if (m_sounds.has_value())
-    {
-        SoundPlayer::getInstance().PlaySFX((*m_sounds).m_attackSound);
-    }
-
-    m_playerData.lockAnimationState(true);
-
     // Reset cooldown
     m_playerData.m_attackTimer = m_playerData.m_attackCooldown;
 
     int enemiesHit = 0;
 
+    float attackHeightOffset = 0.8f; // Abbe modellen är ungefär 1.2 - 1.4 units hög, så 0.8 är ungefär vid midja/brösthöjd
     glm::vec3 attack_circle_center = m_playerData.m_position +
                                      glm::vec3(
                                          sin(glm::radians(m_playerData.m_yaw)) * m_playerData.m_attackRangeOffset,
-                                         0.0f,
+                                         attackHeightOffset,
                                          cos(glm::radians(m_playerData.m_yaw)) * m_playerData.m_attackRangeOffset);
 
     // Check all enemies and damage those within range
@@ -203,7 +192,7 @@ int Player::attack(std::vector<EnemyData *> &enemies)
         // Calculate distance to enemy (XZ plane only)
 
         glm::vec3 toEnemy = e_data->m_position - attack_circle_center;
-        toEnemy.y = 0.0f;
+        // toEnemy.y = 0.0f;
         float distance = glm::length(toEnemy);
 
         if (distance <= m_playerData.m_attackRange)
@@ -214,6 +203,14 @@ int Player::attack(std::vector<EnemyData *> &enemies)
             if (e_data->isDead())
                 m_scoreKeeper.addPoints(e_data->killScore); // Award points for kill
         }
+    }
+
+    // Set animation state to ATTACK and play sound if any enemies were hit
+    if (enemiesHit > 0)
+    {       
+        m_playerData.setAnimationState(AnimationState::ATTACK, true);
+        if (m_sounds.has_value())
+            SoundPlayer::getInstance().PlaySFX((*m_sounds).m_attackSound);
     }
 
     // DEBUG_PRINT("player score: " << m_scoreKeeper.getScore());

@@ -44,8 +44,7 @@ void EnemySpawner::updateAll(float dt, Player &player)
 		// enemy_data.lockAnimationState(enemy_data.m_attackTimer < enemy_data.m_attackCooldown);
 
 		// Calculate distance to player
-		glm::vec3 toPlayer = playerPosition - enemy_data.m_position;
-		toPlayer.y = 0.0f; // Ignore vertical distance
+		glm::vec3 toPlayer = playerPosition - enemy_data.m_position;		
 		float distanceToPlayer = glm::length(toPlayer);
 		glm::vec3 direction_to_player = enemy_data.getDirectionXZtoTarget(playerPosition);
 

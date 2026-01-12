@@ -259,38 +259,10 @@ void WorldManager::update(float dt, InputManager *input)
             allEnemies.push_back(&enemy);
         }
     }
-
-    // Auto-attack: attack if any enemy is in the attack zone (in front of player)
-    bool enemyInAttackZone = false;
-    glm::vec3 playerPos = m_player->m_playerData.m_position;
-    float yaw = m_player->m_playerData.m_yaw;
-    float attackRangeOffset = m_player->m_playerData.m_attackRangeOffset;
-    float attackRange = m_player->m_playerData.m_attackRange;
-
-    // Calculate attack circle center (in front of player)
-    glm::vec3 attackCircleCenter = playerPos + glm::vec3(
-                                                   sin(glm::radians(yaw)) * attackRangeOffset,
-                                                   0.0f,
-                                                   cos(glm::radians(yaw)) * attackRangeOffset);
-
-    for (EnemyData *e : allEnemies)
-    {
-        if (!e->isDead())
-        {
-            glm::vec3 toEnemy = e->m_position - attackCircleCenter;
-            toEnemy.y = 0.0f;
-            if (glm::length(toEnemy) <= attackRange)
-            {
-                enemyInAttackZone = true;
-                break;
-            }
-        }
-    }
-
-    if (enemyInAttackZone)
-    {
-        int hits = m_player->attack(allEnemies);
-    }
+    
+    // auto attack (the attack funciton itself checks for cooldowns and range)
+    m_player->attack(allEnemies);
+    
 
     // Special attack - J key
     if (input->keyboardInput.getKeyState(OOGABOOGA_SPECIAL_ATTACK_KEY).readAndClear())
