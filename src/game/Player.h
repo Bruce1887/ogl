@@ -65,20 +65,17 @@ struct PlayerData
     {
         return m_animationState;
     }
-    
+
     /**
      * @brief Set the Animation State object
-     * 
+     *
      * @param state The new animation state
      * @param lock If true, locks the animation state to prevent automatic changes
      */
     void setAnimationState(AnimationState state, bool lock = false)
     {
         if (m_animation_lock)
-        {
-            DEBUG_PRINT("Animation state is locked, cannot change from " << static_cast<int>(m_animationState) << " to " << static_cast<int>(state));
             return;
-        }
 
         if (lock)
             m_animation_lock = true;
@@ -88,19 +85,18 @@ struct PlayerData
 
     /**
      * @brief Unlock the animation state if the current state matches the expected state
-     * 
+     *
      * @param expectedState The state that is expected to be current for unlocking to occur
      */
     inline void unlockAnimationState(AnimationState expectedState)
     {
         if (m_animationState != expectedState)
         {
-            DEBUG_PRINT("Cannot unlock animation state, current state " << static_cast<int>(m_animationState) << " does not match expected " << static_cast<int>(expectedState));
             return;
         }
 
         m_animation_lock = false;
-    }    
+    }
 
 private:
     AnimationState m_animationState = AnimationState::IDLE; // Current animation state

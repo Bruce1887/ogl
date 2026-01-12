@@ -130,10 +130,11 @@ void Player::update(float dt, InputManager *input, TerrainChunkManager *terrain)
     if (m_playerData.m_attackTimer > 0.0f)
     {
         m_playerData.m_attackTimer -= dt;
-    }
-    else{
-        // Unlock animation state if it was locked during attack
-        m_playerData.unlockAnimationState(AnimationState::ATTACK);
+        if (m_playerData.m_attackTimer < 0.0f)
+        {
+            m_playerData.m_attackTimer = 0.0f;
+            m_playerData.unlockAnimationState(AnimationState::ATTACK);
+        }
     }
 
     // Update special attack cooldown timer
@@ -207,7 +208,7 @@ int Player::attack(std::vector<EnemyData *> &enemies)
 
     // Set animation state to ATTACK and play sound if any enemies were hit
     if (enemiesHit > 0)
-    {       
+    {
         m_playerData.setAnimationState(AnimationState::ATTACK, true);
         if (m_sounds.has_value())
             SoundPlayer::getInstance().PlaySFX((*m_sounds).m_attackSound);
